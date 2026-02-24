@@ -2,19 +2,13 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+Run the dev server (Next.js + Socket.IO on one port):
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000). Real-time room updates use Socket.IO on the same origin. Optional: use `npm run dev:next` for Next.js only, or `npm run socket` in a second terminal for a separate socket server on port 3001 (then set `SOCKET_SERVER_URL` and `NEXT_PUBLIC_SOCKET_URL` to `http://localhost:3001`).
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
