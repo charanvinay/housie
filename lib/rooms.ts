@@ -24,8 +24,12 @@ export type Room = {
   drawnNumbers?: number[];
   /** Tickets per player (playerId -> tickets), set when game starts. */
   playerTickets?: Record<string, Ticket[]>;
-  /** Set when someone successfully claims Jaldi Five. */
-  jaldiFiveClaimed?: { playerId: string; playerName: string } | null;
+  /** Each claim type is an array so multiple players can win with the same number; we store only the winning (last) number. */
+  jaldiFiveClaimed?: { playerId: string; playerName: string; winningNumber: number }[];
+  firstLineClaimed?: { playerId: string; playerName: string; winningNumber: number }[];
+  middleLineClaimed?: { playerId: string; playerName: string; winningNumber: number }[];
+  lastLineClaimed?: { playerId: string; playerName: string; winningNumber: number }[];
+  housieClaimed?: { playerId: string; playerName: string; winningNumber: number }[];
 };
 
 const rooms = new Map<string, Room>();
@@ -139,8 +143,227 @@ export function startGame(code: string, hostId: string): { ok: true } | { error:
   }
   room.playerTickets = playerTickets;
   room.drawnNumbers = [];
-  room.jaldiFiveClaimed = null;
+  room.jaldiFiveClaimed = [];
+  room.firstLineClaimed = [];
+  room.middleLineClaimed = [];
+  room.lastLineClaimed = [];
+  room.housieClaimed = [];
   room.status = "started";
+  notifyRoomUpdated(upperCode);
+  return { ok: true };
+}
+
+/** Last number in drawn order that appears in the claim numbers (the number that completed the claim). */
+function getWinningNumber(drawnNumbers: number[], claimNumbers: number[]): number {
+  const set = new Set(claimNumbers);
+  for (let i = drawnNumbers.length - 1; i >= 0; i--) {
+    if (set.has(drawnNumbers[i]!)) return drawnNumbers[i]!;
+  }
+  return claimNumbers[0] ?? 0;
+}
+
+function getNumbersInRow(ticket: Ticket, rowIndex: number): number[] {
+  const row = ticket[rowIndex];
+  if (!row) return [];
+  return row.filter((c): c is number => c !== null);
+}
+
+function getAllNumbers(ticket: Ticket): number[] {
+  const out: number[] = [];
+  for (let r = 0; r < ticket.length; r++) {
+    for (let c = 0; c < ticket[r]!.length; c++) {
+      const v = ticket[r]![c];
+      if (v !== null) out.push(v);
+    }
+  }
+  return out;
+}
+
+function validateTicketClaim(
+  room: Room,
+  playerId: string,
+  ticketIndex: number,
+  numbers: number[]
+): { error: string } | { ticket: Ticket } {
+  const tickets = room.playerTickets?.[playerId];
+  if (!tickets) return { error: "Tickets not found" };
+  const ticket = tickets[ticketIndex];
+  if (!ticket) return { error: "Invalid ticket" };
+  const drawnSet = new Set(room.drawnNumbers ?? []);
+  const allInDrawn = numbers.every((n) => n >= 1 && n <= 90 && drawnSet.has(n));
+  if (!allInDrawn) return { error: "Not all numbers have been drawn yet" };
+  return { ticket };
+}
+
+export function claimFirstLine(
+  code: string,
+  playerId: string,
+  playerName: string,
+  ticketIndex: number
+): { ok: true } | { error: string } {
+  const upperCode = code.toUpperCase();
+  const room = rooms.get(upperCode);
+  if (!room) return { error: "Room not found" };
+  if (room.status !== "started") return { error: "Game not in progress" };
+
+  const tickets = room.playerTickets?.[playerId];
+  if (!tickets || !tickets[ticketIndex]) return { error: "Invalid ticket" };
+  const numbers = getNumbersInRow(tickets[ticketIndex]!, 0);
+  if (numbers.length !== 5) return { error: "First line must have 5 numbers" };
+  const check = validateTicketClaim(room, playerId, ticketIndex, numbers);
+  if ("error" in check) return check;
+
+  const winningNumber = getWinningNumber(room.drawnNumbers ?? [], numbers);
+  if (!room.firstLineClaimed) room.firstLineClaimed = [];
+  room.firstLineClaimed.push({ playerId, playerName, winningNumber });
+  notifyRoomUpdated(upperCode);
+  return { ok: true };
+}
+
+export function claimMiddleLine(
+  code: string,
+  playerId: string,
+  playerName: string,
+  ticketIndex: number
+): { ok: true } | { error: string } {
+  const upperCode = code.toUpperCase();
+  const room = rooms.get(upperCode);
+  if (!room) return { error: "Room not found" };
+  if (room.status !== "started") return { error: "Game not in progress" };
+
+  const tickets = room.playerTickets?.[playerId];
+  if (!tickets || !tickets[ticketIndex]) return { error: "Invalid ticket" };
+  const numbers = getNumbersInRow(tickets[ticketIndex]!, 1);
+  if (numbers.length !== 5) return { error: "Middle line must have 5 numbers" };
+  const check = validateTicketClaim(room, playerId, ticketIndex, numbers);
+  if ("error" in check) return check;
+
+  const winningNumber = getWinningNumber(room.drawnNumbers ?? [], numbers);
+  if (!room.middleLineClaimed) room.middleLineClaimed = [];
+  room.middleLineClaimed.push({ playerId, playerName, winningNumber });
+  notifyRoomUpdated(upperCode);
+  return { ok: true };
+}
+
+export function claimLastLine(
+  code: string,
+  playerId: string,
+  playerName: string,
+  ticketIndex: number
+): { ok: true } | { error: string } {
+  const upperCode = code.toUpperCase();
+  const room = rooms.get(upperCode);
+  if (!room) return { error: "Room not found" };
+  if (room.status !== "started") return { error: "Game not in progress" };
+
+  const tickets = room.playerTickets?.[playerId];
+  if (!tickets || !tickets[ticketIndex]) return { error: "Invalid ticket" };
+  const numbers = getNumbersInRow(tickets[ticketIndex]!, 2);
+  if (numbers.length !== 5) return { error: "Last line must have 5 numbers" };
+  const check = validateTicketClaim(room, playerId, ticketIndex, numbers);
+  if ("error" in check) return check;
+
+  const winningNumber = getWinningNumber(room.drawnNumbers ?? [], numbers);
+  if (!room.lastLineClaimed) room.lastLineClaimed = [];
+  room.lastLineClaimed.push({ playerId, playerName, winningNumber });
+  notifyRoomUpdated(upperCode);
+  return { ok: true };
+}
+
+export function claimHousie(
+  code: string,
+  playerId: string,
+  playerName: string,
+  ticketIndex: number
+): { ok: true } | { error: string } {
+  const upperCode = code.toUpperCase();
+  const room = rooms.get(upperCode);
+  if (!room) return { error: "Room not found" };
+  if (room.status !== "started") return { error: "Game not in progress" };
+
+  const tickets = room.playerTickets?.[playerId];
+  if (!tickets || !tickets[ticketIndex]) return { error: "Invalid ticket" };
+  const numbers = getAllNumbers(tickets[ticketIndex]!);
+  if (numbers.length !== 15) return { error: "Ticket must have 15 numbers" };
+  const check = validateTicketClaim(room, playerId, ticketIndex, numbers);
+  if ("error" in check) return check;
+
+  const winningNumber = getWinningNumber(room.drawnNumbers ?? [], numbers);
+  if (!room.housieClaimed) room.housieClaimed = [];
+  room.housieClaimed.push({ playerId, playerName, winningNumber });
+  room.status = "ended";
+  notifyRoomUpdated(upperCode);
+  return { ok: true };
+}
+
+export type ClaimType = "jaldiFive" | "firstLine" | "middleLine" | "lastLine" | "housie";
+
+/** Claim multiple types at once (e.g. last line + housie with one number). All validated and set in one go. */
+export function claimMultiple(
+  code: string,
+  playerId: string,
+  playerName: string,
+  ticketIndex: number,
+  claimTypes: ClaimType[],
+  jaldiFiveNumbers?: number[]
+): { ok: true } | { error: string } {
+  const upperCode = code.toUpperCase();
+  const room = rooms.get(upperCode);
+  if (!room) return { error: "Room not found" };
+  if (room.status !== "started") return { error: "Game not in progress" };
+
+  const tickets = room.playerTickets?.[playerId];
+  if (!tickets || !tickets[ticketIndex]) return { error: "Invalid ticket" };
+  const ticket = tickets[ticketIndex]!;
+  const drawnSet = new Set(room.drawnNumbers ?? []);
+
+  const drawn = room.drawnNumbers ?? [];
+  const toApply: ClaimType[] = [];
+  if (claimTypes.includes("firstLine")) {
+    const nums = getNumbersInRow(ticket, 0);
+    if (nums.length === 5 && nums.every((n) => drawnSet.has(n))) toApply.push("firstLine");
+  }
+  if (claimTypes.includes("middleLine")) {
+    const nums = getNumbersInRow(ticket, 1);
+    if (nums.length === 5 && nums.every((n) => drawnSet.has(n))) toApply.push("middleLine");
+  }
+  if (claimTypes.includes("lastLine")) {
+    const nums = getNumbersInRow(ticket, 2);
+    if (nums.length === 5 && nums.every((n) => drawnSet.has(n))) toApply.push("lastLine");
+  }
+  if (claimTypes.includes("jaldiFive") && jaldiFiveNumbers?.length === 5) {
+    if (jaldiFiveNumbers.every((n) => drawnSet.has(n))) toApply.push("jaldiFive");
+  }
+  if (claimTypes.includes("housie")) {
+    const nums = getAllNumbers(ticket);
+    if (nums.length === 15 && nums.every((n) => drawnSet.has(n))) toApply.push("housie");
+  }
+
+  if (toApply.length === 0) return { error: "No valid claims" };
+
+  for (const t of toApply) {
+    if (t === "firstLine") {
+      const nums = getNumbersInRow(ticket, 0);
+      if (!room.firstLineClaimed) room.firstLineClaimed = [];
+      room.firstLineClaimed.push({ playerId, playerName, winningNumber: getWinningNumber(drawn, nums) });
+    } else if (t === "middleLine") {
+      const nums = getNumbersInRow(ticket, 1);
+      if (!room.middleLineClaimed) room.middleLineClaimed = [];
+      room.middleLineClaimed.push({ playerId, playerName, winningNumber: getWinningNumber(drawn, nums) });
+    } else if (t === "lastLine") {
+      const nums = getNumbersInRow(ticket, 2);
+      if (!room.lastLineClaimed) room.lastLineClaimed = [];
+      room.lastLineClaimed.push({ playerId, playerName, winningNumber: getWinningNumber(drawn, nums) });
+    } else if (t === "jaldiFive" && jaldiFiveNumbers) {
+      if (!room.jaldiFiveClaimed) room.jaldiFiveClaimed = [];
+      room.jaldiFiveClaimed.push({ playerId, playerName, winningNumber: getWinningNumber(drawn, jaldiFiveNumbers) });
+    } else if (t === "housie") {
+      const nums = getAllNumbers(ticket);
+      if (!room.housieClaimed) room.housieClaimed = [];
+      room.housieClaimed.push({ playerId, playerName, winningNumber: getWinningNumber(drawn, nums) });
+      room.status = "ended";
+    }
+  }
   notifyRoomUpdated(upperCode);
   return { ok: true };
 }
@@ -171,18 +394,20 @@ export function claimJaldiFive(
   const room = rooms.get(upperCode);
   if (!room) return { error: "Room not found" };
   if (room.status !== "started") return { error: "Game not in progress" };
-  if (room.jaldiFiveClaimed) return { error: "Jaldi Five already claimed" };
   if (!Array.isArray(numbers) || numbers.length !== 5) {
     return { error: "Exactly 5 numbers required" };
   }
 
-  const drawnSet = new Set(room.drawnNumbers ?? []);
+  const drawn = room.drawnNumbers ?? [];
+  const drawnSet = new Set(drawn);
   const allInDrawn = numbers.every((n) => typeof n === "number" && n >= 1 && n <= 90 && drawnSet.has(n));
   if (!allInDrawn) {
     return { error: "Selected numbers are not all in the drawn list" };
   }
 
-  room.jaldiFiveClaimed = { playerId, playerName };
+  const winningNumber = getWinningNumber(drawn, numbers);
+  if (!room.jaldiFiveClaimed) room.jaldiFiveClaimed = [];
+  room.jaldiFiveClaimed.push({ playerId, playerName, winningNumber });
   notifyRoomUpdated(upperCode);
   return { ok: true };
 }

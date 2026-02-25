@@ -21,6 +21,13 @@ function clearRoomSession() {
   } catch {}
 }
 
+function clearSelectionsForRoom(code: string, myId: string) {
+  if (typeof window === "undefined" || !code || !myId) return;
+  try {
+    sessionStorage.removeItem(getSelectionsKey(code, myId));
+  } catch {}
+}
+
 type Player = {
   id: string;
   name: string;
@@ -29,6 +36,8 @@ type Player = {
 
 /** Ticket: 3 rows × 9 columns; null = empty cell */
 type TicketGrid = (number | null)[][];
+
+type ClaimEntry = { playerId: string; playerName: string; winningNumber: number };
 
 type RoomState = {
   code: string;
@@ -40,8 +49,46 @@ type RoomState = {
   totalAmount?: number;
   drawnNumbers?: number[];
   playerTickets?: Record<string, TicketGrid[]>;
-  jaldiFiveClaimed?: { playerId: string; playerName: string } | null;
+  jaldiFiveClaimed?: ClaimEntry[];
+  firstLineClaimed?: ClaimEntry[];
+  middleLineClaimed?: ClaimEntry[];
+  lastLineClaimed?: ClaimEntry[];
+  housieClaimed?: ClaimEntry[];
 };
+
+const SELECTIONS_KEY_PREFIX = "housie_selections_";
+
+function getSelectionsKey(code: string, myId: string) {
+  return `${SELECTIONS_KEY_PREFIX}${code.toUpperCase()}_${myId}`;
+}
+
+function loadSelections(code: string, myId: string): Record<number, Set<number>> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = sessionStorage.getItem(getSelectionsKey(code, myId));
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as Record<string, number[]>;
+    const out: Record<number, Set<number>> = {};
+    for (const [k, arr] of Object.entries(parsed)) {
+      const idx = parseInt(k, 10);
+      if (!Number.isNaN(idx) && Array.isArray(arr)) out[idx] = new Set(arr);
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+function saveSelections(code: string, myId: string, selectedByTicket: Record<number, Set<number>>) {
+  if (typeof window === "undefined" || !code || !myId) return;
+  try {
+    const obj: Record<string, number[]> = {};
+    for (const [k, set] of Object.entries(selectedByTicket)) {
+      obj[String(k)] = Array.from(set);
+    }
+    sessionStorage.setItem(getSelectionsKey(code, myId), JSON.stringify(obj));
+  } catch {}
+}
 
 export default function RoomPage() {
   const params = useParams();
@@ -65,6 +112,7 @@ export default function RoomPage() {
   /** Per-ticket selected numbers (ticketIndex -> Set of numbers) for Jaldi Five */
   const [selectedByTicket, setSelectedByTicket] = useState<Record<number, Set<number>>>({});
   const socketRef = useRef<Socket | null>(null);
+  const selectionsLoadedRef = useRef(false);
 
   const isHost = Boolean(hostId && room?.hostId === hostId);
   const myId = isHost ? hostId : playerId;
@@ -83,12 +131,33 @@ export default function RoomPage() {
     }
   }, [code, room, hostId, playerId]);
 
-  // When game is ended, clear session and send everyone to home
+  // When game is ended we show the winners screen; user clicks "Back to home" to leave
+
+  // Load persisted selections once when game is started (e.g. after refresh)
   useEffect(() => {
-    if (!room || room.status !== "ended") return;
-    clearRoomSession();
-    router.replace("/");
-  }, [room?.status, router]);
+    if (room?.status !== "started") {
+      selectionsLoadedRef.current = false;
+      return;
+    }
+    if (!code || !myId || selectionsLoadedRef.current) return;
+    const loaded = loadSelections(code, myId);
+    if (Object.keys(loaded).length > 0) {
+      setSelectedByTicket((prev) => {
+        const next = { ...prev };
+        for (const [k, set] of Object.entries(loaded)) {
+          const idx = parseInt(k, 10);
+          if (!Number.isNaN(idx) && set.size) next[idx] = set;
+        }
+        return next;
+      });
+    }
+    selectionsLoadedRef.current = true;
+  }, [code, myId, room?.status]);
+
+  useEffect(() => {
+    if (!code || !myId || room?.status !== "started") return;
+    saveSelections(code, myId, selectedByTicket);
+  }, [code, myId, room?.status, selectedByTicket]);
 
   const handleGoHome = async (e: React.MouseEvent) => {
     if (!canQuitAsPlayer) return;
@@ -185,25 +254,79 @@ export default function RoomPage() {
     setClaimError("");
   };
 
-  const handleClaimJaldiFive = async (ticketIndex: number) => {
-    const numbers = selectedByTicket[ticketIndex];
-    if (!numbers || numbers.size !== 5) return;
-    const numList = Array.from(numbers);
-    const myName = room?.players.find((p) => p.id === myId)?.name ?? (isHost ? "Host" : "Player");
-    if (!myId) return;
+  const myName = room?.players.find((p) => p.id === myId)?.name ?? (isHost ? "Host" : "Player");
+
+  type ClaimType = "jaldiFive" | "firstLine" | "middleLine" | "lastLine" | "housie";
+
+  const addClaimedNumbersToSelection = (
+    ticketIndex: number,
+    types: ClaimType[],
+    ticket: TicketGrid,
+    jaldiFiveNums?: number[]
+  ) => {
+    const toAdd = new Set<number>();
+    if (types.includes("firstLine")) getNumbersInRow(ticket, 0).forEach((n) => toAdd.add(n));
+    if (types.includes("middleLine")) getNumbersInRow(ticket, 1).forEach((n) => toAdd.add(n));
+    if (types.includes("lastLine")) getNumbersInRow(ticket, 2).forEach((n) => toAdd.add(n));
+    if (types.includes("jaldiFive") && jaldiFiveNums?.length === 5) jaldiFiveNums.forEach((n) => toAdd.add(n));
+    if (types.includes("housie")) getAllNumbersInTicket(ticket).forEach((n) => toAdd.add(n));
+    if (toAdd.size === 0) return;
+    setSelectedByTicket((prev) => {
+      const next = { ...prev };
+      const existing = next[ticketIndex] ?? new Set();
+      next[ticketIndex] = new Set([...existing, ...toAdd]);
+      return next;
+    });
+  };
+
+  const handleClaim = async (
+    ticketIndex: number,
+    claimTypes: ClaimType[],
+    jaldiFiveNumbers?: number[]
+  ) => {
+    if (!myId || !room || claimTypes.length === 0) return;
+    const ticket = room.playerTickets?.[myId]?.[ticketIndex];
+    if (!ticket) return;
+    if (claimTypes.includes("jaldiFive") && (!jaldiFiveNumbers || jaldiFiveNumbers.length !== 5)) return;
+
     setClaimError("");
     setClaiming(true);
     try {
-      const res = await fetch(`/api/rooms/${encodeURIComponent(code)}/claim/jaldi-five`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ playerId: myId, playerName: myName, numbers: numList }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && data.room) {
-        setRoom(data.room);
+      if (claimTypes.length === 1) {
+        const path = claimTypes[0] === "jaldiFive" ? "jaldi-five" : claimTypes[0] === "firstLine" ? "first-line" : claimTypes[0] === "middleLine" ? "middle-line" : claimTypes[0] === "lastLine" ? "last-line" : "housie";
+        const body: Record<string, unknown> = { playerId: myId, playerName: myName, ticketIndex };
+        if (claimTypes[0] === "jaldiFive") body.numbers = jaldiFiveNumbers;
+        const res = await fetch(`/api/rooms/${encodeURIComponent(code)}/claim/${path}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.room) {
+          setRoom(data.room);
+          addClaimedNumbersToSelection(ticketIndex, claimTypes, data.room.playerTickets?.[myId]?.[ticketIndex] ?? ticket, jaldiFiveNumbers);
+        } else {
+          setClaimError(data.error ?? "Claim failed");
+        }
       } else {
-        setClaimError(data.error ?? "Claim failed");
+        const res = await fetch(`/api/rooms/${encodeURIComponent(code)}/claim/multiple`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            playerId: myId,
+            playerName: myName,
+            ticketIndex,
+            claimTypes,
+            jaldiFiveNumbers: claimTypes.includes("jaldiFive") ? jaldiFiveNumbers : undefined,
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.room) {
+          setRoom(data.room);
+          addClaimedNumbersToSelection(ticketIndex, claimTypes, data.room.playerTickets?.[myId]?.[ticketIndex] ?? ticket, jaldiFiveNumbers);
+        } else {
+          setClaimError(data.error ?? "Claim failed");
+        }
       }
     } finally {
       setClaiming(false);
@@ -437,12 +560,53 @@ export default function RoomPage() {
             onToggleNumber={toggleTicketNumber}
             claiming={claiming}
             claimError={claimError}
-            onClaimJaldiFive={handleClaimJaldiFive}
+            onClaim={handleClaim}
+          />
+        )}
+
+        {room.status === "ended" && (
+          <WinnersScreen
+            room={room}
+            onBackHome={() => {
+              clearRoomSession();
+              if (myId) clearSelectionsForRoom(code, myId);
+              router.push("/");
+            }}
           />
         )}
       </main>
     </div>
   );
+}
+
+function getNumbersInRow(ticket: TicketGrid, rowIndex: number): number[] {
+  const row = ticket[rowIndex];
+  if (!row) return [];
+  return row.filter((c): c is number => c !== null);
+}
+
+function getAllNumbersInTicket(ticket: TicketGrid): number[] {
+  const out: number[] = [];
+  for (let r = 0; r < ticket.length; r++) {
+    for (let c = 0; c < ticket[r]!.length; c++) {
+      const v = ticket[r]![c];
+      if (v !== null) out.push(v);
+    }
+  }
+  return out;
+}
+
+const CLAIM_LABELS: Record<string, string> = {
+  jaldiFive: "Jaldi Five",
+  firstLine: "First Line",
+  middleLine: "Middle Line",
+  lastLine: "Last Line",
+  housie: "Housie",
+};
+
+/** In-game: show only the winning (last) number per claim. */
+function formatClaimWinner(entry: ClaimEntry) {
+  return `${entry.playerName} (${entry.winningNumber})`;
 }
 
 function GameScreen({
@@ -455,7 +619,7 @@ function GameScreen({
   onToggleNumber,
   claiming,
   claimError,
-  onClaimJaldiFive,
+  onClaim,
 }: {
   room: RoomState;
   isHost: boolean;
@@ -466,7 +630,7 @@ function GameScreen({
   onToggleNumber: (ticketIndex: number, num: number) => void;
   claiming: boolean;
   claimError: string;
-  onClaimJaldiFive: (ticketIndex: number) => void;
+  onClaim: (ticketIndex: number, claimTypes: ("jaldiFive" | "firstLine" | "middleLine" | "lastLine" | "housie")[], jaldiFiveNumbers?: number[]) => void;
 }) {
   const tickets = (room.playerTickets && myId ? room.playerTickets[myId] : null) ?? [];
   const drawn = room.drawnNumbers ?? [];
@@ -475,14 +639,11 @@ function GameScreen({
 
   return (
     <div className="space-y-6">
-      {/* Current number: display for all; host also gets Pick next button */}
       <section className="rounded-lg border-2 border-neutral-400 bg-white p-6 text-center">
         <p className="text-sm font-medium text-neutral-600 mb-1">Current number</p>
         {isHost ? (
           <div className="flex flex-col gap-3 items-center">
-            <p className="text-4xl font-bold text-neutral-900">
-              {currentNumber ?? "—"}
-            </p>
+            <p className="text-4xl font-bold text-neutral-900">{currentNumber ?? "—"}</p>
             <button
               type="button"
               onClick={onDrawNumber}
@@ -493,25 +654,37 @@ function GameScreen({
             </button>
           </div>
         ) : (
-          <p className="text-4xl font-bold text-neutral-900">
-            {currentNumber ?? "—"}
-          </p>
+          <p className="text-4xl font-bold text-neutral-900">{currentNumber ?? "—"}</p>
         )}
       </section>
 
-      {room.jaldiFiveClaimed && (
-        <section className="rounded-lg border border-green-500 bg-green-50 p-4 text-center">
-          <p className="font-medium text-green-800">
-            Jaldi Five claimed by {room.jaldiFiveClaimed.playerName}!
-          </p>
+      {(room.jaldiFiveClaimed?.length || room.firstLineClaimed?.length || room.middleLineClaimed?.length || room.lastLineClaimed?.length) ? (
+        <section className="rounded-lg border border-green-500 bg-green-50 p-3 text-center space-y-1">
+          {room.jaldiFiveClaimed?.length ? (
+            <p className="text-sm font-medium text-green-800">
+              Jaldi Five: {room.jaldiFiveClaimed.map(formatClaimWinner).join(", ")}
+            </p>
+          ) : null}
+          {room.firstLineClaimed?.length ? (
+            <p className="text-sm font-medium text-green-800">
+              First line: {room.firstLineClaimed.map(formatClaimWinner).join(", ")}
+            </p>
+          ) : null}
+          {room.middleLineClaimed?.length ? (
+            <p className="text-sm font-medium text-green-800">
+              Middle line: {room.middleLineClaimed.map(formatClaimWinner).join(", ")}
+            </p>
+          ) : null}
+          {room.lastLineClaimed?.length ? (
+            <p className="text-sm font-medium text-green-800">
+              Last line: {room.lastLineClaimed.map(formatClaimWinner).join(", ")}
+            </p>
+          ) : null}
         </section>
-      )}
+      ) : null}
 
-      {claimError && (
-        <p className="text-sm text-red-600 text-center">{claimError}</p>
-      )}
+      {claimError && <p className="text-sm text-red-600 text-center">{claimError}</p>}
 
-      {/* My tickets */}
       <section>
         <h2 className="font-medium text-neutral-800 mb-3">My tickets</h2>
         <div className="space-y-6">
@@ -521,53 +694,93 @@ function GameScreen({
             tickets.map((ticket, ticketIndex) => {
               const selected = selectedByTicket[ticketIndex] ?? new Set();
               const selectedList = Array.from(selected);
-              const allFiveDrawn = selectedList.length === 5 && selectedList.every((n) => drawnSet.has(n));
-              const canClaim = allFiveDrawn && !room.jaldiFiveClaimed;
+              const alreadyClaimedByMe = (arr?: ClaimEntry[]) => arr?.some((e) => e.playerId === myId) ?? false;
+              const jaldiFiveOk =
+                selectedList.length === 5 &&
+                selectedList.every((n) => drawnSet.has(n)) &&
+                !alreadyClaimedByMe(room.jaldiFiveClaimed);
+
+              const row0 = getNumbersInRow(ticket, 0);
+              const row1 = getNumbersInRow(ticket, 1);
+              const row2 = getNumbersInRow(ticket, 2);
+              const firstLineOk =
+                row0.length === 5 && row0.every((n) => drawnSet.has(n)) && !alreadyClaimedByMe(room.firstLineClaimed);
+              const middleLineOk =
+                row1.length === 5 && row1.every((n) => drawnSet.has(n)) && !alreadyClaimedByMe(room.middleLineClaimed);
+              const lastLineOk =
+                row2.length === 5 && row2.every((n) => drawnSet.has(n)) && !alreadyClaimedByMe(room.lastLineClaimed);
+              const all15 = getAllNumbersInTicket(ticket);
+              const housieOk =
+                all15.length === 15 && all15.every((n) => drawnSet.has(n)) && !alreadyClaimedByMe(room.housieClaimed);
+              const row0Complete = row0.length === 5 && row0.every((n) => drawnSet.has(n));
+              const row1Complete = row1.length === 5 && row1.every((n) => drawnSet.has(n));
+              const row2Complete = row2.length === 5 && row2.every((n) => drawnSet.has(n));
+
+              const eligibleTypes: ("jaldiFive" | "firstLine" | "middleLine" | "lastLine" | "housie")[] = [];
+              if (jaldiFiveOk) eligibleTypes.push("jaldiFive");
+              if (firstLineOk) eligibleTypes.push("firstLine");
+              if (middleLineOk) eligibleTypes.push("middleLine");
+              if (lastLineOk) eligibleTypes.push("lastLine");
+              if (housieOk) eligibleTypes.push("housie");
+
+              const hasAnyClaim = eligibleTypes.length > 0;
+
+              const handleClaimClick = () => {
+                onClaim(
+                  ticketIndex,
+                  eligibleTypes,
+                  eligibleTypes.includes("jaldiFive") ? selectedList : undefined
+                );
+              };
+
               return (
                 <div key={ticketIndex} className="relative rounded-lg border border-neutral-300 bg-white p-3">
                   <p className="text-xs text-neutral-500 mb-2">Ticket {ticketIndex + 1}</p>
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse text-center" style={{ minWidth: 280 }}>
                       <tbody>
-                        {ticket.map((row, r) => (
-                          <tr key={r}>
-                            {row.map((cell, c) => {
-                              const num = cell;
-                              const isDrawn = num !== null && drawnSet.has(num);
-                              const isSelected = num !== null && selected.has(num);
-                              return (
-                                <td
-                                  key={c}
-                                  className={`border border-neutral-300 p-1 w-8 h-9 text-sm select-none ${
-                                    num === null
-                                      ? "bg-neutral-100"
-                                      : isSelected
-                                        ? "bg-green-400 text-white font-medium"
-                                        : isDrawn
-                                          ? "bg-green-100"
-                                          : "bg-white hover:bg-neutral-100 cursor-pointer"
-                                  }`}
-                                  onClick={() => num !== null && onToggleNumber(ticketIndex, num)}
-                                  role={num !== null ? "button" : undefined}
-                                >
-                                  {num ?? ""}
-                                </td>
-                              );
-                            })}
-                          </tr>
-                        ))}
+                        {ticket.map((row, r) => {
+                          const rowComplete = r === 0 ? row0Complete : r === 1 ? row1Complete : row2Complete;
+                          return (
+                            <tr key={r}>
+                              {row.map((cell, c) => {
+                                const num = cell;
+                                const isDrawn = num !== null && drawnSet.has(num);
+                                const isSelected = num !== null && selected.has(num);
+                                return (
+                                  <td
+                                    key={c}
+                                    className={`border border-neutral-300 p-1 w-8 h-9 text-sm select-none relative z-0 ${
+                                      num === null
+                                        ? "bg-neutral-100"
+                                        : isSelected
+                                          ? "bg-green-400 text-white font-medium"
+                                          : isDrawn
+                                            ? "bg-green-100"
+                                            : "bg-white hover:bg-neutral-100 cursor-pointer"
+                                    } ${rowComplete ? "line-through decoration-2 decoration-red-500" : ""}`}
+                                    onClick={() => num !== null && onToggleNumber(ticketIndex, num)}
+                                    role={num !== null ? "button" : undefined}
+                                  >
+                                    {num ?? ""}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
-                  {canClaim && (
-                    <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/50">
+                  {hasAnyClaim && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-lg bg-black/60 p-4">
                       <button
                         type="button"
-                        onClick={() => onClaimJaldiFive(ticketIndex)}
+                        onClick={handleClaimClick}
                         disabled={claiming}
-                        className="rounded-lg bg-green-600 px-6 py-3 text-white font-medium shadow-lg hover:bg-green-700 disabled:opacity-50"
+                        className="rounded-lg bg-green-600 px-4 py-3 text-sm font-medium text-white shadow-lg hover:bg-green-700 disabled:opacity-50"
                       >
-                        {claiming ? "Claiming…" : "Claim Jaldi Five"}
+                        {claiming ? "Claiming…" : `Claim ${eligibleTypes.map((t) => CLAIM_LABELS[t]).join(" & ")}`}
                       </button>
                     </div>
                   )}
@@ -577,6 +790,60 @@ function GameScreen({
           )}
         </div>
       </section>
+    </div>
+  );
+}
+
+function WinnersScreen({
+  room,
+  onBackHome,
+}: {
+  room: RoomState;
+  onBackHome: () => void;
+}) {
+  const w = room;
+  const totalAmount = w.totalAmount ?? 0;
+  const poolPerType = totalAmount > 0 ? totalAmount / 5 : 0;
+
+  const renderWinners = (label: string, entries?: ClaimEntry[]) => {
+    if (!entries?.length) return null;
+    const prizeEach = poolPerType / entries.length;
+    return (
+      <li className="text-neutral-700">
+        <span className="font-medium">{label}:</span>{" "}
+        {entries.map((e) => `${e.playerName} – ₹${Math.round(prizeEach)}`).join(", ")}
+      </li>
+    );
+  };
+
+  return (
+    <div className="rounded-lg border-2 border-neutral-400 bg-white p-6 space-y-4">
+      <h2 className="text-xl font-bold text-neutral-900 text-center">Game Over – Winners</h2>
+      <p className="text-sm text-neutral-500 text-center">Total pool: ₹{totalAmount} (₹{Math.round(poolPerType)} per claim type, split equally when multiple winners)</p>
+      <ul className="space-y-2 text-center">
+        {renderWinners("Jaldi Five", w.jaldiFiveClaimed)}
+        {renderWinners("First line", w.firstLineClaimed)}
+        {renderWinners("Middle line", w.middleLineClaimed)}
+        {renderWinners("Last line", w.lastLineClaimed)}
+        {w.housieClaimed?.length ? (
+          <li className="text-lg font-semibold text-green-700">
+            <span className="font-medium">Housie:</span>{" "}
+            {w.housieClaimed.map((e) => {
+              const prizeEach = poolPerType / w.housieClaimed!.length;
+              return `${e.playerName} – ₹${Math.round(prizeEach)}`;
+            }).join(", ")}
+          </li>
+        ) : null}
+      </ul>
+      <div className="pt-4 text-center">
+        <button
+          type="button"
+          onClick={onBackHome}
+          className="rounded-lg bg-neutral-800 px-6 py-3 text-white font-medium hover:bg-neutral-900"
+        >
+          Back to home
+        </button>
+      </div>
     </div>
   );
 }
