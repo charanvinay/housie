@@ -88,6 +88,34 @@ export function joinRoom(
   };
 }
 
+export function leaveRoom(
+  code: string,
+  playerId: string
+): { ok: true } | { error: string } {
+  const upperCode = code.toUpperCase();
+  const room = rooms.get(upperCode);
+  if (!room) return { error: "Room not found" };
+  if (room.status !== "waiting") return { error: "Cannot leave after game has started" };
+  if (room.hostId === playerId) return { error: "Host cannot leave this way; close the room or start the game" };
+
+  const idx = room.players.findIndex((p) => p.id === playerId);
+  if (idx === -1) return { error: "Player not in room" };
+  room.players.splice(idx, 1);
+  notifyRoomUpdated(upperCode);
+  return { ok: true };
+}
+
+export function endRoom(code: string, hostId: string): { ok: true } | { error: string } {
+  const upperCode = code.toUpperCase();
+  const room = rooms.get(upperCode);
+  if (!room) return { error: "Room not found" };
+  if (room.hostId !== hostId) return { error: "Only the host can end the game" };
+  if (room.status === "ended") return { error: "Game already ended" };
+  room.status = "ended";
+  notifyRoomUpdated(upperCode);
+  return { ok: true };
+}
+
 export function updatePlayerTickets(
   code: string,
   playerId: string,

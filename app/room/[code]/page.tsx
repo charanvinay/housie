@@ -2,8 +2,24 @@
 
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { io, Socket } from "socket.io-client";
+
+const ROOM_SESSION_KEY = "housie_room";
+
+function saveRoomSession(code: string, role: "host" | "player", id: string) {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(ROOM_SESSION_KEY, JSON.stringify({ code: code.toUpperCase(), role, id }));
+  } catch {}
+}
+
+function clearRoomSession() {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.removeItem(ROOM_SESSION_KEY);
+  } catch {}
+}
 
 type Player = {
   id: string;
@@ -24,17 +40,89 @@ type RoomState = {
 export default function RoomPage() {
   const params = useParams();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const code = params.code as string;
   const hostId = searchParams.get("hostId");
   const playerId = searchParams.get("playerId");
 
   const [room, setRoom] = useState<RoomState | null>(null);
   const [error, setError] = useState("");
+  const [leaveError, setLeaveError] = useState("");
   const [link, setLink] = useState("");
   const [live, setLive] = useState(false);
+  const [leaving, setLeaving] = useState(false);
+  const [ending, setEnding] = useState(false);
   const socketRef = useRef<Socket | null>(null);
 
   const isHost = Boolean(hostId && room?.hostId === hostId);
+  const canQuitAsPlayer =
+    !isHost &&
+    playerId &&
+    room?.status === "waiting";
+
+  // Persist this tab’s room context so "/" can redirect back (per-tab via sessionStorage)
+  useEffect(() => {
+    if (!code || !room) return;
+    if (hostId && room.hostId === hostId) {
+      saveRoomSession(code, "host", hostId);
+    } else if (playerId && room.players.some((p) => p.id === playerId)) {
+      saveRoomSession(code, "player", playerId);
+    }
+  }, [code, room, hostId, playerId]);
+
+  // When game is ended, clear session and send everyone to home
+  useEffect(() => {
+    if (!room || room.status !== "ended") return;
+    clearRoomSession();
+    router.replace("/");
+  }, [room?.status, router]);
+
+  const handleGoHome = async (e: React.MouseEvent) => {
+    if (!canQuitAsPlayer) return;
+    e.preventDefault();
+    if (leaving) return;
+    setLeaveError("");
+    setLeaving(true);
+    try {
+      const res = await fetch(`/api/rooms/${encodeURIComponent(code)}/leave`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerId }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setLeaveError(data.error || "Failed to leave room");
+        setLeaving(false);
+        return;
+      }
+      clearRoomSession();
+      router.push("/");
+    } catch {
+      setLeaveError("Failed to leave room");
+      setLeaving(false);
+    }
+  };
+
+  const handleEndGame = async () => {
+    if (!isHost || room?.status !== "waiting" || !hostId) return;
+    if (ending) return;
+    setEnding(true);
+    try {
+      const res = await fetch(`/api/rooms/${encodeURIComponent(code)}/end`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hostId }),
+      });
+      if (!res.ok) {
+        setEnding(false);
+        return;
+      }
+      clearRoomSession();
+      router.push("/");
+    } catch {
+      setEnding(false);
+    }
+  };
 
   useEffect(() => {
     if (!code) return;
@@ -139,9 +227,23 @@ export default function RoomPage() {
   return (
     <div className="min-h-screen bg-neutral-100">
       <header className="border-b border-neutral-300 bg-white px-4 py-3">
-        <Link href="/" className="text-neutral-600 hover:text-neutral-800">
-          ← Home
-        </Link>
+        {canQuitAsPlayer ? (
+          <button
+            type="button"
+            onClick={handleGoHome}
+            disabled={leaving}
+            className="text-neutral-600 hover:text-neutral-800 disabled:opacity-50"
+          >
+            {leaving ? "Leaving…" : "← Home"}
+          </button>
+        ) : (
+          <Link href="/" className="text-neutral-600 hover:text-neutral-800">
+            ← Home
+          </Link>
+        )}
+        {leaveError && (
+          <p className="mt-2 text-sm text-red-600">{leaveError}</p>
+        )}
         <div className="mt-2 flex items-center justify-between flex-wrap gap-2">
           <h1 className="text-xl font-semibold text-neutral-800">
             Room {room.code}
@@ -214,9 +316,19 @@ export default function RoomPage() {
         </section>
 
         {room.status === "waiting" && isHost && (
-          <p className="text-sm text-neutral-500 text-center">
-            Start game button can be added next (when you implement game start).
-          </p>
+          <div className="flex flex-col gap-3 items-center">
+            <p className="text-sm text-neutral-500">
+              Start game button can be added next (when you implement game start).
+            </p>
+            <button
+              type="button"
+              onClick={handleEndGame}
+              disabled={ending}
+              className="rounded-lg border border-red-300 bg-red-50 px-4 py-2 text-sm font-medium text-red-800 hover:bg-red-100 disabled:opacity-50"
+            >
+              {ending ? "Ending…" : "End game"}
+            </button>
+          </div>
         )}
       </main>
     </div>
