@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "socket": "node scripts/socket-server.js",
+    "socket": "nodemon scripts/socket-server.js",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
@@ -12,6 +12,7 @@
   "dependencies": {
     "framer-motion": "^12.34.2",
     "next": "16.1.6",
+    "nodemon": "^3.1.14",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "socket.io": "^4.8.3",

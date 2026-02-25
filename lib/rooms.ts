@@ -3,6 +3,9 @@
  * Room code → room state. No persistence (resets on server restart).
  */
 
+import type { Ticket } from "./ticket";
+import { generateTickets } from "./ticket";
+
 export type Player = {
   id: string;
   name: string;
@@ -17,6 +20,12 @@ export type Room = {
   players: Player[];
   status: "waiting" | "started" | "ended";
   createdAt: number;
+  /** Numbers drawn so far (after game starts). */
+  drawnNumbers?: number[];
+  /** Tickets per player (playerId -> tickets), set when game starts. */
+  playerTickets?: Record<string, Ticket[]>;
+  /** Set when someone successfully claims Jaldi Five. */
+  jaldiFiveClaimed?: { playerId: string; playerName: string } | null;
 };
 
 const rooms = new Map<string, Room>();
@@ -112,6 +121,68 @@ export function endRoom(code: string, hostId: string): { ok: true } | { error: s
   if (room.hostId !== hostId) return { error: "Only the host can end the game" };
   if (room.status === "ended") return { error: "Game already ended" };
   room.status = "ended";
+  notifyRoomUpdated(upperCode);
+  return { ok: true };
+}
+
+export function startGame(code: string, hostId: string): { ok: true } | { error: string } {
+  const upperCode = code.toUpperCase();
+  const room = rooms.get(upperCode);
+  if (!room) return { error: "Room not found" };
+  if (room.hostId !== hostId) return { error: "Only the host can start the game" };
+  if (room.status !== "waiting") return { error: "Game already started or ended" };
+
+  const playerTickets: Record<string, Ticket[]> = {};
+  for (const p of room.players) {
+    const count = Math.min(6, Math.max(0, p.ticketCount)) || 0;
+    playerTickets[p.id] = count > 0 ? generateTickets(count) : [];
+  }
+  room.playerTickets = playerTickets;
+  room.drawnNumbers = [];
+  room.jaldiFiveClaimed = null;
+  room.status = "started";
+  notifyRoomUpdated(upperCode);
+  return { ok: true };
+}
+
+export function drawNumber(code: string, hostId: string): { number: number } | { error: string } {
+  const upperCode = code.toUpperCase();
+  const room = rooms.get(upperCode);
+  if (!room) return { error: "Room not found" };
+  if (room.hostId !== hostId) return { error: "Only the host can draw numbers" };
+  if (room.status !== "started") return { error: "Game not in progress" };
+
+  const drawn = room.drawnNumbers ?? [];
+  if (drawn.length >= 90) return { error: "All numbers already drawn" };
+  const available = Array.from({ length: 90 }, (_, i) => i + 1).filter((n) => !drawn.includes(n));
+  const next = available[Math.floor(Math.random() * available.length)]!;
+  room.drawnNumbers = [...drawn, next];
+  notifyRoomUpdated(upperCode);
+  return { number: next };
+}
+
+export function claimJaldiFive(
+  code: string,
+  playerId: string,
+  playerName: string,
+  numbers: number[]
+): { ok: true } | { error: string } {
+  const upperCode = code.toUpperCase();
+  const room = rooms.get(upperCode);
+  if (!room) return { error: "Room not found" };
+  if (room.status !== "started") return { error: "Game not in progress" };
+  if (room.jaldiFiveClaimed) return { error: "Jaldi Five already claimed" };
+  if (!Array.isArray(numbers) || numbers.length !== 5) {
+    return { error: "Exactly 5 numbers required" };
+  }
+
+  const drawnSet = new Set(room.drawnNumbers ?? []);
+  const allInDrawn = numbers.every((n) => typeof n === "number" && n >= 1 && n <= 90 && drawnSet.has(n));
+  if (!allInDrawn) {
+    return { error: "Selected numbers are not all in the drawn list" };
+  }
+
+  room.jaldiFiveClaimed = { playerId, playerName };
   notifyRoomUpdated(upperCode);
   return { ok: true };
 }
