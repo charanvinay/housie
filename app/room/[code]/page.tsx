@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { io, Socket } from "socket.io-client";
@@ -42,7 +42,11 @@ type Player = {
 /** Ticket: 3 rows × 9 columns; null = empty cell */
 type TicketGrid = (number | null)[][];
 
-type ClaimEntry = { playerId: string; playerName: string; winningNumber: number };
+type ClaimEntry = {
+  playerId: string;
+  playerName: string;
+  winningNumber: number;
+};
 
 type RoomState = {
   code: string;
@@ -67,7 +71,10 @@ function getSelectionsKey(code: string, myId: string) {
   return `${SELECTIONS_KEY_PREFIX}${code.toUpperCase()}_${myId}`;
 }
 
-function loadSelections(code: string, myId: string): Record<number, Set<number>> {
+function loadSelections(
+  code: string,
+  myId: string
+): Record<number, Set<number>> {
   if (typeof window === "undefined") return {};
   try {
     const raw = sessionStorage.getItem(getSelectionsKey(code, myId));
@@ -84,7 +91,11 @@ function loadSelections(code: string, myId: string): Record<number, Set<number>>
   }
 }
 
-function saveSelections(code: string, myId: string, selectedByTicket: Record<number, Set<number>>) {
+function saveSelections(
+  code: string,
+  myId: string,
+  selectedByTicket: Record<number, Set<number>>
+) {
   if (typeof window === "undefined" || !code || !myId) return;
   try {
     const obj: Record<string, number[]> = {};
@@ -115,16 +126,15 @@ export default function RoomPage() {
   const [claiming, setClaiming] = useState(false);
   const [claimError, setClaimError] = useState("");
   /** Per-ticket selected numbers (ticketIndex -> Set of numbers) for Jaldi Five */
-  const [selectedByTicket, setSelectedByTicket] = useState<Record<number, Set<number>>>({});
+  const [selectedByTicket, setSelectedByTicket] = useState<
+    Record<number, Set<number>>
+  >({});
   const socketRef = useRef<Socket | null>(null);
   const selectionsLoadedRef = useRef(false);
 
   const isHost = Boolean(hostId && room?.hostId === hostId);
   const myId = isHost ? hostId : playerId;
-  const canQuitAsPlayer =
-    !isHost &&
-    playerId &&
-    room?.status === "waiting";
+  const canQuitAsPlayer = !isHost && playerId && room?.status === "waiting";
 
   // Persist this tab’s room context so "/" can redirect back (per-tab via sessionStorage)
   useEffect(() => {
@@ -270,9 +280,16 @@ export default function RoomPage() {
     setClaimError("");
   };
 
-  const myName = room?.players.find((p) => p.id === myId)?.name ?? (isHost ? "Host" : "Player");
+  const myName =
+    room?.players.find((p) => p.id === myId)?.name ??
+    (isHost ? "Host" : "Player");
 
-  type ClaimType = "jaldiFive" | "firstLine" | "middleLine" | "lastLine" | "housie";
+  type ClaimType =
+    | "jaldiFive"
+    | "firstLine"
+    | "middleLine"
+    | "lastLine"
+    | "housie";
 
   const addClaimedNumbersToSelection = (
     ticketIndex: number,
@@ -281,11 +298,16 @@ export default function RoomPage() {
     jaldiFiveNums?: number[]
   ) => {
     const toAdd = new Set<number>();
-    if (types.includes("firstLine")) getNumbersInRow(ticket, 0).forEach((n) => toAdd.add(n));
-    if (types.includes("middleLine")) getNumbersInRow(ticket, 1).forEach((n) => toAdd.add(n));
-    if (types.includes("lastLine")) getNumbersInRow(ticket, 2).forEach((n) => toAdd.add(n));
-    if (types.includes("jaldiFive") && jaldiFiveNums?.length === 5) jaldiFiveNums.forEach((n) => toAdd.add(n));
-    if (types.includes("housie")) getAllNumbersInTicket(ticket).forEach((n) => toAdd.add(n));
+    if (types.includes("firstLine"))
+      getNumbersInRow(ticket, 0).forEach((n) => toAdd.add(n));
+    if (types.includes("middleLine"))
+      getNumbersInRow(ticket, 1).forEach((n) => toAdd.add(n));
+    if (types.includes("lastLine"))
+      getNumbersInRow(ticket, 2).forEach((n) => toAdd.add(n));
+    if (types.includes("jaldiFive") && jaldiFiveNums?.length === 5)
+      jaldiFiveNums.forEach((n) => toAdd.add(n));
+    if (types.includes("housie"))
+      getAllNumbersInTicket(ticket).forEach((n) => toAdd.add(n));
     if (toAdd.size === 0) return;
     setSelectedByTicket((prev) => {
       const next = { ...prev };
@@ -303,43 +325,78 @@ export default function RoomPage() {
     if (!myId || !room || claimTypes.length === 0) return;
     const ticket = room.playerTickets?.[myId]?.[ticketIndex];
     if (!ticket) return;
-    if (claimTypes.includes("jaldiFive") && (!jaldiFiveNumbers || jaldiFiveNumbers.length !== 5)) return;
+    if (
+      claimTypes.includes("jaldiFive") &&
+      (!jaldiFiveNumbers || jaldiFiveNumbers.length !== 5)
+    )
+      return;
 
     setClaimError("");
     setClaiming(true);
     try {
       if (claimTypes.length === 1) {
-        const path = claimTypes[0] === "jaldiFive" ? "jaldi-five" : claimTypes[0] === "firstLine" ? "first-line" : claimTypes[0] === "middleLine" ? "middle-line" : claimTypes[0] === "lastLine" ? "last-line" : "housie";
-        const body: Record<string, unknown> = { playerId: myId, playerName: myName, ticketIndex };
+        const path =
+          claimTypes[0] === "jaldiFive"
+            ? "jaldi-five"
+            : claimTypes[0] === "firstLine"
+            ? "first-line"
+            : claimTypes[0] === "middleLine"
+            ? "middle-line"
+            : claimTypes[0] === "lastLine"
+            ? "last-line"
+            : "housie";
+        const body: Record<string, unknown> = {
+          playerId: myId,
+          playerName: myName,
+          ticketIndex,
+        };
         if (claimTypes[0] === "jaldiFive") body.numbers = jaldiFiveNumbers;
-        const res = await fetch(`/api/rooms/${encodeURIComponent(code)}/claim/${path}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
+        const res = await fetch(
+          `/api/rooms/${encodeURIComponent(code)}/claim/${path}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          }
+        );
         const data = await res.json().catch(() => ({}));
         if (res.ok && data.room) {
           setRoom(data.room);
-          addClaimedNumbersToSelection(ticketIndex, claimTypes, data.room.playerTickets?.[myId]?.[ticketIndex] ?? ticket, jaldiFiveNumbers);
+          addClaimedNumbersToSelection(
+            ticketIndex,
+            claimTypes,
+            data.room.playerTickets?.[myId]?.[ticketIndex] ?? ticket,
+            jaldiFiveNumbers
+          );
         } else {
           setClaimError(data.error ?? "Claim failed");
         }
       } else {
-        const res = await fetch(`/api/rooms/${encodeURIComponent(code)}/claim/multiple`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            playerId: myId,
-            playerName: myName,
-            ticketIndex,
-            claimTypes,
-            jaldiFiveNumbers: claimTypes.includes("jaldiFive") ? jaldiFiveNumbers : undefined,
-          }),
-        });
+        const res = await fetch(
+          `/api/rooms/${encodeURIComponent(code)}/claim/multiple`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              playerId: myId,
+              playerName: myName,
+              ticketIndex,
+              claimTypes,
+              jaldiFiveNumbers: claimTypes.includes("jaldiFive")
+                ? jaldiFiveNumbers
+                : undefined,
+            }),
+          }
+        );
         const data = await res.json().catch(() => ({}));
         if (res.ok && data.room) {
           setRoom(data.room);
-          addClaimedNumbersToSelection(ticketIndex, claimTypes, data.room.playerTickets?.[myId]?.[ticketIndex] ?? ticket, jaldiFiveNumbers);
+          addClaimedNumbersToSelection(
+            ticketIndex,
+            claimTypes,
+            data.room.playerTickets?.[myId]?.[ticketIndex] ?? ticket,
+            jaldiFiveNumbers
+          );
         } else {
           setClaimError(data.error ?? "Claim failed");
         }
@@ -455,7 +512,8 @@ export default function RoomPage() {
     );
   }
 
-  const totalTickets = room.totalTickets ?? room.players.reduce((s, p) => s + p.ticketCount, 0);
+  const totalTickets =
+    room.totalTickets ?? room.players.reduce((s, p) => s + p.ticketCount, 0);
   const totalAmount = room.totalAmount ?? totalTickets * room.ticketPrice;
 
   return (
@@ -490,7 +548,9 @@ export default function RoomPage() {
             )}
             <span
               className={`rounded px-2 py-0.5 text-sm ${
-                live ? "bg-green-100 text-green-800" : "bg-neutral-200 text-neutral-600"
+                live
+                  ? "bg-green-100 text-green-800"
+                  : "bg-neutral-200 text-neutral-600"
               }`}
               title={live ? "Real-time updates on" : "Connecting…"}
             >
@@ -505,7 +565,9 @@ export default function RoomPage() {
           <>
             <section className="rounded-lg border border-neutral-300 bg-white p-4">
               <p className="text-sm text-neutral-600">Ticket price</p>
-              <p className="text-lg font-semibold">₹{room.ticketPrice} per ticket</p>
+              <p className="text-lg font-semibold">
+                ₹{room.ticketPrice} per ticket
+              </p>
             </section>
 
             {isHost && link && (
@@ -526,15 +588,14 @@ export default function RoomPage() {
               <h2 className="font-medium text-neutral-800 mb-2">Players</h2>
               <ul className="space-y-2">
                 {room.players.map((p) => (
-                  <li
-                    key={p.id}
-                    className="flex justify-between text-sm"
-                  >
+                  <li key={p.id} className="flex justify-between text-sm">
                     <span>
                       {p.name}
                       {p.id === room.hostId && " (Host)"}
                     </span>
-                    <span>{p.ticketCount} ticket{p.ticketCount !== 1 ? "s" : ""}</span>
+                    <span>
+                      {p.ticketCount} ticket{p.ticketCount !== 1 ? "s" : ""}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -551,38 +612,59 @@ export default function RoomPage() {
               </div>
             </section>
 
-            {totalAmount > 0 && (() => {
-              const prizes = getClaimPrizeAmounts(totalAmount);
-              const rows: { label: string; amount: number }[] = [
-                { label: "Jaldi Five", amount: prizes.jaldiFive },
-                { label: "First line", amount: prizes.firstLine },
-                { label: "Middle line", amount: prizes.middleLine },
-                { label: "Last line", amount: prizes.lastLine },
-                { label: "Housie", amount: prizes.housie },
-              ];
-              return (
-                <section className="rounded-lg border border-neutral-300 bg-white p-4">
-                  <h2 className="font-medium text-neutral-800 mb-2">Prize split</h2>
-                  <p className="text-xs text-neutral-500 mb-2">Split equally when multiple winners for the same claim. {Math.min(prizes.jaldiFive, prizes.firstLine, prizes.housie) < 5 ? "Small pool: amounts in multiples of ₹2." : "Minimum ₹5 per claim."}</p>
-                  <table className="w-full text-sm border-collapse">
-                    <thead>
-                      <tr className="border-b border-neutral-300">
-                        <th className="text-left py-2 font-medium text-neutral-700">Claim type</th>
-                        <th className="text-right py-2 font-medium text-neutral-700">Amount you will receive</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rows.map(({ label, amount }) => (
-                        <tr key={label} className="border-b border-neutral-200">
-                          <td className="py-2 text-neutral-800">{label}</td>
-                          <td className="py-2 text-right font-medium">₹{amount}</td>
+            {totalAmount > 0 &&
+              (() => {
+                const prizes = getClaimPrizeAmounts(totalAmount);
+                const rows: { label: string; amount: number }[] = [
+                  { label: "Jaldi Five", amount: prizes.jaldiFive },
+                  { label: "First line", amount: prizes.firstLine },
+                  { label: "Middle line", amount: prizes.middleLine },
+                  { label: "Last line", amount: prizes.lastLine },
+                  { label: "Housie", amount: prizes.housie },
+                ];
+                return (
+                  <section className="rounded-lg border border-neutral-300 bg-white p-4">
+                    <h2 className="font-medium text-neutral-800 mb-2">
+                      Prize split
+                    </h2>
+                    <p className="text-xs text-neutral-500 mb-2">
+                      Split equally when multiple winners for the same claim.{" "}
+                      {Math.min(
+                        prizes.jaldiFive,
+                        prizes.firstLine,
+                        prizes.housie
+                      ) < 5
+                        ? "Small pool: amounts in multiples of ₹2."
+                        : "Minimum ₹5 per claim."}
+                    </p>
+                    <table className="w-full text-sm border-collapse">
+                      <thead>
+                        <tr className="border-b border-neutral-300">
+                          <th className="text-left py-2 font-medium text-neutral-700">
+                            Claim type
+                          </th>
+                          <th className="text-right py-2 font-medium text-neutral-700">
+                            Amount you will receive
+                          </th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </section>
-              );
-            })()}
+                      </thead>
+                      <tbody>
+                        {rows.map(({ label, amount }) => (
+                          <tr
+                            key={label}
+                            className="border-b border-neutral-200"
+                          >
+                            <td className="py-2 text-neutral-800">{label}</td>
+                            <td className="py-2 text-right font-medium">
+                              ₹{amount}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </section>
+                );
+              })()}
 
             {isHost && (
               <div className="flex flex-col gap-3 items-center">
@@ -590,13 +672,19 @@ export default function RoomPage() {
                   type="button"
                   onClick={handleStartGame}
                   disabled={starting || !live}
-                  title={!live ? "Connect to real-time updates to start the game" : undefined}
+                  title={
+                    !live
+                      ? "Connect to real-time updates to start the game"
+                      : undefined
+                  }
                   className="rounded-lg border-2 border-green-600 bg-green-600 px-6 py-3 text-base font-medium text-white hover:bg-green-700 disabled:opacity-50"
                 >
                   {starting ? "Starting…" : "Start game"}
                 </button>
                 {!live && (
-                  <p className="text-xs text-neutral-500 text-center">Start game is available when the connection is live.</p>
+                  <p className="text-xs text-neutral-500 text-center">
+                    Start game is available when the connection is live.
+                  </p>
                 )}
                 <button
                   type="button"
@@ -628,8 +716,8 @@ export default function RoomPage() {
           />
         )}
 
-        {room.status === "ended" && (
-          (room.drawnNumbers?.length ?? 0) > 0 ||
+        {room.status === "ended" &&
+          ((room.drawnNumbers?.length ?? 0) > 0 ||
           room.jaldiFiveClaimed?.length ||
           room.firstLineClaimed?.length ||
           room.middleLineClaimed?.length ||
@@ -651,8 +739,7 @@ export default function RoomPage() {
                 router.push("/");
               }}
             />
-          )
-        )}
+          ))}
       </main>
     </div>
   );
@@ -676,7 +763,10 @@ function getAllNumbersInTicket(ticket: TicketGrid): number[] {
 }
 
 /** Last number in drawn order that appears in the set (winning number for a claim). */
-function getWinningNumberForSet(drawn: number[], numbers: number[]): number | null {
+function getWinningNumberForSet(
+  drawn: number[],
+  numbers: number[]
+): number | null {
   const set = new Set(numbers);
   for (let i = drawn.length - 1; i >= 0; i--) {
     if (set.has(drawn[i]!)) return drawn[i]!;
@@ -720,11 +810,22 @@ function GameScreen({
   onToggleNumber: (ticketIndex: number, num: number) => void;
   claiming: boolean;
   claimError: string;
-  onClaim: (ticketIndex: number, claimTypes: ("jaldiFive" | "firstLine" | "middleLine" | "lastLine" | "housie")[], jaldiFiveNumbers?: number[]) => void;
+  onClaim: (
+    ticketIndex: number,
+    claimTypes: (
+      | "jaldiFive"
+      | "firstLine"
+      | "middleLine"
+      | "lastLine"
+      | "housie"
+    )[],
+    jaldiFiveNumbers?: number[]
+  ) => void;
   onEndGame: () => void;
   ending: boolean;
 }) {
-  const tickets = (room.playerTickets && myId ? room.playerTickets[myId] : null) ?? [];
+  const tickets =
+    (room.playerTickets && myId ? room.playerTickets[myId] : null) ?? [];
   const drawn = room.drawnNumbers ?? [];
   const currentNumber = drawn.length > 0 ? drawn[drawn.length - 1]! : null;
   const drawnSet = new Set(drawn);
@@ -732,10 +833,14 @@ function GameScreen({
   return (
     <div className="space-y-6">
       <section className="rounded-lg border-2 border-neutral-400 bg-white p-6 text-center">
-        <p className="text-sm font-medium text-neutral-600 mb-1">Current number</p>
+        <p className="text-sm font-medium text-neutral-600 mb-1">
+          Current number
+        </p>
         {isHost ? (
           <div className="flex flex-col gap-3 items-center">
-            <p className="text-4xl font-bold text-neutral-900">{currentNumber ?? "—"}</p>
+            <p className="text-4xl font-bold text-neutral-900">
+              {currentNumber ?? "—"}
+            </p>
             <button
               type="button"
               onClick={onDrawNumber}
@@ -754,36 +859,47 @@ function GameScreen({
             </button>
           </div>
         ) : (
-          <p className="text-4xl font-bold text-neutral-900">{currentNumber ?? "—"}</p>
+          <p className="text-4xl font-bold text-neutral-900">
+            {currentNumber ?? "—"}
+          </p>
         )}
       </section>
 
-      {(room.jaldiFiveClaimed?.length || room.firstLineClaimed?.length || room.middleLineClaimed?.length || room.lastLineClaimed?.length) ? (
+      {room.jaldiFiveClaimed?.length ||
+      room.firstLineClaimed?.length ||
+      room.middleLineClaimed?.length ||
+      room.lastLineClaimed?.length ? (
         <section className="rounded-lg border border-green-500 bg-green-50 p-3 text-center space-y-1">
           {room.jaldiFiveClaimed?.length ? (
             <p className="text-sm font-medium text-green-800">
-              Jaldi Five: {room.jaldiFiveClaimed.map(formatClaimWinner).join(", ")}
+              Jaldi Five:{" "}
+              {room.jaldiFiveClaimed.map(formatClaimWinner).join(", ")}
             </p>
           ) : null}
           {room.firstLineClaimed?.length ? (
             <p className="text-sm font-medium text-green-800">
-              First line: {room.firstLineClaimed.map(formatClaimWinner).join(", ")}
+              First line:{" "}
+              {room.firstLineClaimed.map(formatClaimWinner).join(", ")}
             </p>
           ) : null}
           {room.middleLineClaimed?.length ? (
             <p className="text-sm font-medium text-green-800">
-              Middle line: {room.middleLineClaimed.map(formatClaimWinner).join(", ")}
+              Middle line:{" "}
+              {room.middleLineClaimed.map(formatClaimWinner).join(", ")}
             </p>
           ) : null}
           {room.lastLineClaimed?.length ? (
             <p className="text-sm font-medium text-green-800">
-              Last line: {room.lastLineClaimed.map(formatClaimWinner).join(", ")}
+              Last line:{" "}
+              {room.lastLineClaimed.map(formatClaimWinner).join(", ")}
             </p>
           ) : null}
         </section>
       ) : null}
 
-      {claimError && <p className="text-sm text-red-600 text-center">{claimError}</p>}
+      {claimError && (
+        <p className="text-sm text-red-600 text-center">{claimError}</p>
+      )}
 
       <section>
         <h2 className="font-medium text-neutral-800 mb-3">My tickets</h2>
@@ -794,7 +910,8 @@ function GameScreen({
             tickets.map((ticket, ticketIndex) => {
               const selected = selectedByTicket[ticketIndex] ?? new Set();
               const selectedList = Array.from(selected);
-              const alreadyClaimedByMe = (arr?: ClaimEntry[]) => arr?.some((e) => e.playerId === myId) ?? false;
+              const alreadyClaimedByMe = (arr?: ClaimEntry[]) =>
+                arr?.some((e) => e.playerId === myId) ?? false;
               const noOneClaimedYet = (arr?: ClaimEntry[]) => !arr?.length;
 
               const row0 = getNumbersInRow(ticket, 0);
@@ -831,11 +948,20 @@ function GameScreen({
                 all15.every((n) => drawnSet.has(n)) &&
                 noOneClaimedYet(room.housieClaimed) &&
                 !alreadyClaimedByMe(room.housieClaimed);
-              const row0Complete = row0.length === 5 && row0.every((n) => drawnSet.has(n));
-              const row1Complete = row1.length === 5 && row1.every((n) => drawnSet.has(n));
-              const row2Complete = row2.length === 5 && row2.every((n) => drawnSet.has(n));
+              const row0Complete =
+                row0.length === 5 && row0.every((n) => drawnSet.has(n));
+              const row1Complete =
+                row1.length === 5 && row1.every((n) => drawnSet.has(n));
+              const row2Complete =
+                row2.length === 5 && row2.every((n) => drawnSet.has(n));
 
-              const eligibleTypes: ("jaldiFive" | "firstLine" | "middleLine" | "lastLine" | "housie")[] = [];
+              const eligibleTypes: (
+                | "jaldiFive"
+                | "firstLine"
+                | "middleLine"
+                | "lastLine"
+                | "housie"
+              )[] = [];
               if (jaldiFiveOk) eligibleTypes.push("jaldiFive");
               if (firstLineOk) eligibleTypes.push("firstLine");
               if (middleLineOk) eligibleTypes.push("middleLine");
@@ -853,48 +979,80 @@ function GameScreen({
               };
 
               return (
-                <div key={ticketIndex} className="relative rounded-lg border border-neutral-300 bg-white p-3">
-                  <p className="text-xs text-neutral-500 mb-2">Ticket {ticketIndex + 1}</p>
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse text-center" style={{ minWidth: 280 }}>
+                <div
+                  key={ticketIndex}
+                  className="relative rounded-lg border border-neutral-300 bg-white p-3"
+                >
+                  <p className="text-xs text-neutral-500 mb-2">
+                    Ticket {ticketIndex + 1}
+                  </p>
+                  <div className="overflow-x-auto w-full">
+                    <table className="w-full border-collapse text-center table-fixed">
+                      <colgroup>
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
+                          <col key={i} style={{ width: "11.111%" }} />
+                        ))}
+                      </colgroup>
                       <tbody>
                         {ticket.map((row, r) => {
-                          const rowComplete = r === 0 ? row0Complete : r === 1 ? row1Complete : row2Complete;
+                          const rowComplete =
+                            r === 0
+                              ? row0Complete
+                              : r === 1
+                              ? row1Complete
+                              : row2Complete;
                           return (
-                            <Fragment key={r}>
-                              <tr>
-                                {row.map((cell, c) => {
-                                  const num = cell;
-                                  const isDrawn = num !== null && drawnSet.has(num);
-                                  const isSelected = num !== null && selected.has(num);
-                                  return (
-                                    <td
-                                      key={c}
-                                      className={`border border-neutral-300 p-1 w-8 h-9 text-sm select-none ${
-                                        num === null
-                                          ? "bg-neutral-100"
-                                          : isSelected
-                                            ? "bg-green-400 text-white font-medium"
-                                            : isDrawn
-                                              ? "bg-green-100"
-                                              : "bg-white hover:bg-neutral-100 cursor-pointer"
-                                      }`}
-                                      onClick={() => num !== null && onToggleNumber(ticketIndex, num)}
-                                      role={num !== null ? "button" : undefined}
-                                    >
-                                      {num ?? ""}
-                                    </td>
-                                  );
-                                })}
-                              </tr>
-                              {rowComplete ? (
-                                <tr>
-                                  <td colSpan={9} className="border-0 p-0 h-0 align-top">
-                                    <div className="border-t-2 border-red-500 w-full" />
+                            <tr key={r} className="relative">
+                              {row.map((cell, c) => {
+                                const num = cell;
+                                const isDrawn =
+                                  num !== null && drawnSet.has(num);
+                                const isSelected =
+                                  num !== null && selected.has(num);
+                                return (
+                                  <td
+                                    key={c}
+                                    className={`border border-neutral-300 p-1 h-9 text-sm select-none ${
+                                      num === null
+                                        ? "bg-neutral-100"
+                                        : isSelected
+                                        ? "bg-green-400 text-white font-medium"
+                                        : isDrawn
+                                        ? "bg-green-100"
+                                        : "bg-white hover:bg-neutral-100 cursor-pointer"
+                                    }`}
+                                    onClick={() =>
+                                      num !== null &&
+                                      onToggleNumber(ticketIndex, num)
+                                    }
+                                    role={num !== null ? "button" : undefined}
+                                  >
+                                    {num ?? ""}
                                   </td>
-                                </tr>
+                                );
+                              })}
+                              {rowComplete ? (
+                                <td
+                                  colSpan={9}
+                                  aria-hidden
+                                  className="absolute border-0 p-0 m-0 pointer-events-none"
+                                  style={{
+                                    left: 0,
+                                    right: 0,
+                                    top: 0,
+                                    bottom: 0,
+                                    width: "100%",
+                                    minWidth: "100%",
+                                    boxSizing: "border-box",
+                                  }}
+                                >
+                                  <div
+                                    className="absolute left-0 right-0 top-1/2 -translate-y-1/2 border-t-2 border-red-500"
+                                    style={{ left: 0, right: 0, width: "100%" }}
+                                  />
+                                </td>
                               ) : null}
-                            </Fragment>
+                            </tr>
                           );
                         })}
                       </tbody>
@@ -908,7 +1066,11 @@ function GameScreen({
                         disabled={claiming}
                         className="rounded-lg bg-green-600 px-4 py-3 text-sm font-medium text-white shadow-lg hover:bg-green-700 disabled:opacity-50"
                       >
-                        {claiming ? "Claiming…" : `Claim ${eligibleTypes.map((t) => CLAIM_LABELS[t]).join(" & ")}`}
+                        {claiming
+                          ? "Claiming…"
+                          : `Claim ${eligibleTypes
+                              .map((t) => CLAIM_LABELS[t])
+                              .join(" & ")}`}
                       </button>
                     </div>
                   )}
@@ -925,8 +1087,12 @@ function GameScreen({
 function GameEndedNoWinners({ onBackHome }: { onBackHome: () => void }) {
   return (
     <div className="rounded-lg border-2 border-neutral-400 bg-white p-6 space-y-4">
-      <h2 className="text-xl font-bold text-neutral-900 text-center">Game ended</h2>
-      <p className="text-sm text-neutral-500 text-center">The host ended the game before it started.</p>
+      <h2 className="text-xl font-bold text-neutral-900 text-center">
+        Game ended
+      </h2>
+      <p className="text-sm text-neutral-500 text-center">
+        The host ended the game before it started.
+      </p>
       <div className="pt-4 text-center">
         <button
           type="button"
@@ -951,37 +1117,52 @@ function WinnersScreen({
   const totalAmount = w.totalAmount ?? 0;
   const pools = totalAmount > 0 ? getClaimPrizeAmounts(totalAmount) : null;
 
-  const renderWinners = (label: string, pool: number, entries?: ClaimEntry[]) => {
+  const renderWinners = (
+    label: string,
+    pool: number,
+    entries?: ClaimEntry[]
+  ) => {
     if (!entries?.length) return null;
     const prizeEach = pool / entries.length;
     return (
       <li className="text-neutral-700">
         <span className="font-medium">{label}:</span>{" "}
-        {entries.map((e) => `${e.playerName} – ₹${Math.round(prizeEach)}`).join(", ")}
+        {entries
+          .map((e) => `${e.playerName} – ₹${Math.round(prizeEach)}`)
+          .join(", ")}
       </li>
     );
   };
 
   return (
     <div className="rounded-lg border-2 border-neutral-400 bg-white p-6 space-y-4">
-      <h2 className="text-xl font-bold text-neutral-900 text-center">Game Over – Winners</h2>
+      <h2 className="text-xl font-bold text-neutral-900 text-center">
+        Game Over – Winners
+      </h2>
       {pools && (
         <p className="text-sm text-neutral-500 text-center">
-          Total pool: ₹{totalAmount} (Jaldi Five ₹{pools.jaldiFive}, lines ₹{pools.firstLine} each, Housie ₹{pools.housie}; split equally when multiple winners)
+          Total pool: ₹{totalAmount} (Jaldi Five ₹{pools.jaldiFive}, lines ₹
+          {pools.firstLine} each, Housie ₹{pools.housie}; split equally when
+          multiple winners)
         </p>
       )}
       <ul className="space-y-2 text-center">
-        {pools && renderWinners("Jaldi Five", pools.jaldiFive, w.jaldiFiveClaimed)}
-        {pools && renderWinners("First line", pools.firstLine, w.firstLineClaimed)}
-        {pools && renderWinners("Middle line", pools.middleLine, w.middleLineClaimed)}
+        {pools &&
+          renderWinners("Jaldi Five", pools.jaldiFive, w.jaldiFiveClaimed)}
+        {pools &&
+          renderWinners("First line", pools.firstLine, w.firstLineClaimed)}
+        {pools &&
+          renderWinners("Middle line", pools.middleLine, w.middleLineClaimed)}
         {pools && renderWinners("Last line", pools.lastLine, w.lastLineClaimed)}
         {w.housieClaimed?.length && pools ? (
           <li className="text-lg font-semibold text-green-700">
             <span className="font-medium">Housie:</span>{" "}
-            {w.housieClaimed.map((e) => {
-              const prizeEach = pools.housie / w.housieClaimed!.length;
-              return `${e.playerName} – ₹${Math.round(prizeEach)}`;
-            }).join(", ")}
+            {w.housieClaimed
+              .map((e) => {
+                const prizeEach = pools.housie / w.housieClaimed!.length;
+                return `${e.playerName} – ₹${Math.round(prizeEach)}`;
+              })
+              .join(", ")}
           </li>
         ) : null}
       </ul>
