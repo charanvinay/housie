@@ -1,6 +1,6 @@
-# Tambola ticket generation logic
+# Housie ticket generation logic
 
-This document explains how we generate valid Tambola (Housie) tickets and how we ensure **no number is repeated** across tickets (for any count 1–6).
+This document explains how we generate valid Housie tickets and how we ensure **no number is repeated** across tickets (for any count 1–6).
 
 ---
 
@@ -11,10 +11,10 @@ This document explains how we generate valid Tambola (Housie) tickets and how we
 - **Per row:** Exactly **5 numbers** in each row.
 - **Per column:** Between **1 and 3 numbers** in each column. Numbers in a column are in **ascending order** (top to bottom).
 - **Column ranges:**
-  - Column 0: 1–9  
-  - Column 1: 10–19  
-  - …  
-  - Column 8: 80–90  
+  - Column 0: 1–9
+  - Column 1: 10–19
+  - …
+  - Column 8: 80–90
 
 So each column has a fixed set of allowed numbers (e.g. column 0 only uses 1–9). There are 90 numbers in total (1–90).
 
@@ -44,7 +44,7 @@ We have to put 15 “number” cells in the 3×9 grid so that:
 - Each **row** has exactly 5 cells.
 - Each **column** `j` has exactly `cellsPerColumn[j]` cells.
 
-We do this **column by column**, processing columns that need *more* cells first (e.g. 2 before 1). For each column we choose that many **rows** that still have capacity (row has fewer than 5 numbers so far). We prefer rows with the most capacity left so we don’t get stuck. The result is a 3×9 grid of booleans: “does this cell have a number?”.
+We do this **column by column**, processing columns that need _more_ cells first (e.g. 2 before 1). For each column we choose that many **rows** that still have capacity (row has fewer than 5 numbers so far). We prefer rows with the most capacity left so we don’t get stuck. The result is a 3×9 grid of booleans: “does this cell have a number?”.
 
 ### Step 3: Assign numbers to those cells
 

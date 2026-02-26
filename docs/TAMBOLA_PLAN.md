@@ -1,4 +1,4 @@
-# Tambola (Housie) App – Updated Plan
+# Housie App – Updated Plan
 
 ## 1. Winning patterns (only these five)
 
@@ -36,7 +36,7 @@ No Four Corners. Naming: “Jaldi Five” everywhere in UI.
   - Middle Line: X Rs
   - Last Line: X Rs
   - Housie: X Rs  
-  (Exact split is a design choice: equal, or weighted toward Housie, etc.)
+    (Exact split is a design choice: equal, or weighted toward Housie, etc.)
 - Players can **adjust their ticket count** until everyone is ready; totals and shares update live.
 - When everyone is OK, **host starts the game**.
 
@@ -111,7 +111,7 @@ Notify everyone (in-app, and optionally sound/toast) for:
   - Middle Line: winner name
   - Last Line: winner name
   - Housie: winner name  
-  (If a prize was shared or not claimed, show accordingly.)
+    (If a prize was shared or not claimed, show accordingly.)
 
 ---
 
@@ -135,13 +135,14 @@ We need a backend for:
   - Submit claim (player) → validate, mark prize as won, broadcast result
 - **Real-time layer** so all clients get updates without refresh:
   - Options: PartyKit, Pusher, Ably, or SSE (server-sent events) from Next.js.  
-  Recommendation: **PartyKit** or **Pusher** for true real-time; **SSE + REST** if we want to avoid extra infra.
+    Recommendation: **PartyKit** or **Pusher** for true real-time; **SSE + REST** if we want to avoid extra infra.
 
 So: **backend = Next.js server (API routes / Server Actions) + one real-time mechanism.** No separate “backend app” required unless we later scale to a dedicated game server.
 
 ### 9.2 Database – **optional for v1 (“play with friends”)**
 
 - **Without a database (in-memory only):**
+
   - Store rooms and game state in **process memory** (e.g. a Map: `roomCode → game state`).
   - **Pros:** Simple, no setup, no cost, fast.
   - **Cons:** If the server restarts or the process dies, all rooms and games are lost; no history.
@@ -159,11 +160,11 @@ So: **backend = Next.js server (API routes / Server Actions) + one real-time mec
 
 **Summary:**
 
-| Need            | Required? | Notes                                      |
-|-----------------|----------|---------------------------------------------|
-| Backend (APIs)  | **Yes**  | Create/join room, start game, draw, claim  |
-| Real-time       | **Yes**  | PartyKit, Pusher, or SSE                    |
-| Database        | **No**   | Optional; use when you need persistence    |
+| Need           | Required? | Notes                                     |
+| -------------- | --------- | ----------------------------------------- |
+| Backend (APIs) | **Yes**   | Create/join room, start game, draw, claim |
+| Real-time      | **Yes**   | PartyKit, Pusher, or SSE                  |
+| Database       | **No**    | Optional; use when you need persistence   |
 
 ---
 

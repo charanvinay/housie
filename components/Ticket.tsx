@@ -19,7 +19,7 @@ export function Ticket({ ticket, label }: TicketProps) {
       <table
         className="w-full border-collapse text-center"
         role="grid"
-        aria-label="Tambola ticket"
+        aria-label="Housie ticket"
       >
         <tbody>
           {ticket.map((row, rowIndex) => (

@@ -1,5 +1,5 @@
 /**
- * Tambola (Housie) ticket generator.
+ * Housie ticket generator.
  * See docs/TICKET_GENERATION.md for the logic.
  */
 
@@ -85,7 +85,7 @@ function decideWhichCellsGetNumbers(cellsPerColumn: number[]): boolean[][] {
  */
 function fillTicketGrid(
   whichCellsHaveNumber: boolean[][],
-  numbersForEachColumn: (number[])[]
+  numbersForEachColumn: number[][]
 ): Ticket {
   const grid: Ticket = Array.from({ length: ROW_COUNT }, () =>
     Array(COLUMN_COUNT).fill(null)
@@ -120,7 +120,7 @@ function buildOneTicket(cellsPerColumn: number[]): Ticket {
 }
 
 /**
- * Generate one Tambola ticket (standalone). Numbers can repeat if you generate multiple.
+ * Generate one Housie ticket (standalone). Numbers can repeat if you generate multiple.
  */
 export function generateTicket(): Ticket {
   const cellsPerColumn = shuffleArray([2, 2, 2, 2, 2, 2, 1, 1, 1]);
@@ -158,8 +158,9 @@ function buildDemandMatrix(
   numTickets: number,
   totalNumbersPerColumn: number[]
 ): number[][] {
-  const cellsPerTicketPerColumn: number[][] = Array.from({ length: numTickets }, () =>
-    Array(COLUMN_COUNT).fill(1)
+  const cellsPerTicketPerColumn: number[][] = Array.from(
+    { length: numTickets },
+    () => Array(COLUMN_COUNT).fill(1)
   );
   const cellsUsedPerTicket = Array(numTickets).fill(COLUMN_COUNT);
 
@@ -204,10 +205,7 @@ function generateTicketsWithNoRepeats(numTickets: number): Ticket[] {
   const shuffledPoolByColumn: number[][] = [];
   for (let col = 0; col < COLUMN_COUNT; col++) {
     const { min, max } = getColumnMinMax(col);
-    const fullRange = Array.from(
-      { length: max - min + 1 },
-      (_, i) => min + i
-    );
+    const fullRange = Array.from({ length: max - min + 1 }, (_, i) => min + i);
     const shuffled = shuffleArray(fullRange);
     shuffledPoolByColumn[col] = shuffled.slice(0, totalNumbersPerColumn[col]);
   }

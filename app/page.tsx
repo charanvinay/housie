@@ -22,7 +22,8 @@ function getRoomSession(): RoomSession | null {
       "role" in data &&
       "id" in data &&
       typeof (data as RoomSession).code === "string" &&
-      ((data as RoomSession).role === "host" || (data as RoomSession).role === "player") &&
+      ((data as RoomSession).role === "host" ||
+        (data as RoomSession).role === "player") &&
       typeof (data as RoomSession).id === "string"
     ) {
       return data as RoomSession;
@@ -71,13 +72,19 @@ export default function Home() {
           return;
         }
         if (session.role === "host" && room.hostId === session.id) {
-          router.replace(`/room/${room.code}?hostId=${encodeURIComponent(session.id)}`);
+          router.replace(
+            `/room/${room.code}?hostId=${encodeURIComponent(session.id)}`
+          );
           return;
         }
         if (session.role === "player" && Array.isArray(room.players)) {
-          const inRoom = room.players.some((p: { id: string }) => p.id === session.id);
+          const inRoom = room.players.some(
+            (p: { id: string }) => p.id === session.id
+          );
           if (inRoom) {
-            router.replace(`/room/${room.code}?playerId=${encodeURIComponent(session.id)}`);
+            router.replace(
+              `/room/${room.code}?playerId=${encodeURIComponent(session.id)}`
+            );
             return;
           }
         }
@@ -95,7 +102,7 @@ export default function Home() {
     return (
       <div className="min-h-screen bg-neutral-100 flex flex-col">
         <header className="border-b border-neutral-300 bg-white px-4 py-3">
-          <h1 className="text-xl font-semibold text-neutral-800">Tambola</h1>
+          <h1 className="text-xl font-semibold text-neutral-800">Housie</h1>
         </header>
         <main className="flex-1 flex items-center justify-center px-4 py-8">
           <p className="text-neutral-600">Loading…</p>
@@ -107,7 +114,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-neutral-100 flex flex-col">
       <header className="border-b border-neutral-300 bg-white px-4 py-3">
-        <h1 className="text-xl font-semibold text-neutral-800">Tambola</h1>
+        <h1 className="text-xl font-semibold text-neutral-800">Housie</h1>
       </header>
 
       <main className="flex-1 flex items-center justify-center px-4 py-8">

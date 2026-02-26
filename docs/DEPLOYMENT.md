@@ -1,6 +1,6 @@
 # Deployment (Vercel + Socket server)
 
-This guide describes how to deploy the Housie/Tambola app to production: the **Next.js app** on **Vercel** and the **Socket.IO server** on a separate host that supports WebSockets.
+This guide describes how to deploy the Housie app to production: the **Next.js app** on **Vercel** and the **Socket.IO server** on a separate host that supports WebSockets.
 
 ## Overview and architecture
 
@@ -39,10 +39,10 @@ flowchart LR
 
 Set these in **Project → Settings → Environment Variables** for **Production** (and Preview if you use it):
 
-| Variable | Value | Used by |
-|----------|--------|---------|
+| Variable                 | Value                                                                     | Used by                                                                                   |
+| ------------------------ | ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
 | `NEXT_PUBLIC_SOCKET_URL` | Full URL of the socket server (e.g. `https://your-socket.up.railway.app`) | Browser – connects to Socket.IO ([app/room/[code]/page.tsx](../app/room/[code]/page.tsx)) |
-| `SOCKET_SERVER_URL` | Same URL as above | Server – API POSTs to `/broadcast` ([lib/rooms.ts](../lib/rooms.ts)) |
+| `SOCKET_SERVER_URL`      | Same URL as above                                                         | Server – API POSTs to `/broadcast` ([lib/rooms.ts](../lib/rooms.ts))                      |
 
 Use **https** in production. Do **not** add a trailing slash.
 

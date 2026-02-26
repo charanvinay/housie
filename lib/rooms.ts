@@ -1,5 +1,5 @@
 /**
- * In-memory room store for Tambola.
+ * In-memory room store for Housie.
  * Room code → room state. No persistence (resets on server restart).
  */
 
@@ -25,11 +25,31 @@ export type Room = {
   /** Tickets per player (playerId -> tickets), set when game starts. */
   playerTickets?: Record<string, Ticket[]>;
   /** Each claim type is an array so multiple players can win with the same number; we store only the winning (last) number. */
-  jaldiFiveClaimed?: { playerId: string; playerName: string; winningNumber: number }[];
-  firstLineClaimed?: { playerId: string; playerName: string; winningNumber: number }[];
-  middleLineClaimed?: { playerId: string; playerName: string; winningNumber: number }[];
-  lastLineClaimed?: { playerId: string; playerName: string; winningNumber: number }[];
-  housieClaimed?: { playerId: string; playerName: string; winningNumber: number }[];
+  jaldiFiveClaimed?: {
+    playerId: string;
+    playerName: string;
+    winningNumber: number;
+  }[];
+  firstLineClaimed?: {
+    playerId: string;
+    playerName: string;
+    winningNumber: number;
+  }[];
+  middleLineClaimed?: {
+    playerId: string;
+    playerName: string;
+    winningNumber: number;
+  }[];
+  lastLineClaimed?: {
+    playerId: string;
+    playerName: string;
+    winningNumber: number;
+  }[];
+  housieClaimed?: {
+    playerId: string;
+    playerName: string;
+    winningNumber: number;
+  }[];
 };
 
 const rooms = new Map<string, Room>();
@@ -84,11 +104,15 @@ export function joinRoom(
   const upperCode = code.toUpperCase().trim();
   const room = rooms.get(upperCode);
   if (!room) return { error: "Room not found" };
-  if (room.status !== "waiting") return { error: "Game already started or ended" };
+  if (room.status !== "waiting")
+    return { error: "Game already started or ended" };
 
   const playerId = generateId();
   const name = (options.playerName || "Player").trim() || "Player";
-  const ticketCount = Math.min(6, Math.max(1, Math.floor(options.ticketCount) || 1));
+  const ticketCount = Math.min(
+    6,
+    Math.max(1, Math.floor(options.ticketCount) || 1)
+  );
 
   room.players.push({
     id: playerId,
@@ -110,8 +134,12 @@ export function leaveRoom(
   const upperCode = code.toUpperCase();
   const room = rooms.get(upperCode);
   if (!room) return { error: "Room not found" };
-  if (room.status !== "waiting") return { error: "Cannot leave after game has started" };
-  if (room.hostId === playerId) return { error: "Host cannot leave this way; close the room or start the game" };
+  if (room.status !== "waiting")
+    return { error: "Cannot leave after game has started" };
+  if (room.hostId === playerId)
+    return {
+      error: "Host cannot leave this way; close the room or start the game",
+    };
 
   const idx = room.players.findIndex((p) => p.id === playerId);
   if (idx === -1) return { error: "Player not in room" };
@@ -120,23 +148,32 @@ export function leaveRoom(
   return { ok: true };
 }
 
-export function endRoom(code: string, hostId: string): { ok: true } | { error: string } {
+export function endRoom(
+  code: string,
+  hostId: string
+): { ok: true } | { error: string } {
   const upperCode = code.toUpperCase();
   const room = rooms.get(upperCode);
   if (!room) return { error: "Room not found" };
-  if (room.hostId !== hostId) return { error: "Only the host can end the game" };
+  if (room.hostId !== hostId)
+    return { error: "Only the host can end the game" };
   if (room.status === "ended") return { error: "Game already ended" };
   room.status = "ended";
   notifyRoomUpdated(upperCode);
   return { ok: true };
 }
 
-export function startGame(code: string, hostId: string): { ok: true } | { error: string } {
+export function startGame(
+  code: string,
+  hostId: string
+): { ok: true } | { error: string } {
   const upperCode = code.toUpperCase();
   const room = rooms.get(upperCode);
   if (!room) return { error: "Room not found" };
-  if (room.hostId !== hostId) return { error: "Only the host can start the game" };
-  if (room.status !== "waiting") return { error: "Game already started or ended" };
+  if (room.hostId !== hostId)
+    return { error: "Only the host can start the game" };
+  if (room.status !== "waiting")
+    return { error: "Game already started or ended" };
 
   const playerTickets: Record<string, Ticket[]> = {};
   for (const p of room.players) {
@@ -156,7 +193,10 @@ export function startGame(code: string, hostId: string): { ok: true } | { error:
 }
 
 /** Last number in drawn order that appears in the claim numbers (the number that completed the claim). */
-function getWinningNumber(drawnNumbers: number[], claimNumbers: number[]): number {
+function getWinningNumber(
+  drawnNumbers: number[],
+  claimNumbers: number[]
+): number {
   const set = new Set(claimNumbers);
   for (let i = drawnNumbers.length - 1; i >= 0; i--) {
     if (set.has(drawnNumbers[i]!)) return drawnNumbers[i]!;
@@ -302,7 +342,12 @@ export function claimHousie(
   return { ok: true };
 }
 
-export type ClaimType = "jaldiFive" | "firstLine" | "middleLine" | "lastLine" | "housie";
+export type ClaimType =
+  | "jaldiFive"
+  | "firstLine"
+  | "middleLine"
+  | "lastLine"
+  | "housie";
 
 /** Claim multiple types at once (e.g. last line + housie with one number). All validated and set in one go. */
 export function claimMultiple(
@@ -328,22 +373,27 @@ export function claimMultiple(
   const toApply: ClaimType[] = [];
   if (claimTypes.includes("firstLine")) {
     const nums = getNumbersInRow(ticket, 0);
-    if (nums.length === 5 && nums.every((n) => drawnSet.has(n))) toApply.push("firstLine");
+    if (nums.length === 5 && nums.every((n) => drawnSet.has(n)))
+      toApply.push("firstLine");
   }
   if (claimTypes.includes("middleLine")) {
     const nums = getNumbersInRow(ticket, 1);
-    if (nums.length === 5 && nums.every((n) => drawnSet.has(n))) toApply.push("middleLine");
+    if (nums.length === 5 && nums.every((n) => drawnSet.has(n)))
+      toApply.push("middleLine");
   }
   if (claimTypes.includes("lastLine")) {
     const nums = getNumbersInRow(ticket, 2);
-    if (nums.length === 5 && nums.every((n) => drawnSet.has(n))) toApply.push("lastLine");
+    if (nums.length === 5 && nums.every((n) => drawnSet.has(n)))
+      toApply.push("lastLine");
   }
   if (claimTypes.includes("jaldiFive") && jaldiFiveNumbers?.length === 5) {
-    if (jaldiFiveNumbers.every((n) => drawnSet.has(n))) toApply.push("jaldiFive");
+    if (jaldiFiveNumbers.every((n) => drawnSet.has(n)))
+      toApply.push("jaldiFive");
   }
   if (claimTypes.includes("housie")) {
     const nums = getAllNumbers(ticket);
-    if (nums.length === 15 && nums.every((n) => drawnSet.has(n))) toApply.push("housie");
+    if (nums.length === 15 && nums.every((n) => drawnSet.has(n)))
+      toApply.push("housie");
   }
 
   if (toApply.length === 0) return { error: "No valid claims" };
@@ -352,22 +402,42 @@ export function claimMultiple(
     if (t === "firstLine") {
       const nums = getNumbersInRow(ticket, 0);
       if (!room.firstLineClaimed) room.firstLineClaimed = [];
-      room.firstLineClaimed.push({ playerId, playerName, winningNumber: getWinningNumber(drawn, nums) });
+      room.firstLineClaimed.push({
+        playerId,
+        playerName,
+        winningNumber: getWinningNumber(drawn, nums),
+      });
     } else if (t === "middleLine") {
       const nums = getNumbersInRow(ticket, 1);
       if (!room.middleLineClaimed) room.middleLineClaimed = [];
-      room.middleLineClaimed.push({ playerId, playerName, winningNumber: getWinningNumber(drawn, nums) });
+      room.middleLineClaimed.push({
+        playerId,
+        playerName,
+        winningNumber: getWinningNumber(drawn, nums),
+      });
     } else if (t === "lastLine") {
       const nums = getNumbersInRow(ticket, 2);
       if (!room.lastLineClaimed) room.lastLineClaimed = [];
-      room.lastLineClaimed.push({ playerId, playerName, winningNumber: getWinningNumber(drawn, nums) });
+      room.lastLineClaimed.push({
+        playerId,
+        playerName,
+        winningNumber: getWinningNumber(drawn, nums),
+      });
     } else if (t === "jaldiFive" && jaldiFiveNumbers) {
       if (!room.jaldiFiveClaimed) room.jaldiFiveClaimed = [];
-      room.jaldiFiveClaimed.push({ playerId, playerName, winningNumber: getWinningNumber(drawn, jaldiFiveNumbers) });
+      room.jaldiFiveClaimed.push({
+        playerId,
+        playerName,
+        winningNumber: getWinningNumber(drawn, jaldiFiveNumbers),
+      });
     } else if (t === "housie") {
       const nums = getAllNumbers(ticket);
       if (!room.housieClaimed) room.housieClaimed = [];
-      room.housieClaimed.push({ playerId, playerName, winningNumber: getWinningNumber(drawn, nums) });
+      room.housieClaimed.push({
+        playerId,
+        playerName,
+        winningNumber: getWinningNumber(drawn, nums),
+      });
       room.status = "ended";
     }
   }
@@ -375,16 +445,22 @@ export function claimMultiple(
   return { ok: true };
 }
 
-export function drawNumber(code: string, hostId: string): { number: number } | { error: string } {
+export function drawNumber(
+  code: string,
+  hostId: string
+): { number: number } | { error: string } {
   const upperCode = code.toUpperCase();
   const room = rooms.get(upperCode);
   if (!room) return { error: "Room not found" };
-  if (room.hostId !== hostId) return { error: "Only the host can draw numbers" };
+  if (room.hostId !== hostId)
+    return { error: "Only the host can draw numbers" };
   if (room.status !== "started") return { error: "Game not in progress" };
 
   const drawn = room.drawnNumbers ?? [];
   if (drawn.length >= 90) return { error: "All numbers already drawn" };
-  const available = Array.from({ length: 90 }, (_, i) => i + 1).filter((n) => !drawn.includes(n));
+  const available = Array.from({ length: 90 }, (_, i) => i + 1).filter(
+    (n) => !drawn.includes(n)
+  );
   const next = available[Math.floor(Math.random() * available.length)]!;
   room.drawnNumbers = [...drawn, next];
   notifyRoomUpdated(upperCode);
@@ -407,7 +483,9 @@ export function claimJaldiFive(
 
   const drawn = room.drawnNumbers ?? [];
   const drawnSet = new Set(drawn);
-  const allInDrawn = numbers.every((n) => typeof n === "number" && n >= 1 && n <= 90 && drawnSet.has(n));
+  const allInDrawn = numbers.every(
+    (n) => typeof n === "number" && n >= 1 && n <= 90 && drawnSet.has(n)
+  );
   if (!allInDrawn) {
     return { error: "Selected numbers are not all in the drawn list" };
   }
@@ -426,7 +504,8 @@ export function updatePlayerTickets(
 ): Room | { error: string } {
   const room = rooms.get(code.toUpperCase());
   if (!room) return { error: "Room not found" };
-  if (room.status !== "waiting") return { error: "Cannot change tickets after game started" };
+  if (room.status !== "waiting")
+    return { error: "Cannot change tickets after game started" };
 
   const player = room.players.find((p) => p.id === playerId);
   if (!player) return { error: "Player not found" };
@@ -470,11 +549,22 @@ export function getClaimPrizeAmounts(totalAmount: number): {
     m = minAmount(m, min);
     l = minAmount(l, min);
     h = minAmount(h, min);
-    return { jaldiFive: j, firstLine: f, middleLine: m, lastLine: l, housie: h };
+    return {
+      jaldiFive: j,
+      firstLine: f,
+      middleLine: m,
+      lastLine: l,
+      housie: h,
+    };
   }
 
   const with5 = withStep(5, 5);
-  const sum5 = with5.jaldiFive + with5.firstLine + with5.middleLine + with5.lastLine + with5.housie;
+  const sum5 =
+    with5.jaldiFive +
+    with5.firstLine +
+    with5.middleLine +
+    with5.lastLine +
+    with5.housie;
   if (sum5 <= t) return with5;
   return withStep(2, 2);
 }
