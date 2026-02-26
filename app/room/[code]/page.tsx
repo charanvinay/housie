@@ -596,6 +596,15 @@ function getAllNumbersInTicket(ticket: TicketGrid): number[] {
   return out;
 }
 
+/** Last number in drawn order that appears in the set (winning number for a claim). */
+function getWinningNumberForSet(drawn: number[], numbers: number[]): number | null {
+  const set = new Set(numbers);
+  for (let i = drawn.length - 1; i >= 0; i--) {
+    if (set.has(drawn[i]!)) return drawn[i]!;
+  }
+  return null;
+}
+
 const CLAIM_LABELS: Record<string, string> = {
   jaldiFive: "Jaldi Five",
   firstLine: "First Line",
@@ -695,23 +704,42 @@ function GameScreen({
               const selected = selectedByTicket[ticketIndex] ?? new Set();
               const selectedList = Array.from(selected);
               const alreadyClaimedByMe = (arr?: ClaimEntry[]) => arr?.some((e) => e.playerId === myId) ?? false;
-              const jaldiFiveOk =
-                selectedList.length === 5 &&
-                selectedList.every((n) => drawnSet.has(n)) &&
-                !alreadyClaimedByMe(room.jaldiFiveClaimed);
+              const noOneClaimedYet = (arr?: ClaimEntry[]) => !arr?.length;
 
               const row0 = getNumbersInRow(ticket, 0);
               const row1 = getNumbersInRow(ticket, 1);
               const row2 = getNumbersInRow(ticket, 2);
-              const firstLineOk =
-                row0.length === 5 && row0.every((n) => drawnSet.has(n)) && !alreadyClaimedByMe(room.firstLineClaimed);
-              const middleLineOk =
-                row1.length === 5 && row1.every((n) => drawnSet.has(n)) && !alreadyClaimedByMe(room.middleLineClaimed);
-              const lastLineOk =
-                row2.length === 5 && row2.every((n) => drawnSet.has(n)) && !alreadyClaimedByMe(room.lastLineClaimed);
               const all15 = getAllNumbersInTicket(ticket);
+
+              const jaldiFiveOk =
+                selectedList.length === 5 &&
+                selectedList.every((n) => drawnSet.has(n)) &&
+                noOneClaimedYet(room.jaldiFiveClaimed) &&
+                !alreadyClaimedByMe(room.jaldiFiveClaimed);
+
+              const firstLineOk =
+                row0.length === 5 &&
+                row0.every((n) => drawnSet.has(n)) &&
+                noOneClaimedYet(room.firstLineClaimed) &&
+                !alreadyClaimedByMe(room.firstLineClaimed);
+
+              const middleLineOk =
+                row1.length === 5 &&
+                row1.every((n) => drawnSet.has(n)) &&
+                noOneClaimedYet(room.middleLineClaimed) &&
+                !alreadyClaimedByMe(room.middleLineClaimed);
+
+              const lastLineOk =
+                row2.length === 5 &&
+                row2.every((n) => drawnSet.has(n)) &&
+                noOneClaimedYet(room.lastLineClaimed) &&
+                !alreadyClaimedByMe(room.lastLineClaimed);
+
               const housieOk =
-                all15.length === 15 && all15.every((n) => drawnSet.has(n)) && !alreadyClaimedByMe(room.housieClaimed);
+                all15.length === 15 &&
+                all15.every((n) => drawnSet.has(n)) &&
+                noOneClaimedYet(room.housieClaimed) &&
+                !alreadyClaimedByMe(room.housieClaimed);
               const row0Complete = row0.length === 5 && row0.every((n) => drawnSet.has(n));
               const row1Complete = row1.length === 5 && row1.every((n) => drawnSet.has(n));
               const row2Complete = row2.length === 5 && row2.every((n) => drawnSet.has(n));
@@ -742,7 +770,16 @@ function GameScreen({
                         {ticket.map((row, r) => {
                           const rowComplete = r === 0 ? row0Complete : r === 1 ? row1Complete : row2Complete;
                           return (
-                            <tr key={r}>
+                            <tr key={r} className={rowComplete ? "relative" : ""}>
+                              {rowComplete ? (
+                                <td
+                                  colSpan={9}
+                                  className="absolute inset-0 pointer-events-none border-0 p-0 m-0 flex items-center z-10"
+                                  aria-hidden
+                                >
+                                  <div className="w-full border-t-2 border-red-500" />
+                                </td>
+                              ) : null}
                               {row.map((cell, c) => {
                                 const num = cell;
                                 const isDrawn = num !== null && drawnSet.has(num);
@@ -750,7 +787,7 @@ function GameScreen({
                                 return (
                                   <td
                                     key={c}
-                                    className={`border border-neutral-300 p-1 w-8 h-9 text-sm select-none relative z-0 ${
+                                    className={`border border-neutral-300 p-1 w-8 h-9 text-sm select-none relative ${
                                       num === null
                                         ? "bg-neutral-100"
                                         : isSelected
@@ -758,7 +795,7 @@ function GameScreen({
                                           : isDrawn
                                             ? "bg-green-100"
                                             : "bg-white hover:bg-neutral-100 cursor-pointer"
-                                    } ${rowComplete ? "line-through decoration-2 decoration-red-500" : ""}`}
+                                    }`}
                                     onClick={() => num !== null && onToggleNumber(ticketIndex, num)}
                                     role={num !== null ? "button" : undefined}
                                   >

@@ -213,7 +213,8 @@ export function claimFirstLine(
   const check = validateTicketClaim(room, playerId, ticketIndex, numbers);
   if ("error" in check) return check;
 
-  const winningNumber = getWinningNumber(room.drawnNumbers ?? [], numbers);
+  const drawn = room.drawnNumbers ?? [];
+  const winningNumber = getWinningNumber(drawn, numbers);
   if (!room.firstLineClaimed) room.firstLineClaimed = [];
   room.firstLineClaimed.push({ playerId, playerName, winningNumber });
   notifyRoomUpdated(upperCode);
@@ -238,7 +239,8 @@ export function claimMiddleLine(
   const check = validateTicketClaim(room, playerId, ticketIndex, numbers);
   if ("error" in check) return check;
 
-  const winningNumber = getWinningNumber(room.drawnNumbers ?? [], numbers);
+  const drawn = room.drawnNumbers ?? [];
+  const winningNumber = getWinningNumber(drawn, numbers);
   if (!room.middleLineClaimed) room.middleLineClaimed = [];
   room.middleLineClaimed.push({ playerId, playerName, winningNumber });
   notifyRoomUpdated(upperCode);
@@ -263,7 +265,8 @@ export function claimLastLine(
   const check = validateTicketClaim(room, playerId, ticketIndex, numbers);
   if ("error" in check) return check;
 
-  const winningNumber = getWinningNumber(room.drawnNumbers ?? [], numbers);
+  const drawn = room.drawnNumbers ?? [];
+  const winningNumber = getWinningNumber(drawn, numbers);
   if (!room.lastLineClaimed) room.lastLineClaimed = [];
   room.lastLineClaimed.push({ playerId, playerName, winningNumber });
   notifyRoomUpdated(upperCode);
@@ -288,7 +291,8 @@ export function claimHousie(
   const check = validateTicketClaim(room, playerId, ticketIndex, numbers);
   if ("error" in check) return check;
 
-  const winningNumber = getWinningNumber(room.drawnNumbers ?? [], numbers);
+  const drawn = room.drawnNumbers ?? [];
+  const winningNumber = getWinningNumber(drawn, numbers);
   if (!room.housieClaimed) room.housieClaimed = [];
   room.housieClaimed.push({ playerId, playerName, winningNumber });
   room.status = "ended";
@@ -318,6 +322,7 @@ export function claimMultiple(
   const drawnSet = new Set(room.drawnNumbers ?? []);
 
   const drawn = room.drawnNumbers ?? [];
+
   const toApply: ClaimType[] = [];
   if (claimTypes.includes("firstLine")) {
     const nums = getNumbersInRow(ticket, 0);
