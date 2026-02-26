@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { io, Socket } from "socket.io-client";
+import { getClaimPrizeAmounts } from "@/lib/rooms";
 
 const ROOM_SESSION_KEY = "housie_room";
 
@@ -529,28 +530,61 @@ export default function RoomPage() {
                 <span className="font-medium">₹{totalAmount}</span>
               </div>
             </section>
-          </>
-        )}
 
-        {room.status === "waiting" && isHost && (
-          <div className="flex flex-col gap-3 items-center">
-            <button
-              type="button"
-              onClick={handleStartGame}
-              disabled={starting}
-              className="rounded-lg border-2 border-green-600 bg-green-600 px-6 py-3 text-base font-medium text-white hover:bg-green-700 disabled:opacity-50"
-            >
-              {starting ? "Starting…" : "Start game"}
-            </button>
-            <button
-              type="button"
-              onClick={handleEndGame}
-              disabled={ending}
-              className="rounded-lg border border-red-300 bg-red-50 px-4 py-2 text-sm font-medium text-red-800 hover:bg-red-100 disabled:opacity-50"
-            >
-              {ending ? "Ending…" : "End game"}
-            </button>
-          </div>
+            {totalAmount > 0 && (() => {
+              const prizes = getClaimPrizeAmounts(totalAmount);
+              const rows: { label: string; amount: number }[] = [
+                { label: "Jaldi Five", amount: prizes.jaldiFive },
+                { label: "First line", amount: prizes.firstLine },
+                { label: "Middle line", amount: prizes.middleLine },
+                { label: "Last line", amount: prizes.lastLine },
+                { label: "Housie", amount: prizes.housie },
+              ];
+              return (
+                <section className="rounded-lg border border-neutral-300 bg-white p-4">
+                  <h2 className="font-medium text-neutral-800 mb-2">Prize split</h2>
+                  <p className="text-xs text-neutral-500 mb-2">Split equally when multiple winners for the same claim. {Math.min(prizes.jaldiFive, prizes.firstLine, prizes.housie) < 5 ? "Small pool: amounts in multiples of ₹2." : "Minimum ₹5 per claim."}</p>
+                  <table className="w-full text-sm border-collapse">
+                    <thead>
+                      <tr className="border-b border-neutral-300">
+                        <th className="text-left py-2 font-medium text-neutral-700">Claim type</th>
+                        <th className="text-right py-2 font-medium text-neutral-700">Amount you will receive</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rows.map(({ label, amount }) => (
+                        <tr key={label} className="border-b border-neutral-200">
+                          <td className="py-2 text-neutral-800">{label}</td>
+                          <td className="py-2 text-right font-medium">₹{amount}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </section>
+              );
+            })()}
+
+            {isHost && (
+              <div className="flex flex-col gap-3 items-center">
+                <button
+                  type="button"
+                  onClick={handleStartGame}
+                  disabled={starting}
+                  className="rounded-lg border-2 border-green-600 bg-green-600 px-6 py-3 text-base font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                >
+                  {starting ? "Starting…" : "Start game"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleEndGame}
+                  disabled={ending}
+                  className="rounded-lg border border-red-300 bg-red-50 px-4 py-2 text-sm font-medium text-red-800 hover:bg-red-100 disabled:opacity-50"
+                >
+                  {ending ? "Ending…" : "End game"}
+                </button>
+              </div>
+            )}
+          </>
         )}
 
         {room.status === "started" && (
@@ -569,14 +603,29 @@ export default function RoomPage() {
         )}
 
         {room.status === "ended" && (
-          <WinnersScreen
-            room={room}
-            onBackHome={() => {
-              clearRoomSession();
-              if (myId) clearSelectionsForRoom(code, myId);
-              router.push("/");
-            }}
-          />
+          (room.drawnNumbers?.length ?? 0) > 0 ||
+          room.jaldiFiveClaimed?.length ||
+          room.firstLineClaimed?.length ||
+          room.middleLineClaimed?.length ||
+          room.lastLineClaimed?.length ||
+          room.housieClaimed?.length ? (
+            <WinnersScreen
+              room={room}
+              onBackHome={() => {
+                clearRoomSession();
+                if (myId) clearSelectionsForRoom(code, myId);
+                router.push("/");
+              }}
+            />
+          ) : (
+            <GameEndedNoWinners
+              onBackHome={() => {
+                clearRoomSession();
+                if (myId) clearSelectionsForRoom(code, myId);
+                router.push("/");
+              }}
+            />
+          )
         )}
       </main>
     </div>
@@ -835,6 +884,24 @@ function GameScreen({
   );
 }
 
+function GameEndedNoWinners({ onBackHome }: { onBackHome: () => void }) {
+  return (
+    <div className="rounded-lg border-2 border-neutral-400 bg-white p-6 space-y-4">
+      <h2 className="text-xl font-bold text-neutral-900 text-center">Game ended</h2>
+      <p className="text-sm text-neutral-500 text-center">The host ended the game before it started.</p>
+      <div className="pt-4 text-center">
+        <button
+          type="button"
+          onClick={onBackHome}
+          className="rounded-lg bg-neutral-800 px-6 py-3 text-white font-medium hover:bg-neutral-900"
+        >
+          Back to home
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function WinnersScreen({
   room,
   onBackHome,
@@ -844,11 +911,11 @@ function WinnersScreen({
 }) {
   const w = room;
   const totalAmount = w.totalAmount ?? 0;
-  const poolPerType = totalAmount > 0 ? totalAmount / 5 : 0;
+  const pools = totalAmount > 0 ? getClaimPrizeAmounts(totalAmount) : null;
 
-  const renderWinners = (label: string, entries?: ClaimEntry[]) => {
+  const renderWinners = (label: string, pool: number, entries?: ClaimEntry[]) => {
     if (!entries?.length) return null;
-    const prizeEach = poolPerType / entries.length;
+    const prizeEach = pool / entries.length;
     return (
       <li className="text-neutral-700">
         <span className="font-medium">{label}:</span>{" "}
@@ -860,17 +927,21 @@ function WinnersScreen({
   return (
     <div className="rounded-lg border-2 border-neutral-400 bg-white p-6 space-y-4">
       <h2 className="text-xl font-bold text-neutral-900 text-center">Game Over – Winners</h2>
-      <p className="text-sm text-neutral-500 text-center">Total pool: ₹{totalAmount} (₹{Math.round(poolPerType)} per claim type, split equally when multiple winners)</p>
+      {pools && (
+        <p className="text-sm text-neutral-500 text-center">
+          Total pool: ₹{totalAmount} (Jaldi Five ₹{pools.jaldiFive}, lines ₹{pools.firstLine} each, Housie ₹{pools.housie}; split equally when multiple winners)
+        </p>
+      )}
       <ul className="space-y-2 text-center">
-        {renderWinners("Jaldi Five", w.jaldiFiveClaimed)}
-        {renderWinners("First line", w.firstLineClaimed)}
-        {renderWinners("Middle line", w.middleLineClaimed)}
-        {renderWinners("Last line", w.lastLineClaimed)}
-        {w.housieClaimed?.length ? (
+        {pools && renderWinners("Jaldi Five", pools.jaldiFive, w.jaldiFiveClaimed)}
+        {pools && renderWinners("First line", pools.firstLine, w.firstLineClaimed)}
+        {pools && renderWinners("Middle line", pools.middleLine, w.middleLineClaimed)}
+        {pools && renderWinners("Last line", pools.lastLine, w.lastLineClaimed)}
+        {w.housieClaimed?.length && pools ? (
           <li className="text-lg font-semibold text-green-700">
             <span className="font-medium">Housie:</span>{" "}
             {w.housieClaimed.map((e) => {
-              const prizeEach = poolPerType / w.housieClaimed!.length;
+              const prizeEach = pools.housie / w.housieClaimed!.length;
               return `${e.playerName} – ₹${Math.round(prizeEach)}`;
             }).join(", ")}
           </li>

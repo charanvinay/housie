@@ -444,6 +444,41 @@ export function totalAmount(room: Room): number {
   return totalTickets(room) * room.ticketPrice;
 }
 
+/** Prize pool per claim type: 20% Jaldi Five, 15% each line, 35% Housie. Multiples of 5; for small pools uses multiples of 2 so no claim is 0 and total is within pool. */
+export function getClaimPrizeAmounts(totalAmount: number): {
+  jaldiFive: number;
+  firstLine: number;
+  middleLine: number;
+  lastLine: number;
+  housie: number;
+} {
+  const t = Math.max(0, totalAmount);
+  const roundTo = (x: number, mult: number) => Math.round(x / mult) * mult;
+  const minAmount = (v: number, min: number) => Math.max(min, v);
+
+  function withStep(step: number, min: number) {
+    let j = roundTo(t * 0.2, step);
+    let f = roundTo(t * 0.15, step);
+    let m = roundTo(t * 0.15, step);
+    let l = roundTo(t * 0.15, step);
+    let h = roundTo(t * 0.35, step);
+    const sum = j + f + m + l + h;
+    const diff = t - sum;
+    if (diff !== 0) h = roundTo(h + diff, step);
+    j = minAmount(j, min);
+    f = minAmount(f, min);
+    m = minAmount(m, min);
+    l = minAmount(l, min);
+    h = minAmount(h, min);
+    return { jaldiFive: j, firstLine: f, middleLine: m, lastLine: l, housie: h };
+  }
+
+  const with5 = withStep(5, 5);
+  const sum5 = with5.jaldiFive + with5.firstLine + with5.middleLine + with5.lastLine + with5.housie;
+  if (sum5 <= t) return with5;
+  return withStep(2, 2);
+}
+
 // --- Real-time: broadcast room updates to socket server (POST /broadcast) ---
 
 const SOCKET_SERVER_URL =
