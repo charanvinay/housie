@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -41,7 +41,7 @@ function setStoredName(name: string) {
   } catch {}
 }
 
-export default function JoinRoomPage() {
+function JoinRoomContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const codeFromUrl = searchParams.get("code") ?? "";
@@ -199,5 +199,23 @@ export default function JoinRoomPage() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function JoinRoomPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-neutral-100">
+        <header className="border-b border-neutral-300 bg-white px-4 py-3">
+          <Link href="/" className="text-neutral-600 hover:text-neutral-800">← Back</Link>
+          <h1 className="text-xl font-semibold text-neutral-800 mt-1">Join room</h1>
+        </header>
+        <main className="mx-auto max-w-sm px-4 py-8">
+          <p className="text-neutral-600">Loading…</p>
+        </main>
+      </div>
+    }>
+      <JoinRoomContent />
+    </Suspense>
   );
 }
