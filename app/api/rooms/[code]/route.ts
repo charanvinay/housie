@@ -20,8 +20,12 @@ export async function POST(request: Request, { params }: Params) {
   const { code } = await params;
   try {
     const body = await request.json();
+    const name = typeof body.playerName === "string" ? body.playerName.trim() : "";
+    if (!name) {
+      return NextResponse.json({ error: "Player name is required" }, { status: 400 });
+    }
     const result = joinRoom(code, {
-      playerName: body.playerName,
+      playerName: name,
       ticketCount: body.ticketCount ?? 1,
     });
     if ("error" in result) {

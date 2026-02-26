@@ -7,10 +7,13 @@ import { io, Socket } from "socket.io-client";
 
 const ROOM_SESSION_KEY = "housie_room";
 
+/** Persist active room in both storages so all tabs share one session (one player per browser). */
 function saveRoomSession(code: string, role: "host" | "player", id: string) {
   if (typeof window === "undefined") return;
   try {
-    sessionStorage.setItem(ROOM_SESSION_KEY, JSON.stringify({ code: code.toUpperCase(), role, id }));
+    const payload = JSON.stringify({ code: code.toUpperCase(), role, id });
+    sessionStorage.setItem(ROOM_SESSION_KEY, payload);
+    localStorage.setItem(ROOM_SESSION_KEY, payload);
   } catch {}
 }
 
@@ -18,6 +21,7 @@ function clearRoomSession() {
   if (typeof window === "undefined") return;
   try {
     sessionStorage.removeItem(ROOM_SESSION_KEY);
+    localStorage.removeItem(ROOM_SESSION_KEY);
   } catch {}
 }
 

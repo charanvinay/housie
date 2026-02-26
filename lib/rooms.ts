@@ -52,16 +52,18 @@ function generateId(): string {
 
 export function createRoom(
   ticketPrice: number,
-  hostTicketCount: number = 0
+  hostTicketCount: number = 0,
+  hostName?: string
 ): { room: Room; hostId: string } {
   const code = generateRoomCode();
   const hostId = generateId();
   const tickets = Math.min(6, Math.max(0, Math.floor(hostTicketCount) || 0));
+  const name = (hostName ?? "").trim() || "Host";
   const room: Room = {
     code,
     ticketPrice,
     hostId,
-    players: [{ id: hostId, name: "Host", ticketCount: tickets, joinedAt: Date.now() }],
+    players: [{ id: hostId, name, ticketCount: tickets, joinedAt: Date.now() }],
     status: "waiting",
     createdAt: Date.now(),
   };

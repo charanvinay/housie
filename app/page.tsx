@@ -8,10 +8,11 @@ const ROOM_SESSION_KEY = "housie_room";
 
 type RoomSession = { code: string; role: "host" | "player"; id: string };
 
+/** One active room per browser (localStorage so all tabs share). */
 function getRoomSession(): RoomSession | null {
   if (typeof window === "undefined") return null;
   try {
-    const raw = sessionStorage.getItem(ROOM_SESSION_KEY);
+    const raw = localStorage.getItem(ROOM_SESSION_KEY);
     if (!raw) return null;
     const data = JSON.parse(raw) as unknown;
     if (
@@ -33,6 +34,7 @@ function getRoomSession(): RoomSession | null {
 function clearRoomSession() {
   if (typeof window === "undefined") return;
   try {
+    localStorage.removeItem(ROOM_SESSION_KEY);
     sessionStorage.removeItem(ROOM_SESSION_KEY);
   } catch {}
 }

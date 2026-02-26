@@ -6,15 +6,23 @@ export async function POST(request: Request) {
     const body = await request.json();
     const ticketPrice = Number(body.ticketPrice);
     const hostTicketCount = Number(body.hostTicketCount);
+    const hostName = typeof body.hostName === "string" ? body.hostName.trim() : "";
     if (!Number.isFinite(ticketPrice) || ticketPrice < 1) {
       return NextResponse.json(
         { error: "Invalid ticket price (min 1)" },
         { status: 400 }
       );
     }
+    if (!hostName) {
+      return NextResponse.json(
+        { error: "Host name is required" },
+        { status: 400 }
+      );
+    }
     const { room, hostId } = createRoom(
       ticketPrice,
-      Number.isFinite(hostTicketCount) ? hostTicketCount : 0
+      Number.isFinite(hostTicketCount) ? hostTicketCount : 0,
+      hostName
     );
     return NextResponse.json({
       roomCode: room.code,
