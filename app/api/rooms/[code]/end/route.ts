@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { endRoom } from "@/lib/rooms";
+import { endRoom, getRoom, totalTickets, totalAmount } from "@/lib/rooms";
 
 type Params = { params: Promise<{ code: string }> };
 
@@ -15,7 +15,11 @@ export async function POST(request: Request, { params }: Params) {
     if ("error" in result) {
       return NextResponse.json({ error: result.error }, { status: 400 });
     }
-    return NextResponse.json({ ok: true });
+    const room = getRoom(code);
+    return NextResponse.json({
+      ok: true,
+      ...(room && { room: { ...room, totalTickets: totalTickets(room), totalAmount: totalAmount(room) } }),
+    });
   } catch {
     return NextResponse.json({ error: "Failed to end room" }, { status: 500 });
   }

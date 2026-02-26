@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { Fragment, useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { io, Socket } from "socket.io-client";
@@ -191,7 +191,8 @@ export default function RoomPage() {
   };
 
   const handleEndGame = async () => {
-    if (!isHost || room?.status !== "waiting" || !hostId) return;
+    if (!isHost || !hostId) return;
+    if (room?.status !== "waiting" && room?.status !== "started") return;
     if (ending) return;
     setEnding(true);
     try {
@@ -200,13 +201,20 @@ export default function RoomPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ hostId }),
       });
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setEnding(false);
         return;
       }
-      clearRoomSession();
-      router.push("/");
+      if (data.room) {
+        setRoom(data.room);
+      } else {
+        clearRoomSession();
+        router.push("/");
+      }
     } catch {
+      setEnding(false);
+    } finally {
       setEnding(false);
     }
   };
@@ -241,9 +249,11 @@ export default function RoomPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ hostId }),
       });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.room) setRoom(data.room);
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.room) {
+        setRoom(data.room);
+      } else if (!res.ok && data.room) {
+        setRoom(data.room);
       }
     } finally {
       setDrawing(false);
@@ -395,7 +405,16 @@ export default function RoomPage() {
       joinRoom();
     };
     const onDisconnect = () => setLive(false);
-    const onRoom = (data: RoomState) => setRoom(data);
+    const onRoom = (data: RoomState) => {
+      setRoom((prev) => {
+        if (!prev) return data;
+        const prevDrawn = prev.drawnNumbers?.length ?? 0;
+        const nextDrawn = data.drawnNumbers?.length ?? 0;
+        if (data.status === "ended") return data;
+        if (nextDrawn < prevDrawn) return prev;
+        return data;
+      });
+    };
 
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
@@ -604,6 +623,8 @@ export default function RoomPage() {
             claiming={claiming}
             claimError={claimError}
             onClaim={handleClaim}
+            onEndGame={handleEndGame}
+            ending={ending}
           />
         )}
 
@@ -687,6 +708,8 @@ function GameScreen({
   claiming,
   claimError,
   onClaim,
+  onEndGame,
+  ending,
 }: {
   room: RoomState;
   isHost: boolean;
@@ -698,6 +721,8 @@ function GameScreen({
   claiming: boolean;
   claimError: string;
   onClaim: (ticketIndex: number, claimTypes: ("jaldiFive" | "firstLine" | "middleLine" | "lastLine" | "housie")[], jaldiFiveNumbers?: number[]) => void;
+  onEndGame: () => void;
+  ending: boolean;
 }) {
   const tickets = (room.playerTickets && myId ? room.playerTickets[myId] : null) ?? [];
   const drawn = room.drawnNumbers ?? [];
@@ -718,6 +743,14 @@ function GameScreen({
               className="rounded-lg bg-green-600 px-6 py-2 text-white font-medium hover:bg-green-700 disabled:opacity-50"
             >
               {drawing ? "Drawing…" : "Pick next number"}
+            </button>
+            <button
+              type="button"
+              onClick={onEndGame}
+              disabled={ending}
+              className="rounded-lg border border-red-300 bg-red-50 px-4 py-2 text-sm font-medium text-red-800 hover:bg-red-100 disabled:opacity-50"
+            >
+              {ending ? "Ending…" : "End game"}
             </button>
           </div>
         ) : (
@@ -828,40 +861,40 @@ function GameScreen({
                         {ticket.map((row, r) => {
                           const rowComplete = r === 0 ? row0Complete : r === 1 ? row1Complete : row2Complete;
                           return (
-                            <tr key={r} className={rowComplete ? "relative" : ""}>
+                            <Fragment key={r}>
+                              <tr>
+                                {row.map((cell, c) => {
+                                  const num = cell;
+                                  const isDrawn = num !== null && drawnSet.has(num);
+                                  const isSelected = num !== null && selected.has(num);
+                                  return (
+                                    <td
+                                      key={c}
+                                      className={`border border-neutral-300 p-1 w-8 h-9 text-sm select-none ${
+                                        num === null
+                                          ? "bg-neutral-100"
+                                          : isSelected
+                                            ? "bg-green-400 text-white font-medium"
+                                            : isDrawn
+                                              ? "bg-green-100"
+                                              : "bg-white hover:bg-neutral-100 cursor-pointer"
+                                      }`}
+                                      onClick={() => num !== null && onToggleNumber(ticketIndex, num)}
+                                      role={num !== null ? "button" : undefined}
+                                    >
+                                      {num ?? ""}
+                                    </td>
+                                  );
+                                })}
+                              </tr>
                               {rowComplete ? (
-                                <td
-                                  colSpan={9}
-                                  className="absolute inset-0 pointer-events-none border-0 p-0 m-0 flex items-center z-10"
-                                  aria-hidden
-                                >
-                                  <div className="w-full border-t-2 border-red-500" />
-                                </td>
-                              ) : null}
-                              {row.map((cell, c) => {
-                                const num = cell;
-                                const isDrawn = num !== null && drawnSet.has(num);
-                                const isSelected = num !== null && selected.has(num);
-                                return (
-                                  <td
-                                    key={c}
-                                    className={`border border-neutral-300 p-1 w-8 h-9 text-sm select-none relative ${
-                                      num === null
-                                        ? "bg-neutral-100"
-                                        : isSelected
-                                          ? "bg-green-400 text-white font-medium"
-                                          : isDrawn
-                                            ? "bg-green-100"
-                                            : "bg-white hover:bg-neutral-100 cursor-pointer"
-                                    }`}
-                                    onClick={() => num !== null && onToggleNumber(ticketIndex, num)}
-                                    role={num !== null ? "button" : undefined}
-                                  >
-                                    {num ?? ""}
+                                <tr>
+                                  <td colSpan={9} className="border-0 p-0 h-0 align-top">
+                                    <div className="border-t-2 border-red-500 w-full" />
                                   </td>
-                                );
-                              })}
-                            </tr>
+                                </tr>
+                              ) : null}
+                            </Fragment>
                           );
                         })}
                       </tbody>

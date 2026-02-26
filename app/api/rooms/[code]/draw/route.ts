@@ -12,10 +12,14 @@ export async function POST(request: Request, { params }: Params) {
       return NextResponse.json({ error: "hostId required" }, { status: 400 });
     }
     const result = drawNumber(code, hostId);
+    const room = getRoom(code);
     if ("error" in result) {
-      return NextResponse.json({ error: result.error }, { status: 400 });
+      return NextResponse.json(
+        { error: result.error, ...(room && { room: { ...room, totalTickets: totalTickets(room), totalAmount: totalAmount(room) } }) },
+        { status: 400 }
+      );
     }
-    const room = getRoom(code)!;
+    if (!room) return NextResponse.json({ error: "Room not found" }, { status: 404 });
     return NextResponse.json({
       number: result.number,
       room: {
