@@ -213,6 +213,7 @@ export default function RoomPage() {
 
   const handleStartGame = async () => {
     if (!isHost || room?.status !== "waiting" || !hostId) return;
+    if (!live) return;
     if (starting) return;
     setStarting(true);
     try {
@@ -569,11 +570,15 @@ export default function RoomPage() {
                 <button
                   type="button"
                   onClick={handleStartGame}
-                  disabled={starting}
+                  disabled={starting || !live}
+                  title={!live ? "Connect to real-time updates to start the game" : undefined}
                   className="rounded-lg border-2 border-green-600 bg-green-600 px-6 py-3 text-base font-medium text-white hover:bg-green-700 disabled:opacity-50"
                 >
                   {starting ? "Starting…" : "Start game"}
                 </button>
+                {!live && (
+                  <p className="text-xs text-neutral-500 text-center">Start game is available when the connection is live.</p>
+                )}
                 <button
                   type="button"
                   onClick={handleEndGame}
