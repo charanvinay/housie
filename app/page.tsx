@@ -45,6 +45,8 @@ function clearRoomSession() {
 export default function Home() {
   const router = useRouter();
   const [checking, setChecking] = useState(true);
+  const [exiting, setExiting] = useState(false);
+  const [exitTargetUrl, setExitTargetUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const session = getRoomSession();
@@ -100,8 +102,19 @@ export default function Home() {
     };
   }, [router]);
 
+  const handleExitComplete = () => {
+    if (exitTargetUrl) {
+      const url = exitTargetUrl;
+      setExitTargetUrl(null);
+      router.push(url);
+      // Keep exiting true so content stays hidden until route changes
+    } else {
+      setExiting(false);
+    }
+  };
+
   return (
-    <PageWrapper>
+    <PageWrapper exiting={exiting} onExitComplete={handleExitComplete}>
       {checking ? (
         <motion.p
           className="text-neutral-600 text-center"
@@ -113,10 +126,24 @@ export default function Home() {
         </motion.p>
       ) : (
         <div className="flex flex-col gap-4">
-          <Button href="/create" variant="primary">
+          <Button
+            type="button"
+            variant="primary"
+            onClick={() => {
+              setExiting(true);
+              setExitTargetUrl("/create");
+            }}
+          >
             Create room
           </Button>
-          <Button href="/join" variant="secondary">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => {
+              setExiting(true);
+              setExitTargetUrl("/join");
+            }}
+          >
             Join room
           </Button>
         </div>

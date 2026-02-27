@@ -12,15 +12,29 @@ import { TicketCounter } from "@/components/form/TicketCounter";
 const NAME_KEY = "player_name";
 const ROOM_SESSION_KEY = "housie_room";
 
-function getActiveRoomSession(): { code: string; role: string; id: string } | null {
+function getActiveRoomSession(): {
+  code: string;
+  role: string;
+  id: string;
+} | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = localStorage.getItem(ROOM_SESSION_KEY);
     if (!raw) return null;
     const data = JSON.parse(raw) as unknown;
-    if (data && typeof data === "object" && "code" in data && "role" in data && "id" in data) {
+    if (
+      data &&
+      typeof data === "object" &&
+      "code" in data &&
+      "role" in data &&
+      "id" in data
+    ) {
       const d = data as { code: string; role: string; id: string };
-      if (typeof d.code === "string" && typeof d.role === "string" && typeof d.id === "string")
+      if (
+        typeof d.code === "string" &&
+        typeof d.role === "string" &&
+        typeof d.id === "string"
+      )
         return d;
     }
   } catch {}
@@ -57,6 +71,8 @@ function JoinRoomContent() {
   const [error, setError] = useState("");
   const [initialized, setInitialized] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
+  const [exiting, setExiting] = useState(false);
+  const [exitTargetUrl, setExitTargetUrl] = useState<string | null>(null);
 
   useEffect(() => {
     setRoomCode((c) => (codeFromUrl ? codeFromUrl : c));
@@ -85,15 +101,25 @@ function JoinRoomContent() {
         setCheckingSession(false);
         if (!room || room.status === "ended") return;
         if (session.role === "host" && room.hostId === session.id) {
-          router.replace(`/room/${room.code}?hostId=${encodeURIComponent(session.id)}`);
+          router.replace(
+            `/room/${room.code}?hostId=${encodeURIComponent(session.id)}`
+          );
           return;
         }
-        if (session.role === "player" && Array.isArray(room.players) && room.players.some((p: { id: string }) => p.id === session.id)) {
-          router.replace(`/room/${room.code}?playerId=${encodeURIComponent(session.id)}`);
+        if (
+          session.role === "player" &&
+          Array.isArray(room.players) &&
+          room.players.some((p: { id: string }) => p.id === session.id)
+        ) {
+          router.replace(
+            `/room/${room.code}?playerId=${encodeURIComponent(session.id)}`
+          );
         }
       })
       .catch(() => setCheckingSession(false));
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -125,9 +151,8 @@ function JoinRoomContent() {
         return;
       }
       setStoredName(name);
-      router.push(
-        `/room/${data.roomCode}?playerId=${data.playerId}`
-      );
+      setExiting(true);
+      setExitTargetUrl(`/room/${data.roomCode}?playerId=${data.playerId}`);
     } catch {
       setError("Something went wrong");
     } finally {
@@ -135,8 +160,28 @@ function JoinRoomContent() {
     }
   }
 
+  const handleExitComplete = () => {
+    if (exitTargetUrl) {
+      const url = exitTargetUrl;
+      setExitTargetUrl(null);
+      router.push(url);
+      // Keep exiting true so content stays hidden until route changes
+    } else {
+      setExiting(false);
+    }
+  };
+
   return (
-    <PageWrapper showBack cardTitle="Join room">
+    <PageWrapper
+      showBack
+      cardTitle="Join room"
+      exiting={exiting}
+      onExitComplete={handleExitComplete}
+      onBackClick={() => {
+        setExiting(true);
+        setExitTargetUrl("/");
+      }}
+    >
       {checkingSession ? (
         <p className="text-neutral-600">Loading…</p>
       ) : (
@@ -154,7 +199,9 @@ function JoinRoomContent() {
             />
           </div>
           <div>
-            <Label htmlFor="playerName" required>Your name</Label>
+            <Label htmlFor="playerName" required>
+              Your name
+            </Label>
             <Input
               id="playerName"
               type="text"

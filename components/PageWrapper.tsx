@@ -8,12 +8,24 @@ import { IconButton } from "@/components/IconButton";
 const GRADIENT_BG =
   "radial-gradient(ellipse at center, #0045f6 0%, #0038d4 35%, #002a9e 70%, #001a62 100%)";
 
+const exitTransition = { duration: 0.4, ease: [0.22, 1, 0.36, 1] as const };
+/** Title: entered from top (y -32), so exit back up and fade. */
+const titleExit = { opacity: 0, y: -32 };
+/** Card: entered scale 0→1, so exit scale 1→0 and fade. */
+const cardExit = { opacity: 0, scale: 0 };
+
 type PageWrapperProps = {
   children: React.ReactNode;
   /** Show a Back link at the top of the card (for create/join). */
   showBack?: boolean;
   /** Optional card title below Back (e.g. "Create room"). */
   cardTitle?: string;
+  /** When true, run exit animation (title + card hide). */
+  exiting?: boolean;
+  /** Called when exit animation completes. */
+  onExitComplete?: () => void;
+  /** If provided, Back button calls this instead of linking to /. Use for exit-then-navigate. */
+  onBackClick?: () => void;
 };
 
 /** When true, title is at top and card is below (avoids overlap with tall cards). */
@@ -23,6 +35,9 @@ export function PageWrapper({
   children,
   showBack = false,
   cardTitle,
+  exiting = false,
+  onExitComplete,
+  onBackClick,
 }: PageWrapperProps) {
   const isFormLayout = formLayout(showBack);
 
@@ -38,11 +53,12 @@ export function PageWrapper({
             className="text-4xl sm:text-5xl md:text-6xl text-white drop-shadow-lg text-center"
             style={{ fontFamily: "var(--font-pacifico), cursive" }}
             initial={{ opacity: 0, y: -32 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{
-              duration: 0.6,
-              ease: [0.22, 1, 0.36, 1],
-            }}
+            animate={exiting ? titleExit : { opacity: 1, y: 0 }}
+            transition={
+              exiting
+                ? exitTransition
+                : { duration: 0.6, ease: [0.22, 1, 0.36, 1] as const }
+            }
           >
             Housie
           </motion.h1>
@@ -55,24 +71,38 @@ export function PageWrapper({
             ? "w-full max-w-sm flex-shrink-0 rounded-2xl bg-white/95 backdrop-blur-sm shadow-2xl p-8 max-h-[calc(100vh-14rem)] overflow-y-auto"
             : "w-full max-w-sm flex-shrink-0 rounded-2xl bg-white/95 backdrop-blur-sm shadow-2xl p-8"
         }
-        initial={{ opacity: 0, scale: 0.98 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{
-          duration: 0.5,
-          delay: 0.2,
-          ease: [0.22, 1, 0.36, 1],
+        initial={{ opacity: 0, scale: 0 }}
+        animate={exiting ? cardExit : { opacity: 1, scale: 1 }}
+        transition={
+          exiting
+            ? exitTransition
+            : { duration: 0.5, delay: 0.2, ease: [0.22, 1, 0.36, 1] as const }
+        }
+        onAnimationComplete={() => {
+          if (exiting) onExitComplete?.();
         }}
       >
         {(showBack || cardTitle) && (
           <div className="flex flex-row items-center gap-3 mb-4">
             {showBack ? (
-              <IconButton
-                href="/"
-                icon={
-                  <ChevronLeft className="size-5 shrink-0" strokeWidth={2.5} />
-                }
-                aria-label="Back to home"
-              />
+              onBackClick ? (
+                <IconButton
+                  type="button"
+                  onClick={onBackClick}
+                  icon={
+                    <ChevronLeft className="size-5 shrink-0" strokeWidth={2.5} />
+                  }
+                  aria-label="Back to home"
+                />
+              ) : (
+                <IconButton
+                  href="/"
+                  icon={
+                    <ChevronLeft className="size-5 shrink-0" strokeWidth={2.5} />
+                  }
+                  aria-label="Back to home"
+                />
+              )
             ) : (
               <span className="w-10" aria-hidden />
             )}
