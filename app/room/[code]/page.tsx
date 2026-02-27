@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { io, Socket } from "socket.io-client";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Copy, Share2 } from "lucide-react";
 import { getClaimPrizeAmounts } from "@/lib/rooms";
 import { GRADIENT_BG } from "@/lib/theme";
 import { Button } from "@/components/Button";
@@ -122,6 +122,7 @@ export default function RoomPage() {
   const [error, setError] = useState("");
   const [leaveError, setLeaveError] = useState("");
   const [link, setLink] = useState("");
+  const [linkCopied, setLinkCopied] = useState(false);
   const [live, setLive] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [ending, setEnding] = useState(false);
@@ -540,10 +541,10 @@ export default function RoomPage() {
       {room.status === "waiting" ? (
         <main className="w-full max-w-4xl flex-1 flex flex-col items-center justify-center">
           <div
-            className="w-full rounded-2xl p-4 md:p-6"
+            className="w-full rounded-2xl p-4 md:p-8 shadow-2xl"
             style={{ background: "var(--room-card-bg)" }}
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-18">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
               {/* Left card: header actions + joining players */}
               <div className="order-2 md:order-1 room-card flex flex-col">
                 <div className="flex flex-row items-center gap-3 mb-4">
@@ -702,13 +703,53 @@ export default function RoomPage() {
                 {isHost && link && (
                   <section>
                     <p className="form-label mb-2">Share this link</p>
-                    <p className="text-sm text-theme-primary break-all select-all rounded-lg border-2 border-[var(--accent)]/30 bg-[var(--input-bg)] px-3 py-2">
+                    <p className="text-sm text-theme-primary break-all rounded-lg border-2 border-[var(--accent)]/30 bg-[var(--input-bg)] px-3 py-2">
                       {link}
                     </p>
-                    <p className="mt-2 text-xs text-theme-muted">
-                      Or share the code:{" "}
-                      <strong className="text-theme-accent">{room.code}</strong>
-                    </p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(link);
+                            setLinkCopied(true);
+                            setTimeout(() => setLinkCopied(false), 2000);
+                          } catch {
+                            setLinkCopied(false);
+                          }
+                        }}
+                        className="inline-flex items-center gap-2 rounded-lg border-2 border-[var(--accent)]/30 bg-[var(--input-bg)] px-3 py-2 text-sm text-theme-primary hover:border-[var(--accent)]/50 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50"
+                        title="Copy link"
+                      >
+                        <Copy className="size-4 shrink-0" />
+                        {linkCopied ? "Copied!" : "Copy"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            if (navigator.share) {
+                              await navigator.share({
+                                title: `Room ${room.code}`,
+                                text: `Join Housie room ${room.code}`,
+                                url: link,
+                              });
+                            } else {
+                              await navigator.clipboard.writeText(link);
+                              setLinkCopied(true);
+                              setTimeout(() => setLinkCopied(false), 2000);
+                            }
+                          } catch {
+                            // user cancelled or share failed
+                          }
+                        }}
+                        className="inline-flex items-center gap-2 rounded-lg border-2 border-[var(--accent)]/30 bg-[var(--input-bg)] px-3 py-2 text-sm text-theme-primary hover:border-[var(--accent)]/50 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50"
+                        title="Share link"
+                      >
+                        <Share2 className="size-4 shrink-0" />
+                        Share
+                      </button>
+                    </div>
                   </section>
                 )}
 
