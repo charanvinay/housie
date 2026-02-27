@@ -72,3 +72,42 @@
   box-shadow: 0 2px 0 #002d9e, 0 3px 0 rgba(0, 0, 0, 0.15),
     inset 0 2px 4px rgba(0, 45, 246, 0.1);
 }
+
+/* Form fields – match app theme */
+.input-field {
+  font-family: var(--font-inter), sans-serif;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  color: #1a1a2e;
+  background: #fff;
+  border: 2px solid #0045f6;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 0 #002d9e;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input-field::placeholder {
+  color: #94a3b8;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: #0038c7;
+  box-shadow: 0 2px 0 #002d9e, 0 0 0 3px rgba(0, 69, 246, 0.2);
+}
+
+.form-label {
+  font-family: var(--font-inter), sans-serif;
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 0.375rem;
+}
+
+.form-error {
+  font-size: 0.875rem;
+  color: #dc2626;
+  margin-top: 0.25rem;
+}

@@ -1,8 +1,12 @@
 "use client";
 
 import { Suspense, useState, useEffect } from "react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { PageWrapper } from "@/components/PageWrapper";
+import { Button } from "@/components/Button";
+import { Label } from "@/components/form/Label";
+import { Input } from "@/components/form/Input";
+import { TicketCounter } from "@/components/form/TicketCounter";
 
 /** Single name for this browser profile (host and player use the same). */
 const NAME_KEY = "player_name";
@@ -64,7 +68,6 @@ function JoinRoomContent() {
     setInitialized(true);
   }, [initialized]);
 
-  // One instance per browser: if already in a room, go there instead of joining again
   useEffect(() => {
     const session = getActiveRoomSession();
     if (!session) {
@@ -133,88 +136,61 @@ function JoinRoomContent() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-100">
-      <header className="border-b border-neutral-300 bg-white px-4 py-3">
-        <Link href="/" className="text-neutral-600 hover:text-neutral-800">
-          ← Back
-        </Link>
-        <h1 className="text-xl font-semibold text-neutral-800 mt-1">
-          Join room
-        </h1>
-      </header>
-
-      <main className="mx-auto max-w-sm px-4 py-8">
-        {checkingSession ? (
-          <p className="text-neutral-600">Loading…</p>
-        ) : (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <label className="block text-sm font-medium text-neutral-700">
-            Room code
-          </label>
-          <input
-            type="text"
-            placeholder="e.g. ABC123"
-            value={roomCode}
-            onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-            maxLength={6}
-            className="w-full rounded border border-neutral-400 bg-white px-3 py-2 uppercase"
-          />
-          <label className="block text-sm font-medium text-neutral-700">
-            Your name <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            placeholder="Enter your name"
-            value={playerName}
-            onChange={(e) => setPlayerName(e.target.value)}
-            required
-            className="w-full rounded border border-neutral-400 bg-white px-3 py-2"
-            autoComplete="name"
-          />
-          <label className="block text-sm font-medium text-neutral-700">
-            Number of tickets (1–6)
-          </label>
-          <select
+    <PageWrapper showBack cardTitle="Join room">
+      {checkingSession ? (
+        <p className="text-neutral-600">Loading…</p>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <Label htmlFor="roomCode">Room code</Label>
+            <Input
+              id="roomCode"
+              type="text"
+              placeholder="e.g. ABC123"
+              value={roomCode}
+              onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+              maxLength={6}
+              className="uppercase"
+            />
+          </div>
+          <div>
+            <Label htmlFor="playerName" required>Your name</Label>
+            <Input
+              id="playerName"
+              type="text"
+              placeholder="Enter your name"
+              value={playerName}
+              onChange={(e) => setPlayerName(e.target.value)}
+              required
+              autoComplete="name"
+            />
+          </div>
+          <TicketCounter
+            label="Number of tickets (1–6)"
             value={ticketCount}
-            onChange={(e) => setTicketCount(Number(e.target.value))}
-            className="w-full rounded border border-neutral-400 bg-white px-3 py-2"
-          >
-            {[1, 2, 3, 4, 5, 6].map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-          {error && (
-            <p className="text-sm text-red-600">{error}</p>
-          )}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded bg-neutral-800 py-2 text-white font-medium disabled:opacity-50"
-          >
+            min={1}
+            max={6}
+            onChange={setTicketCount}
+          />
+          {error && <p className="form-error">{error}</p>}
+          <Button type="submit" variant="primary" disabled={loading}>
             {loading ? "Joining…" : "Join room"}
-          </button>
+          </Button>
         </form>
-        )}
-      </main>
-    </div>
+      )}
+    </PageWrapper>
   );
 }
 
 export default function JoinRoomPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-neutral-100">
-        <header className="border-b border-neutral-300 bg-white px-4 py-3">
-          <Link href="/" className="text-neutral-600 hover:text-neutral-800">← Back</Link>
-          <h1 className="text-xl font-semibold text-neutral-800 mt-1">Join room</h1>
-        </header>
-        <main className="mx-auto max-w-sm px-4 py-8">
+    <Suspense
+      fallback={
+        <PageWrapper showBack cardTitle="Join room">
           <p className="text-neutral-600">Loading…</p>
-        </main>
-      </div>
-    }>
+        </PageWrapper>
+      }
+    >
       <JoinRoomContent />
     </Suspense>
   );
