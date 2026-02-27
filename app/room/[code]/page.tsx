@@ -544,9 +544,9 @@ export default function RoomPage() {
             className="w-full rounded-2xl p-4 md:p-8 shadow-2xl"
             style={{ background: "var(--room-card-bg)" }}
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
               {/* Left card: header actions + joining players */}
-              <div className="order-2 md:order-1 room-card flex flex-col">
+              <div className="order-1 room-card flex flex-col">
                 <div className="flex flex-row items-center gap-3 mb-4">
                   {canQuitAsPlayer ? (
                     <IconButton
@@ -619,7 +619,7 @@ export default function RoomPage() {
               </div>
 
               {/* Right card: game details + prize split + share + start/end */}
-              <div className="order-1 md:order-2 room-card space-y-6">
+              <div className="order-2 room-card space-y-6 border-t border-[var(--accent)]/30 md:border-l md:border-t-0 border-dashed pt-6 md:pl-10 md:pt-0">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <section>
                     <p className="form-label">Ticket price</p>
