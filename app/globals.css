@@ -1,1 +1,74 @@
 @import "tailwindcss";
+
+@layer utilities {
+  .font-pacifico {
+    font-family: var(--font-pacifico), cursive;
+  }
+
+  .font-inter {
+    font-family: var(--font-inter), sans-serif;
+  }
+}
+
+/* Gaming-style button variants */
+.btn-primary {
+  font-family: var(--font-inter), sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 1rem 1.5rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(180deg, #0045f6 0%, #0038c7 50%, #002d9e 100%);
+  border: 3px solid #0038c7;
+  border-radius: 1rem;
+  box-shadow: 0 4px 0 #002d9e, 0 6px 0 rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 #002d9e, 0 8px 0 rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.btn-primary:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #002d9e, 0 3px 0 rgba(0, 0, 0, 0.2),
+    inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.btn-secondary {
+  font-family: var(--font-inter), sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 1rem 1.5rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #0045f6;
+  background: linear-gradient(180deg, #ffffff 0%, #f0f4ff 100%);
+  border: 3px solid #0045f6;
+  border-radius: 1rem;
+  box-shadow: 0 4px 0 #002d9e, 0 6px 0 rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease;
+}
+
+.btn-secondary:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(180deg, #f0f4ff 0%, #e0e8ff 100%);
+  box-shadow: 0 6px 0 #002d9e, 0 8px 0 rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.btn-secondary:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #002d9e, 0 3px 0 rgba(0, 0, 0, 0.15),
+    inset 0 2px 4px rgba(0, 45, 246, 0.1);
+}

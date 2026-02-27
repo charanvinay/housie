@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 
 const ROOM_SESSION_KEY = "housie_room";
 
@@ -39,6 +40,9 @@ function clearRoomSession() {
     sessionStorage.removeItem(ROOM_SESSION_KEY);
   } catch {}
 }
+
+const gradientBg =
+  "radial-gradient(ellipse at center, #0045f6 0%, #0038d4 35%, #002a9e 70%, #001a62 100%)";
 
 export default function Home() {
   const router = useRouter();
@@ -100,39 +104,72 @@ export default function Home() {
 
   if (checking) {
     return (
-      <div className="min-h-screen bg-neutral-100 flex flex-col">
-        <header className="border-b border-neutral-300 bg-white px-4 py-3">
-          <h1 className="text-xl font-semibold text-neutral-800">Housie</h1>
-        </header>
-        <main className="flex-1 flex items-center justify-center px-4 py-8">
-          <p className="text-neutral-600">Loading…</p>
-        </main>
+      <div
+        className="min-h-screen flex flex-col items-center justify-center px-4"
+        style={{ background: gradientBg }}
+      >
+        <motion.p
+          className="text-white/90 text-lg"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          Loading…
+        </motion.p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-neutral-100 flex flex-col">
-      <header className="border-b border-neutral-300 bg-white px-4 py-3">
-        <h1 className="text-xl font-semibold text-neutral-800">Housie</h1>
-      </header>
+    <div
+      className="min-h-screen relative px-4"
+      style={{ background: gradientBg }}
+    >
+        <motion.h1
+          className="text-5xl sm:text-6xl md:text-7xl text-white drop-shadow-lg text-center absolute left-1/2 -translate-x-1/2 w-full max-w-sm"
+          style={{
+            fontFamily: "var(--font-pacifico), cursive",
+            bottom: "calc(50% + 140px)",
+          }}
+        initial={{ opacity: 0, y: -32 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{
+          duration: 0.6,
+          ease: [0.22, 1, 0.36, 1],
+        }}
+      >
+        Housie
+      </motion.h1>
 
-      <main className="flex-1 flex items-center justify-center px-4 py-8">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Link
-            href="/create"
-            className="rounded-lg border-2 border-neutral-400 bg-white px-8 py-6 text-center font-medium text-neutral-800 shadow-sm hover:border-neutral-500 hover:bg-neutral-50 transition-colors"
+      <motion.div
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm rounded-2xl bg-white/95 backdrop-blur-sm shadow-2xl p-8 flex flex-col gap-4"
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{
+          duration: 0.5,
+          delay: 0.2,
+          ease: [0.22, 1, 0.36, 1],
+        }}
+      >
+        <Link href="/create" className="block">
+          <motion.span
+            className="btn-primary cursor-pointer select-none"
+            whileTap={{ scale: 0.98 }}
+            transition={{ duration: 0.1 }}
           >
             Create room
-          </Link>
-          <Link
-            href="/join"
-            className="rounded-lg border-2 border-neutral-400 bg-white px-8 py-6 text-center font-medium text-neutral-800 shadow-sm hover:border-neutral-500 hover:bg-neutral-50 transition-colors"
+          </motion.span>
+        </Link>
+        <Link href="/join" className="block">
+          <motion.span
+            className="btn-secondary cursor-pointer select-none"
+            whileTap={{ scale: 0.98 }}
+            transition={{ duration: 0.1 }}
           >
             Join room
-          </Link>
-        </div>
-      </main>
+          </motion.span>
+        </Link>
+      </motion.div>
     </div>
   );
 }
