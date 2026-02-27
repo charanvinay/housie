@@ -3,50 +3,54 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 
-const baseClass = "cursor-pointer select-none w-full flex items-center justify-center font-medium text-lg py-4 px-6 rounded-xl";
+const iconOnlyClass = "btn-icon size-10 p-0";
+const withLabelClass = "btn-icon gap-2 px-4 py-2";
 
 const motionProps = {
   initial: { scale: 1, y: 0 },
   whileHover: { scale: 1, y: -2 },
-  whileTap: { scale: 0.96, y: 0 },
+  whileTap: { scale: 0.92, y: 0 },
   transition: { type: "tween" as const, duration: 0.12 },
 };
 
-type ButtonBaseProps = {
-  variant: "primary" | "secondary";
-  children: React.ReactNode;
+type IconButtonBaseProps = {
+  icon: React.ReactNode;
+  children?: React.ReactNode;
   className?: string;
+  "aria-label"?: string;
 };
 
-type ButtonAsLink = ButtonBaseProps & {
+type IconButtonAsLink = IconButtonBaseProps & {
   href: string;
   type?: never;
   disabled?: never;
   onClick?: never;
 };
 
-type ButtonAsButton = ButtonBaseProps & {
+type IconButtonAsButton = IconButtonBaseProps & {
   href?: never;
-  type?: "submit" | "button";
+  type?: "button" | "submit";
   disabled?: boolean;
   onClick?: () => void;
 };
 
-export type ButtonProps = ButtonAsLink | ButtonAsButton;
+export type IconButtonProps = IconButtonAsLink | IconButtonAsButton;
 
-export function Button({
-  variant,
+export function IconButton({
+  icon,
   children,
   className = "",
   ...rest
-}: ButtonProps) {
-  const variantClass = variant === "primary" ? "btn-primary" : "btn-secondary";
-  const classes = `${baseClass} ${variantClass} ${className}`.trim();
+}: IconButtonProps) {
+  const isIconOnly = !children;
+  const shapeClass = isIconOnly ? iconOnlyClass : withLabelClass;
+  const classes = `${shapeClass} ${className}`.trim();
 
   if ("href" in rest && rest.href) {
     return (
-      <Link href={rest.href} className="block">
+      <Link href={rest.href} className="inline-block" aria-label={rest["aria-label"]}>
         <motion.span className={classes} {...motionProps}>
+          {icon}
           {children}
         </motion.span>
       </Link>
@@ -60,10 +64,12 @@ export function Button({
       disabled={disabled}
       onClick={onClick}
       className={classes}
+      aria-label={rest["aria-label"]}
       {...motionProps}
       whileHover={disabled ? undefined : motionProps.whileHover}
       whileTap={disabled ? undefined : motionProps.whileTap}
     >
+      {icon}
       {children}
     </motion.button>
   );

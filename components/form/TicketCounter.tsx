@@ -1,5 +1,8 @@
 "use client";
 
+import { Minus, Plus } from "lucide-react";
+import { IconButton } from "@/components/IconButton";
+
 type TicketCounterProps = {
   value: number;
   min: number;
@@ -28,30 +31,26 @@ export function TicketCounter({
         <label className="form-label !mb-0 flex-shrink-0">{label}</label>
       )}
       <div className="flex items-center gap-1">
-        <button
+        <IconButton
           type="button"
+          icon={<Minus className="size-5" strokeWidth={2.5} />}
           onClick={decrement}
           disabled={value <= min}
           aria-label="Decrease"
-          className="counter-btn flex-shrink-0 w-10 h-10 rounded-xl border-2 border-[#0045f6] bg-white text-[#0045f6] font-bold text-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#f0f4ff] active:scale-95 transition-transform"
-        >
-          −
-        </button>
+        />
         <span
           className="w-10 text-center text-lg font-semibold text-neutral-800 tabular-nums"
           aria-live="polite"
         >
           {value}
         </span>
-        <button
+        <IconButton
           type="button"
+          icon={<Plus className="size-5" strokeWidth={2.5} />}
           onClick={increment}
           disabled={value >= max}
           aria-label="Increase"
-          className="counter-btn flex-shrink-0 w-10 h-10 rounded-xl border-2 border-[#0045f6] bg-white text-[#0045f6] font-bold text-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#f0f4ff] active:scale-95 transition-transform"
-        >
-          +
-        </button>
+        />
       </div>
     </div>
   );

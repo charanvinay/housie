@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { ChevronLeft } from "lucide-react";
+import { IconButton } from "@/components/IconButton";
 
 const GRADIENT_BG =
   "radial-gradient(ellipse at center, #0045f6 0%, #0038d4 35%, #002a9e 70%, #001a62 100%)";
@@ -61,18 +63,28 @@ export function PageWrapper({
           ease: [0.22, 1, 0.36, 1],
         }}
       >
-        {showBack && (
-          <Link
-            href="/"
-            className="inline-block text-[#0045f6] hover:underline font-medium text-sm mb-4"
-          >
-            ← Back
-          </Link>
-        )}
-        {cardTitle && (
-          <h2 className="text-xl font-semibold text-neutral-800 mb-4">
-            {cardTitle}
-          </h2>
+        {(showBack || cardTitle) && (
+          <div className="flex flex-row items-center gap-3 mb-4">
+            {showBack ? (
+              <IconButton
+                href="/"
+                icon={
+                  <ChevronLeft className="size-5 shrink-0" strokeWidth={2.5} />
+                }
+                aria-label="Back to home"
+              />
+            ) : (
+              <span className="w-10" aria-hidden />
+            )}
+            {cardTitle ? (
+              <h2 className="flex-1 text-xl font-semibold text-neutral-800 text-center">
+                {cardTitle}
+              </h2>
+            ) : (
+              <span className="flex-1" aria-hidden />
+            )}
+            <span className="w-10" aria-hidden />
+          </div>
         )}
         {children}
       </motion.div>
