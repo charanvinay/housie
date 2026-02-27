@@ -39,7 +39,7 @@ export function TicketCounter({
           aria-label="Decrease"
         />
         <span
-          className="w-10 text-center text-lg font-semibold text-neutral-800 tabular-nums"
+          className="w-10 text-center text-lg font-semibold text-theme-primary tabular-nums"
           aria-live="polite"
         >
           {value}

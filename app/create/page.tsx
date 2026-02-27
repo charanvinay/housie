@@ -172,7 +172,7 @@ export default function CreateRoomPage() {
       }}
     >
       {checkingSession ? (
-        <p className="text-neutral-600">Loading…</p>
+        <p className="text-theme-muted">Loading…</p>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>

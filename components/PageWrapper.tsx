@@ -66,8 +66,8 @@ export function PageWrapper({
       <motion.div
         className={
           isFormLayout
-            ? "w-full max-w-sm flex-shrink-0 rounded-2xl bg-white/95 backdrop-blur-sm shadow-2xl p-8 max-h-[calc(100vh-14rem)] overflow-y-auto"
-            : "w-full max-w-sm flex-shrink-0 rounded-2xl bg-white/95 backdrop-blur-sm shadow-2xl p-8"
+            ? "w-full max-w-sm flex-shrink-0 rounded-2xl backdrop-blur-sm shadow-2xl p-8 max-h-[calc(100vh-14rem)] overflow-y-auto [background:var(--card-bg)]"
+            : "w-full max-w-sm flex-shrink-0 rounded-2xl backdrop-blur-sm shadow-2xl p-8 [background:var(--card-bg)]"
         }
         initial={{ opacity: 0, scale: 0 }}
         animate={exiting ? cardExit : { opacity: 1, scale: 1 }}
@@ -111,7 +111,7 @@ export function PageWrapper({
               <span className="w-10" aria-hidden />
             )}
             {cardTitle ? (
-              <h2 className="flex-1 text-xl font-semibold text-neutral-800 text-center">
+              <h2 className="flex-1 text-xl font-semibold text-theme-primary text-center">
                 {cardTitle}
               </h2>
             ) : (

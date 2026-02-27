@@ -1,3 +1,5 @@
-/** Shared gradient background for app shell and loading overlay. */
+/** Dark theme – darker blue radial gradient. */
+
+/** Main app background: radial, darker blues (same blue family) */
 export const GRADIENT_BG =
-  "radial-gradient(ellipse at center, #0045f6 0%, #0038d4 35%, #002a9e 70%, #001a62 100%)";
+  "radial-gradient(ellipse at center, #0038d4 0%, #002a9e 30%, #001a62 60%, #000d33 85%, #050518 100%)";

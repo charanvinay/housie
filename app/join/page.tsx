@@ -183,7 +183,7 @@ function JoinRoomContent() {
       }}
     >
       {checkingSession ? (
-        <p className="text-neutral-600">Loading…</p>
+        <p className="text-theme-muted">Loading…</p>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
@@ -234,7 +234,7 @@ export default function JoinRoomPage() {
     <Suspense
       fallback={
         <PageWrapper showBack cardTitle="Join room">
-          <p className="text-neutral-600">Loading…</p>
+          <p className="text-theme-muted">Loading…</p>
         </PageWrapper>
       }
     >

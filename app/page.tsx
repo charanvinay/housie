@@ -117,7 +117,7 @@ export default function Home() {
     <PageWrapper exiting={exiting} onExitComplete={handleExitComplete}>
       {checking ? (
         <motion.p
-          className="text-neutral-600 text-center"
+          className="text-theme-muted text-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}

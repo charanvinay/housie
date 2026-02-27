@@ -4,7 +4,11 @@ import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { io, Socket } from "socket.io-client";
+import { ChevronLeft } from "lucide-react";
 import { getClaimPrizeAmounts } from "@/lib/rooms";
+import { GRADIENT_BG } from "@/lib/theme";
+import { Button } from "@/components/Button";
+import { IconButton } from "@/components/IconButton";
 
 const ROOM_SESSION_KEY = "housie_room";
 
@@ -174,9 +178,9 @@ export default function RoomPage() {
     saveSelections(code, myId, selectedByTicket);
   }, [code, myId, room?.status, selectedByTicket]);
 
-  const handleGoHome = async (e: React.MouseEvent) => {
+  const handleGoHome = async (e?: React.MouseEvent) => {
     if (!canQuitAsPlayer) return;
-    e.preventDefault();
+    e?.preventDefault();
     if (leaving) return;
     setLeaveError("");
     setLeaving(true);
@@ -495,19 +499,31 @@ export default function RoomPage() {
 
   if (error && !room) {
     return (
-      <div className="min-h-screen bg-neutral-100 px-4 py-8">
-        <p className="text-red-600">{error}</p>
-        <Link href="/" className="mt-4 inline-block text-neutral-600 underline">
-          Back to home
-        </Link>
+      <div
+        className="min-h-screen flex flex-col items-center justify-center px-4 py-8"
+        style={{ background: GRADIENT_BG }}
+      >
+        <div className="room-card max-w-sm w-full text-center">
+          <p className="form-error">{error}</p>
+          <div className="mt-4">
+            <Button href="/" variant="secondary">
+              Back to home
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!room) {
     return (
-      <div className="min-h-screen bg-neutral-100 flex items-center justify-center">
-        <p className="text-neutral-600">Loading room…</p>
+      <div
+        className="min-h-screen flex items-center justify-center px-4"
+        style={{ background: GRADIENT_BG }}
+      >
+        <div className="room-card max-w-sm text-center">
+          <p className="text-theme-primary">Loading room…</p>
+        </div>
       </div>
     );
   }
@@ -517,230 +533,299 @@ export default function RoomPage() {
   const totalAmount = room.totalAmount ?? totalTickets * room.ticketPrice;
 
   return (
-    <div className="min-h-screen bg-neutral-100">
-      <header className="border-b border-neutral-300 bg-white px-4 py-3">
-        {canQuitAsPlayer ? (
-          <button
-            type="button"
-            onClick={handleGoHome}
-            disabled={leaving}
-            className="text-neutral-600 hover:text-neutral-800 disabled:opacity-50"
+    <div
+      className="min-h-screen flex flex-col items-center justify-center px-4 py-6"
+      style={{ background: GRADIENT_BG }}
+    >
+      {room.status === "waiting" ? (
+        <main className="w-full max-w-4xl flex-1 flex flex-col items-center justify-center">
+          <div
+            className="w-full rounded-2xl p-4 md:p-6"
+            style={{ background: "var(--room-card-bg)" }}
           >
-            {leaving ? "Leaving…" : "← Home"}
-          </button>
-        ) : (
-          <Link href="/" className="text-neutral-600 hover:text-neutral-800">
-            ← Home
-          </Link>
-        )}
-        {leaveError && (
-          <p className="mt-2 text-sm text-red-600">{leaveError}</p>
-        )}
-        <div className="mt-2 flex items-center justify-between flex-wrap gap-2">
-          <h1 className="text-xl font-semibold text-neutral-800">
-            Room {room.code}
-          </h1>
-          <div className="flex items-center gap-2">
-            {isHost && (
-              <span className="rounded bg-neutral-200 px-2 py-0.5 text-sm text-neutral-700">
-                Host
-              </span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-18">
+              {/* Left card: header actions + joining players */}
+              <div className="order-2 md:order-1 room-card flex flex-col">
+                <div className="flex flex-row items-center gap-3 mb-4">
+                  {canQuitAsPlayer ? (
+                    <IconButton
+                      type="button"
+                      onClick={() => handleGoHome()}
+                      disabled={leaving}
+                      icon={
+                        <ChevronLeft
+                          className="size-5 shrink-0"
+                          strokeWidth={2.5}
+                        />
+                      }
+                      aria-label="Leave room"
+                    />
+                  ) : (
+                    <IconButton
+                      href="/"
+                      icon={
+                        <ChevronLeft
+                          className="size-5 shrink-0"
+                          strokeWidth={2.5}
+                        />
+                      }
+                      aria-label="Back to home"
+                    />
+                  )}
+                  <h1 className="flex-1 text-xl font-semibold text-theme-primary text-center">
+                    Room {room.code}
+                  </h1>
+                  <div className="flex items-center gap-2 w-10 justify-end">
+                    {isHost && (
+                      <span className="rounded bg-theme-accent-soft px-2 py-0.5 text-xs font-medium text-theme-accent">
+                        Host
+                      </span>
+                    )}
+                    <span
+                      className={`rounded px-2 py-0.5 text-xs font-medium ${
+                        live
+                          ? "bg-[var(--success-bg)] text-[var(--success)]"
+                          : "bg-theme-accent-soft text-theme-muted"
+                      }`}
+                      title={live ? "Real-time updates on" : "Connecting…"}
+                    >
+                      {live ? "Live" : "…"}
+                    </span>
+                  </div>
+                </div>
+                {leaveError && <p className="form-error mb-3">{leaveError}</p>}
+                <h2 className="form-label mb-2">Joining players</h2>
+                <ul className="space-y-2 flex-1 rounded-lg p-3 border-2 border-[var(--accent)]/30 bg-[var(--input-bg)]">
+                  {room.players.map((p) => (
+                    <li
+                      key={p.id}
+                      className="flex justify-between text-sm text-theme-primary"
+                    >
+                      <span>
+                        {p.name}
+                        {p.id === room.hostId && (
+                          <span className="ml-1 text-theme-accent font-medium">
+                            (Host)
+                          </span>
+                        )}
+                      </span>
+                      <span className="font-medium text-theme-accent">
+                        {p.ticketCount} ticket{p.ticketCount !== 1 ? "s" : ""}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Right card: game details + prize split + share + start/end */}
+              <div className="order-1 md:order-2 room-card space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <section>
+                    <p className="form-label">Ticket price</p>
+                    <p className="text-xl font-bold text-theme-accent">
+                      ₹{room.ticketPrice} per ticket
+                    </p>
+                  </section>
+                  <section>
+                    <div className="flex justify-between text-sm">
+                      <span className="form-label mb-0">Total tickets</span>
+                      <span className="font-semibold text-theme-primary">
+                        {totalTickets}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm mt-1">
+                      <span className="text-theme-muted">Total amount</span>
+                      <span className="font-semibold text-theme-accent">
+                        ₹{totalAmount}
+                      </span>
+                    </div>
+                  </section>
+                </div>
+
+                {totalAmount > 0 &&
+                  (() => {
+                    const prizes = getClaimPrizeAmounts(totalAmount);
+                    const rows: { label: string; amount: number }[] = [
+                      { label: "Jaldi Five", amount: prizes.jaldiFive },
+                      { label: "First line", amount: prizes.firstLine },
+                      { label: "Middle line", amount: prizes.middleLine },
+                      { label: "Last line", amount: prizes.lastLine },
+                      { label: "Housie", amount: prizes.housie },
+                    ];
+                    return (
+                      <section>
+                        <h2 className="form-label mb-2">Prize split</h2>
+                        <p className="text-xs text-theme-muted mb-2">
+                          Split equally when multiple winners for the same
+                          claim.{" "}
+                          {Math.min(
+                            prizes.jaldiFive,
+                            prizes.firstLine,
+                            prizes.housie
+                          ) < 5
+                            ? "Small pool: amounts in multiples of ₹2."
+                            : "Minimum ₹5 per claim."}
+                        </p>
+                        <div className="rounded-lg p-4 border-2 border-[var(--accent)]/30 bg-[var(--input-bg)]">
+                          <table className="w-full text-sm border-collapse">
+                            <thead>
+                              <tr className="border-b-2 border-[#93c5fd]/60">
+                                <th className="text-left py-2 font-semibold text-theme-primary">
+                                  Claim type
+                                </th>
+                                <th className="text-right py-2 font-semibold text-theme-primary">
+                                  Amount
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {rows.map(({ label, amount }) => (
+                                <tr
+                                  key={label}
+                                  className="border-b border-[#93c5fd]/40"
+                                >
+                                  <td className="py-2 text-theme-primary">
+                                    {label}
+                                  </td>
+                                  <td className="py-2 text-right font-semibold text-theme-accent">
+                                    ₹{amount}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </section>
+                    );
+                  })()}
+
+                {isHost && link && (
+                  <section>
+                    <p className="form-label mb-2">Share this link</p>
+                    <p className="text-sm text-theme-primary break-all select-all rounded-lg border-2 border-[var(--accent)]/30 bg-[var(--input-bg)] px-3 py-2">
+                      {link}
+                    </p>
+                    <p className="mt-2 text-xs text-theme-muted">
+                      Or share the code:{" "}
+                      <strong className="text-theme-accent">{room.code}</strong>
+                    </p>
+                  </section>
+                )}
+
+                {isHost && (
+                  <div className="flex flex-col gap-3 pt-2">
+                    <Button
+                      type="button"
+                      variant="primary"
+                      onClick={handleStartGame}
+                      disabled={starting || !live}
+                    >
+                      {starting ? "Starting…" : "Start game"}
+                    </Button>
+                    {!live && (
+                      <p className="text-xs text-theme-muted text-center">
+                        Start game is available when the connection is live.
+                      </p>
+                    )}
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={handleEndGame}
+                      disabled={ending}
+                      className="!border-[var(--danger)] !text-[var(--danger)] hover:!bg-[var(--danger-soft)]"
+                    >
+                      {ending ? "Ending…" : "End game"}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </main>
+      ) : (
+        <>
+          <header className="shrink-0 flex items-center gap-3 px-2 py-2 max-w-4xl mx-auto w-full">
+            {canQuitAsPlayer ? (
+              <IconButton
+                type="button"
+                onClick={() => handleGoHome()}
+                disabled={leaving}
+                icon={
+                  <ChevronLeft className="size-5 shrink-0" strokeWidth={2.5} />
+                }
+                aria-label="Leave room"
+              />
+            ) : (
+              <IconButton
+                href="/"
+                icon={
+                  <ChevronLeft className="size-5 shrink-0" strokeWidth={2.5} />
+                }
+                aria-label="Back to home"
+              />
             )}
+            <h1 className="flex-1 text-lg font-semibold text-white drop-shadow-sm">
+              Room {room.code}
+            </h1>
             <span
-              className={`rounded px-2 py-0.5 text-sm ${
-                live
-                  ? "bg-green-100 text-green-800"
-                  : "bg-neutral-200 text-neutral-600"
+              className={`rounded px-2 py-0.5 text-xs font-medium ${
+                live ? "bg-green-400/90 text-white" : "bg-white/20 text-white"
               }`}
-              title={live ? "Real-time updates on" : "Connecting…"}
             >
               {live ? "Live" : "…"}
             </span>
-          </div>
-        </div>
-      </header>
+          </header>
 
-      <main className="mx-auto max-w-lg px-4 py-6 space-y-6">
-        {room.status === "waiting" && (
-          <>
-            <section className="rounded-lg border border-neutral-300 bg-white p-4">
-              <p className="text-sm text-neutral-600">Ticket price</p>
-              <p className="text-lg font-semibold">
-                ₹{room.ticketPrice} per ticket
-              </p>
-            </section>
-
-            {isHost && link && (
-              <section className="rounded-lg border border-neutral-300 bg-white p-4">
-                <p className="text-sm font-medium text-neutral-700 mb-2">
-                  Share this link
-                </p>
-                <p className="text-sm text-neutral-600 break-all select-all">
-                  {link}
-                </p>
-                <p className="mt-2 text-sm text-neutral-500">
-                  Or share the code: <strong>{room.code}</strong>
-                </p>
-              </section>
+          <main className="mx-auto w-full max-w-4xl flex-1 px-0 py-4">
+            {room.status === "started" && (
+              <div className="mx-auto max-w-lg space-y-6">
+                <GameScreen
+                  room={room}
+                  isHost={isHost}
+                  myId={myId ?? ""}
+                  drawing={drawing}
+                  onDrawNumber={handleDrawNumber}
+                  selectedByTicket={selectedByTicket}
+                  onToggleNumber={toggleTicketNumber}
+                  claiming={claiming}
+                  claimError={claimError}
+                  onClaim={handleClaim}
+                  onEndGame={handleEndGame}
+                  ending={ending}
+                />
+              </div>
             )}
 
-            <section className="rounded-lg border border-neutral-300 bg-white p-4">
-              <h2 className="font-medium text-neutral-800 mb-2">Players</h2>
-              <ul className="space-y-2">
-                {room.players.map((p) => (
-                  <li key={p.id} className="flex justify-between text-sm">
-                    <span>
-                      {p.name}
-                      {p.id === room.hostId && " (Host)"}
-                    </span>
-                    <span>
-                      {p.ticketCount} ticket{p.ticketCount !== 1 ? "s" : ""}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-
-            <section className="rounded-lg border border-neutral-300 bg-white p-4">
-              <div className="flex justify-between text-sm">
-                <span className="text-neutral-600">Total tickets</span>
-                <span className="font-medium">{totalTickets}</span>
-              </div>
-              <div className="flex justify-between text-sm mt-1">
-                <span className="text-neutral-600">Total amount</span>
-                <span className="font-medium">₹{totalAmount}</span>
-              </div>
-            </section>
-
-            {totalAmount > 0 &&
-              (() => {
-                const prizes = getClaimPrizeAmounts(totalAmount);
-                const rows: { label: string; amount: number }[] = [
-                  { label: "Jaldi Five", amount: prizes.jaldiFive },
-                  { label: "First line", amount: prizes.firstLine },
-                  { label: "Middle line", amount: prizes.middleLine },
-                  { label: "Last line", amount: prizes.lastLine },
-                  { label: "Housie", amount: prizes.housie },
-                ];
-                return (
-                  <section className="rounded-lg border border-neutral-300 bg-white p-4">
-                    <h2 className="font-medium text-neutral-800 mb-2">
-                      Prize split
-                    </h2>
-                    <p className="text-xs text-neutral-500 mb-2">
-                      Split equally when multiple winners for the same claim.{" "}
-                      {Math.min(
-                        prizes.jaldiFive,
-                        prizes.firstLine,
-                        prizes.housie
-                      ) < 5
-                        ? "Small pool: amounts in multiples of ₹2."
-                        : "Minimum ₹5 per claim."}
-                    </p>
-                    <table className="w-full text-sm border-collapse">
-                      <thead>
-                        <tr className="border-b border-neutral-300">
-                          <th className="text-left py-2 font-medium text-neutral-700">
-                            Claim type
-                          </th>
-                          <th className="text-right py-2 font-medium text-neutral-700">
-                            Amount you will receive
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {rows.map(({ label, amount }) => (
-                          <tr
-                            key={label}
-                            className="border-b border-neutral-200"
-                          >
-                            <td className="py-2 text-neutral-800">{label}</td>
-                            <td className="py-2 text-right font-medium">
-                              ₹{amount}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </section>
-                );
-              })()}
-
-            {isHost && (
-              <div className="flex flex-col gap-3 items-center">
-                <button
-                  type="button"
-                  onClick={handleStartGame}
-                  disabled={starting || !live}
-                  title={
-                    !live
-                      ? "Connect to real-time updates to start the game"
-                      : undefined
-                  }
-                  className="rounded-lg border-2 border-green-600 bg-green-600 px-6 py-3 text-base font-medium text-white hover:bg-green-700 disabled:opacity-50"
-                >
-                  {starting ? "Starting…" : "Start game"}
-                </button>
-                {!live && (
-                  <p className="text-xs text-neutral-500 text-center">
-                    Start game is available when the connection is live.
-                  </p>
+            {room.status === "ended" && (
+              <div className="mx-auto max-w-lg space-y-6">
+                {(room.drawnNumbers?.length ?? 0) > 0 ||
+                room.jaldiFiveClaimed?.length ||
+                room.firstLineClaimed?.length ||
+                room.middleLineClaimed?.length ||
+                room.lastLineClaimed?.length ||
+                room.housieClaimed?.length ? (
+                  <WinnersScreen
+                    room={room}
+                    onBackHome={() => {
+                      clearRoomSession();
+                      if (myId) clearSelectionsForRoom(code, myId);
+                      router.push("/");
+                    }}
+                  />
+                ) : (
+                  <GameEndedNoWinners
+                    onBackHome={() => {
+                      clearRoomSession();
+                      if (myId) clearSelectionsForRoom(code, myId);
+                      router.push("/");
+                    }}
+                  />
                 )}
-                <button
-                  type="button"
-                  onClick={handleEndGame}
-                  disabled={ending}
-                  className="rounded-lg border border-red-300 bg-red-50 px-4 py-2 text-sm font-medium text-red-800 hover:bg-red-100 disabled:opacity-50"
-                >
-                  {ending ? "Ending…" : "End game"}
-                </button>
               </div>
             )}
-          </>
-        )}
-
-        {room.status === "started" && (
-          <GameScreen
-            room={room}
-            isHost={isHost}
-            myId={myId ?? ""}
-            drawing={drawing}
-            onDrawNumber={handleDrawNumber}
-            selectedByTicket={selectedByTicket}
-            onToggleNumber={toggleTicketNumber}
-            claiming={claiming}
-            claimError={claimError}
-            onClaim={handleClaim}
-            onEndGame={handleEndGame}
-            ending={ending}
-          />
-        )}
-
-        {room.status === "ended" &&
-          ((room.drawnNumbers?.length ?? 0) > 0 ||
-          room.jaldiFiveClaimed?.length ||
-          room.firstLineClaimed?.length ||
-          room.middleLineClaimed?.length ||
-          room.lastLineClaimed?.length ||
-          room.housieClaimed?.length ? (
-            <WinnersScreen
-              room={room}
-              onBackHome={() => {
-                clearRoomSession();
-                if (myId) clearSelectionsForRoom(code, myId);
-                router.push("/");
-              }}
-            />
-          ) : (
-            <GameEndedNoWinners
-              onBackHome={() => {
-                clearRoomSession();
-                if (myId) clearSelectionsForRoom(code, myId);
-                router.push("/");
-              }}
-            />
-          ))}
-      </main>
+          </main>
+        </>
+      )}
     </div>
   );
 }
