@@ -21,6 +21,7 @@
   font-size: 1.125rem;
   font-weight: 600;
   color: white;
+  cursor: pointer;
   background: linear-gradient(180deg, #0045f6 0%, #0038c7 50%, #002d9e 100%);
   border: 3px solid #0038c7;
   border-radius: 1rem;
@@ -50,6 +51,7 @@
   font-size: 1.125rem;
   font-weight: 600;
   color: #0045f6;
+  cursor: pointer;
   background: linear-gradient(180deg, #ffffff 0%, #f0f4ff 100%);
   border: 3px solid #0045f6;
   border-radius: 1rem;
@@ -75,6 +77,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
   border: 2px solid #0045f6;
   border-radius: 9999px;
   background: linear-gradient(180deg, #ffffff 0%, #f5f8ff 100%);
