@@ -1,16 +1,6 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Inter, Pacifico } from "next/font/google";
+import { Google_Sans_Flex, Pacifico } from "next/font/google";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 const pacifico = Pacifico({
   weight: "400",
@@ -18,8 +8,9 @@ const pacifico = Pacifico({
   subsets: ["latin"],
 });
 
-const inter = Inter({
-  variable: "--font-inter",
+const googleSansFlex = Google_Sans_Flex({
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  variable: "--font-google-sans-flex",
   subsets: ["latin"],
 });
 
@@ -34,9 +25,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={googleSansFlex.variable}>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${pacifico.variable} ${inter.variable} antialiased`}
+        className={`${pacifico.variable} ${googleSansFlex.variable} antialiased`}
       >
         {children}
       </body>

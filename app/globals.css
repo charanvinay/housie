@@ -1,25 +1,31 @@
 @import "tailwindcss";
 
+@layer base {
+  body {
+    font-family: var(--font-google-sans-flex), sans-serif;
+  }
+}
+
 @layer utilities {
   .font-pacifico {
     font-family: var(--font-pacifico), cursive;
   }
 
-  .font-inter {
-    font-family: var(--font-inter), sans-serif;
+  .font-google-sans-flex {
+    font-family: var(--font-google-sans-flex), sans-serif;
   }
 }
 
-/* Gaming-style button variants */
+/* Gaming-style button variants – inherit font from body */
 .btn-primary {
-  font-family: var(--font-inter), sans-serif;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
   padding: 1rem 1.5rem;
   font-size: 1.125rem;
-  font-weight: 600;
+  font-weight: 700;
+  text-transform: capitalize;
   color: white;
   cursor: pointer;
   background: linear-gradient(180deg, #0045f6 0%, #0038c7 50%, #002d9e 100%);
@@ -42,7 +48,6 @@
 }
 
 .btn-secondary {
-  font-family: var(--font-inter), sans-serif;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -50,6 +55,7 @@
   padding: 1rem 1.5rem;
   font-size: 1.125rem;
   font-weight: 600;
+  text-transform: capitalize;
   color: #0045f6;
   cursor: pointer;
   background: linear-gradient(180deg, #ffffff 0%, #f0f4ff 100%);
@@ -73,7 +79,6 @@
 
 /* Icon button – same pattern: base, hover, active (tap) */
 .btn-icon {
-  font-family: var(--font-inter), sans-serif;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -101,7 +106,6 @@
 
 /* Form fields – match app theme */
 .input-field {
-  font-family: var(--font-inter), sans-serif;
   width: 100%;
   padding: 0.75rem 1rem;
   font-size: 1rem;
@@ -124,7 +128,6 @@
 }
 
 .form-label {
-  font-family: var(--font-inter), sans-serif;
   display: block;
   font-size: 0.875rem;
   font-weight: 600;
