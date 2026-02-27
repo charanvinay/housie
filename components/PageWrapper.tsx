@@ -4,9 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ChevronLeft } from "lucide-react";
 import { IconButton } from "@/components/IconButton";
-
-const GRADIENT_BG =
-  "radial-gradient(ellipse at center, #0045f6 0%, #0038d4 35%, #002a9e 70%, #001a62 100%)";
+import { GRADIENT_BG } from "@/lib/theme";
 
 const exitTransition = { duration: 0.4, ease: [0.22, 1, 0.36, 1] as const };
 /** Title: entered from top (y -32), so exit back up and fade. */
@@ -90,7 +88,10 @@ export function PageWrapper({
                   type="button"
                   onClick={onBackClick}
                   icon={
-                    <ChevronLeft className="size-5 shrink-0" strokeWidth={2.5} />
+                    <ChevronLeft
+                      className="size-5 shrink-0"
+                      strokeWidth={2.5}
+                    />
                   }
                   aria-label="Back to home"
                 />
@@ -98,7 +99,10 @@ export function PageWrapper({
                 <IconButton
                   href="/"
                   icon={
-                    <ChevronLeft className="size-5 shrink-0" strokeWidth={2.5} />
+                    <ChevronLeft
+                      className="size-5 shrink-0"
+                      strokeWidth={2.5}
+                    />
                   }
                   aria-label="Back to home"
                 />

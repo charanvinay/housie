@@ -144,7 +144,7 @@ export default function Home() {
               setExitTargetUrl("/join");
             }}
           >
-            Joiny room
+            Join room
           </Button>
         </div>
       )}
