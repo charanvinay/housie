@@ -58,7 +58,7 @@ export function PageWrapper({
           </motion.h1>
         </Link>
       </header>
-      <div className="h-5 shrink-0" />
+      <div className="h-12 shrink-0" />
       <motion.div
         className={`w-full max-w-xs border-2 border-accent/30 md:border-none md:max-w-md shrink-0 rounded-2xl backdrop-blur-sm shadow-2xl p-4 md:p-8  
           ${
