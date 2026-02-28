@@ -207,6 +207,9 @@
     padding: 0.25rem;
     font-size: 0.8125rem;
   }
+  .tickets-scroll::-webkit-scrollbar-thumb {
+    background: transparent;
+  }
 }
 
 /* Form fields – lighter so they stand out on dark cards */
