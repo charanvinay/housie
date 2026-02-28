@@ -728,7 +728,9 @@ function RoomPageInner() {
 
               {isHost && link && (
                 <section>
-                  <p className="form-label mb-2">Share this link</p>
+                  <p className="form-label mb-2">
+                    Invite players — share this link
+                  </p>
                   <p className="text-sm text-theme-primary break-all rounded-lg border-2 border-accent/30 bg-inputBg px-3 py-2">
                     {link}
                   </p>
@@ -756,8 +758,8 @@ function RoomPageInner() {
                         try {
                           if (navigator.share) {
                             await navigator.share({
-                              title: `Room ${room.code}`,
-                              text: `Join Housie room ${room.code}`,
+                              title: "Housie Time! 🥳",
+                              text: `Come join our Housie game! Use room code ${room.code} and let's enjoy together 😊`,
                               url: link,
                             });
                           } else {
