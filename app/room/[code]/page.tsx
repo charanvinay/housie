@@ -758,8 +758,8 @@ function RoomPageInner() {
                         try {
                           if (navigator.share) {
                             await navigator.share({
-                              title: "Housie Time! 🥳",
-                              text: `Come join our Housie game! Use room code ${room.code} and let's enjoy together 😊`,
+                              title: "Let's play Housie! 🪙",
+                              text: `Hey! Game on — join my Housie room (${room.code}) and let's see who wins! 🏆`,
                               url: link,
                             });
                           } else {
