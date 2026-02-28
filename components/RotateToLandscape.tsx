@@ -1,19 +1,27 @@
 "use client";
 
 import { useIsMobileUserAgent } from "@/hooks/useIsMobileUserAgent";
-import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { FiRotateCw } from "react-icons/fi";
 
 const NARROW_BREAKPOINT = 768;
 
-export function RotateToLandscape({ children }: { children: ReactNode }) {
+type Props = {
+  children: ReactNode;
+  /** When true, show rotate prompt and apply orientation lock (game screen with tickets only). When false, just render children. */
+  active?: boolean;
+};
+
+export function RotateToLandscape({ children, active = false }: Props) {
   const [showRotatePrompt, setShowRotatePrompt] = useState(false);
   const isMobileUserAgent = useIsMobileUserAgent();
-  const pathname = usePathname();
-  const isRoomPage = pathname?.startsWith("/room/") ?? false;
 
   useEffect(() => {
+    if (!active) {
+      setShowRotatePrompt(false);
+      return;
+    }
+
     const checkOrientation = () => {
       const isPortrait =
         typeof window !== "undefined" &&
@@ -22,24 +30,17 @@ export function RotateToLandscape({ children }: { children: ReactNode }) {
         typeof window !== "undefined" &&
         window.innerWidth < NARROW_BREAKPOINT;
 
-      // Non-mobile (e.g. laptop in device mode): show rotate when portrait or narrow; after "larger device" / landscape → app with scrollable tickets
-      // Mobile (real device): show rotate only when portrait so we only display landscape view; in landscape we lock and show app
+      // Non-mobile (e.g. laptop in device mode): show rotate when portrait or narrow
+      // Mobile (real device): show rotate only when portrait; in landscape we lock
       if (isMobileUserAgent) {
         setShowRotatePrompt(isPortrait);
       } else {
         setShowRotatePrompt(isPortrait || isNarrow);
       }
 
-      // Mobile (by user agent): prevent rotation on room page when in landscape
-      if (
-        isMobileUserAgent &&
-        isRoomPage &&
-        !isPortrait &&
-        typeof window !== "undefined" &&
-        "orientation" in screen &&
-        "lock" in screen.orientation
-      ) {
-        screen.orientation.lock("landscape").catch(() => {});
+      if (isMobileUserAgent && !isPortrait && typeof window !== "undefined") {
+        const orientation = (screen as { orientation?: { lock?: (o: string) => Promise<void> } }).orientation;
+        orientation?.lock?.("landscape").catch(() => {});
       }
     };
 
@@ -52,9 +53,9 @@ export function RotateToLandscape({ children }: { children: ReactNode }) {
       mediaQuery.removeEventListener("change", checkOrientation);
       window.removeEventListener("resize", resizeHandler);
     };
-  }, [isMobileUserAgent, isRoomPage]);
+  }, [isMobileUserAgent, active]);
 
-  if (showRotatePrompt) {
+  if (active && showRotatePrompt) {
     return (
       <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[var(--gradient-bg)] p-6 text-center">
         <FiRotateCw className="mb-6 size-16 text-yellow" aria-hidden />

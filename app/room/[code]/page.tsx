@@ -10,6 +10,7 @@ import { useEffect, useRef, useState } from "react";
 import { FiChevronLeft, FiCopy, FiRefreshCw, FiShare2, FiUser } from "react-icons/fi";
 import { PiUserCircleCheckFill, PiUserCircleDashedFill } from "react-icons/pi";
 import { io, Socket } from "socket.io-client";
+import { RotateToLandscape } from "@/components/RotateToLandscape";
 import { GameEndedNoWinners } from "./GameEndedNoWinners";
 import { GameScreen } from "./GameScreen";
 import { WinnersScreen } from "./WinnersScreen";
@@ -416,7 +417,7 @@ function RoomPageInner() {
 
   if (error && !room) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-4 py-8">
+      <div className="min-h-screen-safe flex flex-col items-center justify-center px-4 py-8">
         <div className="room-card max-w-sm w-full text-center">
           <p className="form-error">{error}</p>
           <div className="mt-4">
@@ -441,8 +442,8 @@ function RoomPageInner() {
     <div
       className={
         room.status === "waiting"
-          ? "min-h-screen flex flex-col items-center justify-center px-4 py-6"
-          : "h-screen flex flex-col overflow-hidden"
+          ? "min-h-screen-safe flex flex-col items-center justify-center px-4 py-6"
+          : "h-screen-safe flex flex-col overflow-hidden"
       }
     >
       {room.status === "waiting" ? (
@@ -695,6 +696,7 @@ function RoomPageInner() {
           </motion.div>
         </main>
       ) : (
+        <RotateToLandscape active={room.status === "started"}>
         <div className="flex-1 min-h-0 flex flex-col w-full overflow-hidden p-4">
           <header className="shrink-0 grid grid-cols-3 items-center px-2 py-2 w-full gap-4">
             {/* Left: back + room name */}
@@ -861,6 +863,7 @@ function RoomPageInner() {
             )}
           </main>
         </div>
+        </RotateToLandscape>
       )}
     </div>
   );

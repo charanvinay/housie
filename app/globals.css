@@ -40,10 +40,15 @@
 }
 
 @layer base {
+  html {
+    height: 100%;
+  }
   body {
     font-family: var(--font-google-sans-flex), sans-serif;
     background: var(--gradient-bg);
-    min-height: 100vh;
+    min-height: 100%;
+    min-height: 100dvh;
+    height: 100%;
     color: var(--text-primary);
   }
 }
@@ -252,6 +257,16 @@
 }
 .border-theme {
   border-color: var(--card-border);
+}
+
+/* Full viewport height that avoids mobile browser chrome scroll (dvh = dynamic viewport height) */
+.min-h-screen-safe {
+  min-height: 100dvh;
+  min-height: 100vh;
+}
+.h-screen-safe {
+  height: 100dvh;
+  height: 100vh;
 }
 
 /* Tickets column: light blue scrollbar thumb, gap before track */

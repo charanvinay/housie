@@ -39,7 +39,7 @@ export function PageWrapper({
   const isFormLayout = formLayout(showBack);
 
   return (
-    <div className="min-h-screen flex flex-col items-center px-4 py-6">
+    <div className="min-h-screen-safe flex flex-col items-center px-4 py-6">
       <div className="flex-1 min-h-[1rem]" />
       <header className="flex-shrink-0 flex justify-center">
         <Link href="/" className="block">
@@ -62,7 +62,7 @@ export function PageWrapper({
       <motion.div
         className={
           isFormLayout
-            ? "w-full max-w-sm shrink-0 rounded-2xl backdrop-blur-sm shadow-2xl p-8 max-h-[calc(100vh-14rem)] overflow-y-auto bg-cardBg"
+            ? "w-full max-w-sm shrink-0 rounded-2xl backdrop-blur-sm shadow-2xl p-8 max-h-[calc(100dvh-14rem)] overflow-y-auto bg-cardBg"
             : "w-full max-w-sm shrink-0 rounded-2xl backdrop-blur-sm shadow-2xl p-8 bg-cardBg"
         }
         initial={{ opacity: 0, scale: 0 }}
