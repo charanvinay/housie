@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import Link from "next/link";
-import { useParams, useSearchParams, useRouter } from "next/navigation";
-import { io, Socket } from "socket.io-client";
-import { ChevronLeft, Copy, Share2 } from "lucide-react";
-import { getClaimPrizeAmounts } from "@/lib/rooms";
-import { GRADIENT_BG } from "@/lib/theme";
 import { Button } from "@/components/Button";
 import { IconButton } from "@/components/IconButton";
-import { ModalProvider, useModal } from "@/components/Modal";
+import { useModal } from "@/components/Modal";
+import { getClaimPrizeAmounts } from "@/lib/rooms";
+import { GRADIENT_BG } from "@/lib/theme";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { FiChevronLeft, FiCopy, FiShare2 } from "react-icons/fi";
+import { PiUserCircleCheckFill, PiUserCircleDashedFill } from "react-icons/pi";
+import { io, Socket } from "socket.io-client";
 
 const ROOM_SESSION_KEY = "housie_room";
 
@@ -542,7 +542,7 @@ function RoomPageInner() {
     >
       {room.status === "waiting" ? (
         <main className="w-full max-w-4xl flex-1 flex flex-col items-center justify-center">
-          <div className="w-full rounded-2xl p-4 md:p-8 shadow-2xl bg-roomCard">
+          <div className="w-full rounded-2xl p-4 md:p-8 shadow-2xl bg-roomCard border-2 border-yellow/80">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
               {/* Left card: header actions + joining players */}
               <div className="order-1 room-card flex flex-col">
@@ -552,12 +552,7 @@ function RoomPageInner() {
                       type="button"
                       onClick={() => handleGoHome()}
                       disabled={leaving}
-                      icon={
-                        <ChevronLeft
-                          className="size-5 shrink-0"
-                          strokeWidth={2.5}
-                        />
-                      }
+                      icon={<FiChevronLeft className="size-5 shrink-0" />}
                       aria-label="Leave room"
                     />
                   ) : isHost ? (
@@ -573,23 +568,13 @@ function RoomPageInner() {
                           cancelText: "No",
                         })
                       }
-                      icon={
-                        <ChevronLeft
-                          className="size-5 shrink-0"
-                          strokeWidth={2.5}
-                        />
-                      }
+                      icon={<FiChevronLeft className="size-5 shrink-0" />}
                       aria-label="Back (exit and end game)"
                     />
                   ) : (
                     <IconButton
                       href="/"
-                      icon={
-                        <ChevronLeft
-                          className="size-5 shrink-0"
-                          strokeWidth={2.5}
-                        />
-                      }
+                      icon={<FiChevronLeft className="size-5 shrink-0" />}
                       aria-label="Back to home"
                     />
                   )}
@@ -616,21 +601,26 @@ function RoomPageInner() {
                 </div>
                 {leaveError && <p className="form-error mb-3">{leaveError}</p>}
                 <h2 className="form-label mb-2">Joining players</h2>
-                <ul className="space-y-2 flex-1 rounded-lg p-3 border-2 border-accent/30 bg-inputBg">
+                <ul className="space-y-4 flex-1 rounded-lg p-3 border-2 border-accent/30 bg-inputBg">
                   {room.players.map((p) => (
                     <li
                       key={p.id}
-                      className="flex justify-between text-sm text-theme-primary"
+                      className="flex items-center gap-3 text-sm text-theme-primary"
                     >
-                      <span>
+                      {p.id === room.hostId ? (
+                        <PiUserCircleCheckFill className="size-7 text-yellow" />
+                      ) : (
+                        <PiUserCircleDashedFill className="size-7 text-accent/90" />
+                      )}
+                      <span className="min-w-0 flex-1 truncate font-medium">
                         {p.name}
                         {p.id === room.hostId && (
-                          <span className="ml-1 text-theme-accent font-medium">
+                          <span className="ml-1 text-yellow text-xs font-semibold">
                             (Host)
                           </span>
                         )}
                       </span>
-                      <span className="font-medium text-theme-accent">
+                      <span className="shrink-0 font-medium text-theme-accent">
                         {p.ticketCount} ticket{p.ticketCount !== 1 ? "s" : ""}
                       </span>
                     </li>
@@ -700,10 +690,14 @@ function RoomPageInner() {
                               </tr>
                             </thead>
                             <tbody>
-                              {rows.map(({ label, amount }) => (
+                              {rows.map(({ label, amount }, index) => (
                                 <tr
                                   key={label}
-                                  className="border-b border-[#93c5fd]/40"
+                                  className={`border-b border-[#93c5fd]/40 ${
+                                    index === rows.length - 1
+                                      ? "border-b-0"
+                                      : ""
+                                  }`}
                                 >
                                   <td className="py-2 text-theme-primary">
                                     {label}
@@ -741,7 +735,7 @@ function RoomPageInner() {
                         className="inline-flex items-center gap-2 rounded-lg border-2 border-accent/30 bg-inputBg px-3 py-2 text-sm text-theme-primary hover:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/50"
                         title="Copy link"
                       >
-                        <Copy className="size-4 shrink-0" />
+                        <FiCopy className="size-4 shrink-0" />
                         {linkCopied ? "Copied!" : "Copy"}
                       </button>
                       <button
@@ -766,7 +760,7 @@ function RoomPageInner() {
                         className="inline-flex items-center gap-2 rounded-lg border-2 border-accent/30 bg-inputBg px-3 py-2 text-sm text-theme-primary hover:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/50"
                         title="Share link"
                       >
-                        <Share2 className="size-4 shrink-0" />
+                        <FiShare2 className="size-4 shrink-0" />
                         Share
                       </button>
                     </div>
@@ -802,9 +796,7 @@ function RoomPageInner() {
                 type="button"
                 onClick={() => handleGoHome()}
                 disabled={leaving}
-                icon={
-                  <ChevronLeft className="size-5 shrink-0" strokeWidth={2.5} />
-                }
+                icon={<FiChevronLeft className="size-5 shrink-0" />}
                 aria-label="Leave room"
               />
             ) : isHost ? (
@@ -820,17 +812,13 @@ function RoomPageInner() {
                     cancelText: "No",
                   })
                 }
-                icon={
-                  <ChevronLeft className="size-5 shrink-0" strokeWidth={2.5} />
-                }
+                icon={<FiChevronLeft className="size-5 shrink-0" />}
                 aria-label="Back (exit and end game)"
               />
             ) : (
               <IconButton
                 href="/"
-                icon={
-                  <ChevronLeft className="size-5 shrink-0" strokeWidth={2.5} />
-                }
+                icon={<FiChevronLeft className="size-5 shrink-0" />}
                 aria-label="Back to home"
               />
             )}

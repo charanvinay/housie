@@ -187,14 +187,18 @@ function JoinRoomContent() {
       ) : (
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <Label htmlFor="roomCode">Room code</Label>
+            <Label htmlFor="roomCode" required>
+              Room code
+            </Label>
             <Input
               id="roomCode"
               type="text"
-              placeholder="e.g. ABC123"
+              placeholder="Eg. ABC123"
               value={roomCode}
               onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
               maxLength={6}
+              required
+              autoComplete="off"
               className="uppercase"
             />
           </div>

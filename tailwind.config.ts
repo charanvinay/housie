@@ -22,6 +22,9 @@ const config: Config = {
         danger: "var(--danger)",
         dangerSoft: "var(--danger-soft)",
         accentDim: "var(--accent-dim)",
+        yellow: "var(--yellow)",
+        yellowDark: "var(--yellow-dark)",
+        yellowDarker: "var(--yellow-darker)",
       },
       fontFamily: {
         display: ["var(--font-display)", "system-ui", "sans-serif"],

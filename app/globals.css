@@ -22,6 +22,10 @@
   --danger-soft: rgba(248, 113, 113, 0.2);
   --success: #34d399;
   --success-bg: rgba(52, 211, 153, 0.15);
+  /* Yellow – stands out on blue; matches .btn-yellow */
+  --yellow: #facc15;
+  --yellow-dark: #ca8a04;
+  --yellow-darker: #a16207;
 }
 
 @layer base {
@@ -168,20 +172,22 @@
   font-size: 1rem;
   color: #f8fafc;
   background: var(--input-bg);
-  border: 2px solid var(--input-border);
+  border: none;
+  font-weight: 500;
   border-radius: 0.75rem;
   box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .input-field::placeholder {
-  color: #94a3b8;
+  color: #a6b7cf;
+  text-transform: capitalize;
 }
 
 .input-field:focus {
+  border: none;
   outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3), 0 0 0 3px var(--accent-dim);
+  box-shadow: none;
 }
 
 .form-label {

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ChevronLeft } from "lucide-react";
+import { FiChevronLeft } from "react-icons/fi";
 import { IconButton } from "@/components/IconButton";
 import { GRADIENT_BG } from "@/lib/theme";
 
@@ -88,7 +88,7 @@ export function PageWrapper({
                   type="button"
                   onClick={onBackClick}
                   icon={
-                    <ChevronLeft
+                    <FiChevronLeft
                       className="size-5 shrink-0"
                       strokeWidth={2.5}
                     />
@@ -99,7 +99,7 @@ export function PageWrapper({
                 <IconButton
                   href="/"
                   icon={
-                    <ChevronLeft
+                    <FiChevronLeft
                       className="size-5 shrink-0"
                       strokeWidth={2.5}
                     />

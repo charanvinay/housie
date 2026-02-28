@@ -1,6 +1,6 @@
 "use client";
 
-import { Minus, Plus } from "lucide-react";
+import { FiMinus, FiPlus } from "react-icons/fi";
 import { IconButton } from "@/components/IconButton";
 
 type TicketCounterProps = {
@@ -33,7 +33,7 @@ export function TicketCounter({
       <div className="flex items-center gap-1">
         <IconButton
           type="button"
-          icon={<Minus className="size-5" strokeWidth={2.5} />}
+          icon={<FiMinus className="size-5" />}
           onClick={decrement}
           disabled={value <= min}
           aria-label="Decrease"
@@ -46,7 +46,7 @@ export function TicketCounter({
         </span>
         <IconButton
           type="button"
-          icon={<Plus className="size-5" strokeWidth={2.5} />}
+          icon={<FiPlus className="size-5" />}
           onClick={increment}
           disabled={value >= max}
           aria-label="Increase"
