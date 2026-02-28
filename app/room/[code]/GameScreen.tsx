@@ -108,20 +108,27 @@ export function GameScreen({
           </AnimatePresence>
         </div>
         {isHost && (
-          <Button
-            type="button"
-            variant="yellow"
-            onClick={handlePickNext}
-            disabled={drawing || drawn.length >= 90}
-            className="mt-16 w-full min-w-[220px] max-w-[280px] whitespace-nowrap"
+          <motion.div
+            initial={{ y: 24, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ type: "tween", duration: 0.3, ease: "easeOut", delay: 0.15 }}
+            className="w-full max-w-[280px] mt-16"
           >
-            Pick next number
-          </Button>
+            <Button
+              type="button"
+              variant="yellow"
+              onClick={handlePickNext}
+              disabled={drawing || drawn.length >= 90}
+              className="w-full min-w-[220px] max-w-[280px] whitespace-nowrap"
+            >
+              Pick next number
+            </Button>
+          </motion.div>
         )}
       </div>
 
       {/* Right: 2/3 – tickets column (scrollable) */}
-      <div className="md:col-span-2 flex flex-col gap-0 p-2 md:p-4 min-h-0 overflow-y-auto justify-center">
+      <div className="md:col-span-2 flex flex-col gap-0 p-2 md:p-4 min-h-0 overflow-y-auto">
         {claimError && (
           <p className="text-sm text-red-600 text-center mb-2">{claimError}</p>
         )}
@@ -202,8 +209,16 @@ export function GameScreen({
               };
 
               return (
-                <div
+                <motion.div
                   key={ticketIndex}
+                  initial={{ y: 24, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{
+                    type: "tween",
+                    duration: 0.3,
+                    ease: "easeOut",
+                    delay: 0.08 * ticketIndex,
+                  }}
                   className="relative rounded-none bg-ticket/95 p-4 md:p-6 shrink-0"
                 >
                   <p className="text-xs text-slate-800 text-center font-semibold mb-1.5">
@@ -309,7 +324,7 @@ export function GameScreen({
                       </Button>
                     </div>
                   )}
-                </div>
+                </motion.div>
               );
             })
           )}

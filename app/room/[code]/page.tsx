@@ -5,8 +5,9 @@ import { IconButton } from "@/components/IconButton";
 import { useModal } from "@/components/Modal";
 import { getClaimPrizeAmounts } from "@/lib/rooms";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-import { FiChevronLeft, FiCopy, FiShare2, FiUser } from "react-icons/fi";
+import { FiChevronLeft, FiCopy, FiRefreshCw, FiShare2, FiUser } from "react-icons/fi";
 import { PiUserCircleCheckFill, PiUserCircleDashedFill } from "react-icons/pi";
 import { io, Socket } from "socket.io-client";
 import { GameEndedNoWinners } from "./GameEndedNoWinners";
@@ -446,7 +447,12 @@ function RoomPageInner() {
     >
       {room.status === "waiting" ? (
         <main className="w-full max-w-4xl flex-1 flex flex-col items-center justify-center">
-          <div className="w-full rounded-2xl p-6 md:p-8 bg-roomCard border-2 border-yellow/80 shadow-roomCardInner grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
+          <motion.div
+            initial={{ y: 32, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ type: "tween", duration: 0.35, ease: "easeOut" }}
+            className="w-full rounded-2xl p-6 md:p-8 bg-roomCard border-2 border-yellow/80 shadow-roomCardInner grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10"
+          >
             {/* Left card: header actions + joining players */}
             <div className="order-1 room-card flex flex-col">
               <div className="flex flex-row items-center gap-3 mb-4">
@@ -484,17 +490,23 @@ function RoomPageInner() {
                 <h1 className="flex-1 text-xl font-semibold text-theme-primary text-center">
                   Room {room.code}
                 </h1>
-                <div className="flex items-center gap-2 w-10 justify-end">
+                <div className="flex items-center gap-2 justify-end">
                   <span
-                    className={`rounded px-2 py-0.5 text-xs font-medium ${
+                    className={`rounded-lg border px-2.5 py-1 text-xs font-medium ${
                       live
-                        ? "bg-successBg text-success"
-                        : "bg-theme-accent-soft text-theme-muted"
+                        ? "border-green-500/50 bg-green-500/20 text-green-400"
+                        : "border-white/20 bg-white/10 text-theme-muted"
                     }`}
                     title={live ? "Real-time updates on" : "Connecting…"}
                   >
                     {live ? "Live" : "…"}
                   </span>
+                  <IconButton
+                    type="button"
+                    onClick={() => window.location.reload()}
+                    icon={<FiRefreshCw className="size-5 shrink-0" />}
+                    aria-label="Reload page"
+                  />
                 </div>
               </div>
               {leaveError && <p className="form-error mb-3">{leaveError}</p>}
@@ -680,7 +692,7 @@ function RoomPageInner() {
                 </div>
               )}
             </div>
-          </div>
+          </motion.div>
         </main>
       ) : (
         <div className="flex-1 min-h-0 flex flex-col w-full overflow-hidden p-4">
@@ -694,6 +706,17 @@ function RoomPageInner() {
                   disabled={leaving}
                   icon={<FiChevronLeft className="size-5 shrink-0" />}
                   aria-label="Leave room"
+                />
+              ) : isHost && room.status === "ended" ? (
+                <IconButton
+                  type="button"
+                  onClick={() => {
+                    clearRoomSession();
+                    if (myId) clearSelectionsForRoom(code, myId);
+                    router.push("/");
+                  }}
+                  icon={<FiChevronLeft className="size-5 shrink-0" />}
+                  aria-label="Back to home"
                 />
               ) : isHost ? (
                 <IconButton
@@ -773,14 +796,22 @@ function RoomPageInner() {
                 );
               })}
             </div>
-            {/* Right: Live */}
-            <span
-              className={`shrink-0 rounded px-2 py-0.5 text-xs font-medium place-self-end self-start ${
-                live ? "bg-green-400/90 text-white" : "bg-white/20 text-white"
-              }`}
-            >
-              {live ? "Live" : "…"}
-            </span>
+            {/* Right: Live + Reload */}
+            <div className="flex items-center gap-2 shrink-0 place-self-end self-start">
+              <span
+                className={`rounded-lg border px-2.5 py-1 text-xs font-medium ${
+                  live ? "border-green-500/50 bg-green-500/20 text-green-400" : "border-white/20 bg-white/10 text-white/70"
+                }`}
+              >
+                {live ? "Live" : "…"}
+              </span>
+              <IconButton
+                type="button"
+                onClick={() => window.location.reload()}
+                icon={<FiRefreshCw className="size-5 shrink-0" />}
+                aria-label="Reload page"
+              />
+            </div>
           </header>
 
           <main className="w-full flex-1 min-h-0 px-0 py-4 flex flex-col">
@@ -802,7 +833,7 @@ function RoomPageInner() {
             )}
 
             {room.status === "ended" && (
-              <div className="mx-auto max-w-lg space-y-6">
+              <div className="flex flex-1 flex-col items-center justify-center w-full px-4">
                 {(room.drawnNumbers?.length ?? 0) > 0 ||
                 room.jaldiFiveClaimed?.length ||
                 room.firstLineClaimed?.length ||

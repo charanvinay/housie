@@ -1,27 +1,31 @@
 "use client";
 
+import { Button } from "@/components/Button";
+import { motion } from "framer-motion";
+
 export function GameEndedNoWinners({
   onBackHome,
 }: {
   onBackHome: () => void;
 }) {
   return (
-    <div className="rounded-lg border-2 border-neutral-400 bg-white p-6 space-y-4">
-      <h2 className="text-xl font-bold text-neutral-900 text-center">
+    <motion.div
+      initial={{ y: 32, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ type: "tween", duration: 0.35, ease: "easeOut" }}
+      className="w-full max-w-xl rounded-2xl p-8 md:p-10 bg-roomCard border-2 border-yellow/80 shadow-roomCardInner"
+    >
+      <h2 className="text-xl font-bold text-theme-primary text-center mb-2">
         Game ended
       </h2>
-      <p className="text-sm text-neutral-500 text-center">
+      <p className="text-sm text-theme-muted text-center mb-6">
         The host ended the game before it started.
       </p>
-      <div className="pt-4 text-center">
-        <button
-          type="button"
-          onClick={onBackHome}
-          className="rounded-lg bg-neutral-800 px-6 py-3 text-white font-medium hover:bg-neutral-900"
-        >
-          Back to home
-        </button>
+      <div className="pt-2 text-center">
+        <Button type="button" variant="primary" onClick={onBackHome}>
+          New game
+        </Button>
       </div>
-    </div>
+    </motion.div>
   );
 }
