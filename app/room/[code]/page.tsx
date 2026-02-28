@@ -540,10 +540,7 @@ export default function RoomPage() {
     >
       {room.status === "waiting" ? (
         <main className="w-full max-w-4xl flex-1 flex flex-col items-center justify-center">
-          <div
-            className="w-full rounded-2xl p-4 md:p-8 shadow-2xl"
-            style={{ background: "var(--room-card-bg)" }}
-          >
+          <div className="w-full rounded-2xl p-4 md:p-8 shadow-2xl bg-roomCard">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
               {/* Left card: header actions + joining players */}
               <div className="order-1 room-card flex flex-col">
@@ -585,7 +582,7 @@ export default function RoomPage() {
                     <span
                       className={`rounded px-2 py-0.5 text-xs font-medium ${
                         live
-                          ? "bg-[var(--success-bg)] text-[var(--success)]"
+                          ? "bg-successBg text-success"
                           : "bg-theme-accent-soft text-theme-muted"
                       }`}
                       title={live ? "Real-time updates on" : "Connecting…"}
@@ -596,7 +593,7 @@ export default function RoomPage() {
                 </div>
                 {leaveError && <p className="form-error mb-3">{leaveError}</p>}
                 <h2 className="form-label mb-2">Joining players</h2>
-                <ul className="space-y-2 flex-1 rounded-lg p-3 border-2 border-[var(--accent)]/30 bg-[var(--input-bg)]">
+                <ul className="space-y-2 flex-1 rounded-lg p-3 border-2 border-accent/30 bg-inputBg">
                   {room.players.map((p) => (
                     <li
                       key={p.id}
@@ -619,7 +616,7 @@ export default function RoomPage() {
               </div>
 
               {/* Right card: game details + prize split + share + start/end */}
-              <div className="order-2 room-card space-y-6 border-t border-[var(--accent)]/30 md:border-l md:border-t-0 border-dashed pt-6 md:pl-10 md:pt-0">
+              <div className="order-2 room-card space-y-6 border-t border-accent/30 md:border-l md:border-t-0 border-dashed pt-6 md:pl-10 md:pt-0">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <section>
                     <p className="form-label">Ticket price</p>
@@ -667,7 +664,7 @@ export default function RoomPage() {
                             ? "Small pool: amounts in multiples of ₹2."
                             : "Minimum ₹5 per claim."}
                         </p>
-                        <div className="rounded-lg p-4 border-2 border-[var(--accent)]/30 bg-[var(--input-bg)]">
+                        <div className="rounded-lg p-4 border-2 border-accent/30 bg-inputBg">
                           <table className="w-full text-sm border-collapse">
                             <thead>
                               <tr className="border-b-2 border-[#93c5fd]/60">
@@ -703,7 +700,7 @@ export default function RoomPage() {
                 {isHost && link && (
                   <section>
                     <p className="form-label mb-2">Share this link</p>
-                    <p className="text-sm text-theme-primary break-all rounded-lg border-2 border-[var(--accent)]/30 bg-[var(--input-bg)] px-3 py-2">
+                    <p className="text-sm text-theme-primary break-all rounded-lg border-2 border-accent/30 bg-inputBg px-3 py-2">
                       {link}
                     </p>
                     <div className="mt-2 flex flex-wrap gap-2">
@@ -718,7 +715,7 @@ export default function RoomPage() {
                             setLinkCopied(false);
                           }
                         }}
-                        className="inline-flex items-center gap-2 rounded-lg border-2 border-[var(--accent)]/30 bg-[var(--input-bg)] px-3 py-2 text-sm text-theme-primary hover:border-[var(--accent)]/50 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50"
+                        className="inline-flex items-center gap-2 rounded-lg border-2 border-accent/30 bg-inputBg px-3 py-2 text-sm text-theme-primary hover:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/50"
                         title="Copy link"
                       >
                         <Copy className="size-4 shrink-0" />
@@ -743,7 +740,7 @@ export default function RoomPage() {
                             // user cancelled or share failed
                           }
                         }}
-                        className="inline-flex items-center gap-2 rounded-lg border-2 border-[var(--accent)]/30 bg-[var(--input-bg)] px-3 py-2 text-sm text-theme-primary hover:border-[var(--accent)]/50 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50"
+                        className="inline-flex items-center gap-2 rounded-lg border-2 border-accent/30 bg-inputBg px-3 py-2 text-sm text-theme-primary hover:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/50"
                         title="Share link"
                       >
                         <Share2 className="size-4 shrink-0" />
@@ -773,7 +770,7 @@ export default function RoomPage() {
                       variant="secondary"
                       onClick={handleEndGame}
                       disabled={ending}
-                      className="!border-[var(--danger)] !text-[var(--danger)] hover:!bg-[var(--danger-soft)]"
+                      className="!border-danger !text-danger hover:!bg-dangerSoft"
                     >
                       {ending ? "Ending…" : "End game"}
                     </Button>

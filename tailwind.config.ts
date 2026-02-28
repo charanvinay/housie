@@ -2,21 +2,26 @@ import type { Config } from "tailwindcss";
 
 const config: Config = {
   content: [
-    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./components/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {
       colors: {
-        primary: {
-          DEFAULT: "var(--color-primary)",
-          foreground: "var(--color-primary-foreground)",
-        },
-        accent: {
-          DEFAULT: "var(--color-accent)",
-          foreground: "var(--color-accent-foreground)",
-        },
+        primary: "var(--color-primary)",
+        primaryForeground: "var(--color-primary-foreground)",
+        accent: "var(--color-accent)",
+        accentForeground: "var(--color-accent-foreground)",
+        roomCard: "var(--room-card-bg)",
+        cardBg: "var(--card-bg)",
+        cardBorder: "var(--card-border)",
+        inputBg: "var(--input-bg)",
+        inputBorder: "var(--input-border)",
+        success: "var(--success)",
+        successBg: "var(--success-bg)",
+        danger: "var(--danger)",
+        dangerSoft: "var(--danger-soft)",
+        accentDim: "var(--accent-dim)",
       },
       fontFamily: {
         display: ["var(--font-display)", "system-ui", "sans-serif"],

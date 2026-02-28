@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@config "../tailwind.config.ts";
 
 /* Dark theme – cards darker; text fields lighter */
 :root {
@@ -40,31 +41,6 @@
     font-family: var(--font-google-sans-flex), sans-serif;
   }
 
-  /* Primary/accent – use bg-primary, text-primary, border-primary, etc. */
-  .bg-primary {
-    background-color: var(--color-primary);
-  }
-  .text-primary {
-    color: var(--color-primary);
-  }
-  .border-primary {
-    border-color: var(--color-primary);
-  }
-  .text-primary-foreground {
-    color: var(--color-primary-foreground);
-  }
-  .bg-accent {
-    background-color: var(--color-accent);
-  }
-  .text-accent {
-    color: var(--color-accent);
-  }
-  .border-accent {
-    border-color: var(--color-accent);
-  }
-  .text-accent-foreground {
-    color: var(--color-accent-foreground);
-  }
 }
 
 /* Buttons – earlier blue (#0045f6) for strong, recognizable CTAs */

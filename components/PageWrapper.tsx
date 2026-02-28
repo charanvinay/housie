@@ -62,12 +62,12 @@ export function PageWrapper({
           </motion.h1>
         </Link>
       </header>
-      <div className="h-5 flex-shrink-0" />
+      <div className="h-5 shrink-0" />
       <motion.div
         className={
           isFormLayout
-            ? "w-full max-w-sm flex-shrink-0 rounded-2xl backdrop-blur-sm shadow-2xl p-8 max-h-[calc(100vh-14rem)] overflow-y-auto [background:var(--card-bg)]"
-            : "w-full max-w-sm flex-shrink-0 rounded-2xl backdrop-blur-sm shadow-2xl p-8 [background:var(--card-bg)]"
+            ? "w-full max-w-sm shrink-0 rounded-2xl backdrop-blur-sm shadow-2xl p-8 max-h-[calc(100vh-14rem)] overflow-y-auto bg-cardBg"
+            : "w-full max-w-sm shrink-0 rounded-2xl backdrop-blur-sm shadow-2xl p-8 bg-cardBg"
         }
         initial={{ opacity: 0, scale: 0 }}
         animate={exiting ? cardExit : { opacity: 1, scale: 1 }}
