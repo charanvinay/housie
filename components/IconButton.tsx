@@ -4,7 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { usePressable } from "@/components/usePressable";
 
-const iconOnlyClass = "btn-icon size-8 md:size-10 p-0";
+const iconOnlyClass = "btn-icon size-10 p-0";
 const withLabelClass = "btn-icon gap-2 px-4 py-2";
 
 const transition = { type: "tween" as const, duration: 0.12 };
@@ -48,8 +48,7 @@ export function IconButton({
   const disabled = "disabled" in rest ? rest.disabled : false;
   const { isHovered, isPressed, pressableProps } = usePressable(disabled);
 
-  const animate =
-    isPressed ? tapStyle : isHovered ? hoverStyle : restStyle;
+  const animate = isPressed ? tapStyle : isHovered ? hoverStyle : restStyle;
   const transitionConfig = isPressed ? tapTransition : transition;
 
   if ("href" in rest && rest.href) {
