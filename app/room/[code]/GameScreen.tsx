@@ -303,7 +303,7 @@ export function GameScreen({
                   }`}
                   style={{
                     textShadow:
-                      "0 4px 12px rgba(21, 128, 61, 0.95), 0 0 20px rgba(134, 239, 172, 0.3)",
+                      "rgba(21, 128, 61, 1) 0.2px 1px 0px, rgba(134, 239, 172, 0.3) 1px 1px 1px",
                   }}
                 >
                   {currentNumber}

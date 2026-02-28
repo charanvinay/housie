@@ -16,8 +16,48 @@ const googleSansFlex = Google_Sans_Flex({
 });
 
 export const metadata: Metadata = {
-  title: "Housie",
-  description: "Telugu Tambola game",
+  title: {
+    default: "Housie – Play Telugu Tambola Online",
+    template: "%s | Housie Game",
+  },
+  description:
+    "Play Telugu Tambola (Housie) online with friends and family. Create rooms, share codes, buy tickets and enjoy real-time multiplayer fun!",
+
+  keywords: [
+    "Housie",
+    "Tambola",
+    "Telugu Tambola",
+    "Online Housie",
+    "Multiplayer Tambola",
+    "Indian Bingo",
+    "Family game",
+  ],
+
+  authors: [{ name: "Charan vinay" }],
+  creator: "Charan vinay",
+  publisher: "Charan vinay",
+
+  metadataBase: new URL("https://housiegame.vercel.app"),
+
+  openGraph: {
+    title: "Housie – Play Telugu Tambola Online",
+    description:
+      "Create a room, invite your friends, have fun playing Telugu Tambola game!",
+    url: "https://housiegame.vercel.app",
+    siteName: "Housie",
+    images: [
+      {
+        url: "/og-image.png", // Add a 1200x630 image in public folder
+        width: 1200,
+        height: 630,
+        alt: "Housie Telugu Tambola Game",
+      },
+    ],
+    locale: "en_IN",
+    type: "website",
+  },
+
+  category: "game",
 };
 
 export default function RootLayout({
