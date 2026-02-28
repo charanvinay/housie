@@ -26,6 +26,7 @@ import {
 } from "./room-utils";
 import type { RoomState, TicketGrid } from "./types";
 import { LoadingOverlay } from "@/components/LoadingOverlay";
+import { useToast } from "@/components/Toast";
 
 function RoomPageInner() {
   const params = useParams();
@@ -53,11 +54,14 @@ function RoomPageInner() {
   >({});
   const socketRef = useRef<Socket | null>(null);
   const selectionsLoadedRef = useRef(false);
+  const hasRefetchedForStartedRef = useRef(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const isHost = Boolean(hostId && room?.hostId === hostId);
   const myId = isHost ? hostId : playerId;
   const canQuitAsPlayer = !isHost && playerId && room?.status === "waiting";
   const modal = useModal();
+  const toast = useToast();
 
   // Persist this tab’s room context so "/" can redirect back (per-tab via sessionStorage)
   useEffect(() => {
@@ -416,8 +420,28 @@ function RoomPageInner() {
     };
   }, [code]);
 
+  // Refetch room when game starts so production always has latest state (avoids stuck waiting screen)
+  useEffect(() => {
+    if (room?.status !== "started") {
+      hasRefetchedForStartedRef.current = false;
+      return;
+    }
+    if (hasRefetchedForStartedRef.current || !code) return;
+    hasRefetchedForStartedRef.current = true;
+    fetch(`/api/rooms/${encodeURIComponent(code)}`)
+      .then((res) => {
+        if (!res.ok) return;
+        return res.json();
+      })
+      .then((data) => {
+        if (data) setRoom(data);
+      })
+      .catch(() => {});
+  }, [code, room?.status]);
+
   const handleSoftRefresh = async () => {
-    if (!code) return;
+    if (!code || isRefreshing) return;
+    setIsRefreshing(true);
     try {
       const res = await fetch(`/api/rooms/${encodeURIComponent(code)}`);
       if (!res.ok) {
@@ -432,9 +456,12 @@ function RoomPageInner() {
       if (socket?.connected) {
         socket.emit("join_room", { roomCode: String(code).toUpperCase() });
       }
+      toast.show("Reloaded");
     } catch {
       setError("Failed to load room");
       setRoom(null);
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
@@ -475,8 +502,8 @@ function RoomPageInner() {
     <div
       className={
         room.status === "waiting"
-          ? "min-h-screen-safe flex flex-col items-center justify-center px-4 py-6"
-          : "h-screen-safe flex flex-col overflow-hidden"
+          ? "relative min-h-screen-safe flex flex-col items-center justify-center px-4 py-6"
+          : "relative h-screen-safe flex flex-col overflow-hidden"
       }
     >
       {room.status === "waiting" ? (
@@ -900,6 +927,7 @@ function RoomPageInner() {
         </div>
         </RotateToLandscape>
       )}
+      {isRefreshing && <LoadingOverlay />}
     </div>
   );
 }

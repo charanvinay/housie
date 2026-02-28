@@ -148,7 +148,7 @@ export function GameScreen({
     <div className="grid grid-cols-3 grid-rows-[minmax(0,1fr)] gap-0 w-full h-full min-h-0 overflow-hidden">
       {/* Left: 1/3 – coin + pick button (sticky) */}
       <div className="col-span-1 flex flex-col items-center justify-center px-2 py-4 md:px-4 md:py-6 h-full sticky top-6 self-start">
-        <div className="w-full max-w-[72px] min-h-[72px] md:max-w-[160px] md:min-h-[160px] flex items-center justify-center shrink-0">
+        <div className="w-full max-w-[66px] min-h-[66px] md:max-w-[160px] md:min-h-[160px] flex items-center justify-center shrink-0">
           <AnimatePresence mode="wait">
             {currentNumber !== null && !coinHidden && (
               <motion.div
@@ -186,7 +186,7 @@ export function GameScreen({
               ease: "easeOut",
               delay: 0.15,
             }}
-            className="w-full max-w-[280px] mt-4 md:mt-16"
+            className="w-full max-w-[280px] mt-3 md:mt-16"
           >
             <Button
               type="button"
@@ -373,7 +373,11 @@ export function GameScreen({
                                 ? 0
                                 : 0.08 * ticketIndex,
                           }}
-                          className={`relative ${isMobileLayout && tickets.length > 1 ? "rounded-lg" : "rounded-none"} bg-ticket/95 p-4 md:p-6 shrink-0 z-10`}
+                          className={`relative ${
+                            isMobileLayout && tickets.length > 1
+                              ? "rounded-lg"
+                              : "rounded-none"
+                          } bg-ticket/95 p-4 md:p-6 shrink-0 z-10`}
                         >
                           <p className="text-[10px] md:text-xs text-slate-800 text-center font-semibold mb-1 md:mb-1.5">
                             {isMobileLayout && tickets.length > 1
