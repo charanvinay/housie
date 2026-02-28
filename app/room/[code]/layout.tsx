@@ -11,7 +11,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       images: [
         {
-          url: "https://housiegame.vercel.app/og-image-2png",
+          url: "https://housiegame.vercel.app/og-image-2.png",
           width: 1200,
           height: 630,
         },
