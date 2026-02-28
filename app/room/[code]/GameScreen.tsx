@@ -145,10 +145,20 @@ export function GameScreen({
   }, [drawing, coinHidden]);
 
   return (
-    <div className="grid grid-cols-3 grid-rows-[minmax(0,1fr)] gap-0 w-full h-full min-h-0 overflow-hidden">
+    <div className="grid grid-cols-3 grid-rows-[minmax(0,1fr)] gap-10 w-full h-full min-h-0 overflow-hidden">
       {/* Left: 1/3 – coin + pick button (sticky) */}
-      <div className="col-span-1 flex flex-col items-center justify-center px-2 py-4 md:px-4 md:py-6 h-full sticky top-6 self-start">
-        <div className="w-full max-w-[66px] min-h-[66px] md:max-w-[160px] md:min-h-[160px] flex items-center justify-center shrink-0">
+      <div
+        className={`col-span-1 flex flex-col items-center justify-center h-full sticky top-6 self-start ${
+          isMobileLayout ? "px-2 py-4" : "px-4 py-6"
+        }`}
+      >
+        <div
+          className={`w-full flex items-center justify-center shrink-0 ${
+            isMobileLayout
+              ? "max-w-[120px] min-h-[120px]"
+              : "max-w-[180px] min-h-[180px]"
+          }`}
+        >
           <AnimatePresence mode="wait">
             {currentNumber !== null && !coinHidden && (
               <motion.div
@@ -157,14 +167,20 @@ export function GameScreen({
                 animate={{ scale: 1 }}
                 exit={{ scale: 0 }}
                 transition={{ type: "tween", duration: 0.25 }}
-                className="relative w-full max-w-[72px] md:max-w-[160px] aspect-square rounded-full flex items-center justify-center overflow-hidden bg-green-600 border-[3px] md:border-[5px] border-green-300"
+                className={`relative w-full aspect-square rounded-full flex items-center justify-center overflow-hidden bg-green-600 border-green-300 ${
+                  isMobileLayout
+                    ? "max-w-[120px] border-[3px]"
+                    : "max-w-[180px] border-[5px]"
+                }`}
                 style={{
                   boxShadow:
                     "3px 8px 0 rgba(21, 128, 61, 0.85), 4px 10px 20px rgba(0, 0, 0, 0.3)",
                 }}
               >
                 <span
-                  className="flex items-center justify-center text-2xl md:text-6xl font-bold text-green-300 leading-none text-center w-full h-full"
+                  className={`flex items-center justify-center font-bold text-green-300 leading-none text-center w-full h-full ${
+                    isMobileLayout ? "text-5xl" : "text-6xl"
+                  }`}
                   style={{
                     textShadow:
                       "0 4px 12px rgba(21, 128, 61, 0.95), 0 0 20px rgba(134, 239, 172, 0.3)",
@@ -186,14 +202,20 @@ export function GameScreen({
               ease: "easeOut",
               delay: 0.15,
             }}
-            className="w-full max-w-[280px] mt-3 md:mt-16"
+            className={`w-full ${
+              isMobileLayout ? "max-w-[220px] mt-8" : "max-w-[240px] mt-18"
+            }`}
           >
             <Button
               type="button"
               variant="yellow"
               onClick={handlePickNext}
               disabled={drawing || drawn.length >= 90}
-              className="w-full min-w-[220px] max-w-[280px] whitespace-nowrap"
+              className={`w-full whitespace-nowrap ${
+                isMobileLayout
+                  ? "min-w-[220px] max-w-[280px]"
+                  : "min-w-[200px] max-w-[240px]"
+              }`}
             >
               Pick next number
             </Button>
@@ -204,9 +226,9 @@ export function GameScreen({
       {/* Right: 2/3 – tickets column (scrollable); center when content fits, top when needs scroll */}
       <div
         ref={scrollContainerRef}
-        className={`tickets-scroll col-span-2 flex min-h-0 flex-col gap-0 px-1 py-2 md:px-2 md:py-4 overflow-y-auto ${
-          ticketsFit ? "justify-center" : "justify-start"
-        }`}
+        className={`tickets-scroll col-span-2 flex min-h-0 flex-col gap-0 overflow-y-auto ${
+          isMobileLayout ? "px-1 py-2" : "px-2 py-4"
+        } ${ticketsFit ? "justify-center" : "justify-start"}`}
       >
         <div ref={ticketsContentRef} className="flex flex-col shrink-0">
           {claimError && (
@@ -377,9 +399,17 @@ export function GameScreen({
                             isMobileLayout && tickets.length > 1
                               ? "rounded-lg"
                               : "rounded-none"
-                          } bg-ticket/95 p-4 md:p-6 shrink-0 z-10`}
+                          } bg-ticket/95 shrink-0 z-10 ${
+                            isMobileLayout ? "p-4" : "p-6"
+                          }`}
                         >
-                          <p className="text-[10px] md:text-xs text-slate-800 text-center font-semibold mb-1 md:mb-1.5">
+                          <p
+                            className={`text-slate-800 text-center font-semibold ${
+                              isMobileLayout
+                                ? "text-[10px] mb-1"
+                                : "text-xs mb-1.5"
+                            }`}
+                          >
                             {isMobileLayout && tickets.length > 1
                               ? `Ticket ${ticketIndex + 1} of ${tickets.length}`
                               : `Ticket ${ticketIndex + 1}`}
@@ -415,7 +445,7 @@ export function GameScreen({
                                         return (
                                           <td
                                             key={c}
-                                            className={`border-[1.5px] border-[#1f2937] p-0.5 h-7 md:h-9 text-xs md:text-sm select-none text-slate-800 font-semibold ${
+                                            className={`border-[1.5px] border-[#1f2937] p-0.5 select-none text-slate-800 font-semibold ${"h-10 text-sm"} ${
                                               num !== null &&
                                               isDrawn &&
                                               !isSelected

@@ -10,7 +10,7 @@ export function Providers({ children }: { children: ReactNode }) {
     <ModalProvider>
       <ToastProvider>
         {children}
-        <FullscreenPrompt />
+        {/* <FullscreenPrompt /> */}
       </ToastProvider>
     </ModalProvider>
   );
