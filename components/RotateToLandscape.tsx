@@ -30,17 +30,11 @@ export function RotateToLandscape({ children, active = false }: Props) {
         typeof window !== "undefined" &&
         window.innerWidth < NARROW_BREAKPOINT;
 
-      // Non-mobile (e.g. laptop in device mode): show rotate when portrait or narrow
-      // Mobile (real device): show rotate only when portrait; in landscape we lock
-      if (isMobileUserAgent) {
-        setShowRotatePrompt(isPortrait);
-      } else {
+      // Non-mobile: show rotate when portrait or narrow. Mobile: no rotate prompt, allow scroll.
+      if (!isMobileUserAgent) {
         setShowRotatePrompt(isPortrait || isNarrow);
-      }
-
-      if (isMobileUserAgent && !isPortrait && typeof window !== "undefined") {
-        const orientation = (screen as { orientation?: { lock?: (o: string) => Promise<void> } }).orientation;
-        orientation?.lock?.("landscape").catch(() => {});
+      } else {
+        setShowRotatePrompt(false);
       }
     };
 
@@ -57,7 +51,7 @@ export function RotateToLandscape({ children, active = false }: Props) {
 
   if (active && showRotatePrompt) {
     return (
-      <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[var(--gradient-bg)] p-6 text-center">
+      <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/80 p-6 text-center">
         <FiRotateCw className="mb-6 size-16 text-yellow" aria-hidden />
         <h1 className="text-xl font-bold text-white drop-shadow-sm">
           Please rotate

@@ -60,12 +60,34 @@ export function GameScreen({
   const prevDrawing = useRef(drawing);
   const isMobile = useIsMobile();
   const [currentTicketIndex, setCurrentTicketIndex] = useState(0);
+  const [ticketsFit, setTicketsFit] = useState(true);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const ticketsContentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (currentTicketIndex >= tickets.length && tickets.length > 0) {
       setCurrentTicketIndex(tickets.length - 1);
     }
   }, [tickets.length, currentTicketIndex]);
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    const content = ticketsContentRef.current;
+    if (!container || !content) {
+      setTicketsFit(true);
+      return;
+    }
+    const check = () => {
+      const containerHeight = container.clientHeight;
+      const contentHeight = content.scrollHeight;
+      setTicketsFit(contentHeight <= containerHeight);
+    };
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(container);
+    ro.observe(content);
+    return () => ro.disconnect();
+  }, [tickets.length, isMobile, currentTicketIndex]);
 
   const handlePickNext = () => {
     if (!isHost || drawing || drawn.length >= 90) return;
@@ -138,8 +160,12 @@ export function GameScreen({
         )}
       </div>
 
-      {/* Right: 2/3 – tickets column (scrollable); on mobile single ticket + arrows */}
-      <div className="tickets-scroll md:col-span-2 flex min-h-0 flex-col gap-0 p-2 md:p-4 overflow-y-auto">
+      {/* Right: 2/3 – tickets column (scrollable); center when content fits, top when needs scroll */}
+      <div
+        ref={scrollContainerRef}
+        className={`tickets-scroll md:col-span-2 flex min-h-0 flex-col gap-0 p-2 md:p-4 overflow-y-auto ${ticketsFit ? "justify-center" : "justify-start"}`}
+      >
+        <div ref={ticketsContentRef} className="flex flex-col shrink-0">
         {claimError && (
           <p className="text-sm text-red-600 text-center mb-2">{claimError}</p>
         )}
@@ -380,6 +406,7 @@ export function GameScreen({
               />
             </div>
           )}
+        </div>
         </div>
       </div>
     </div>
