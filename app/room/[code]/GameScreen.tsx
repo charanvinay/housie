@@ -11,7 +11,7 @@ import {
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useIsMobileUserAgent } from "@/hooks/useIsMobileUserAgent";
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FiChevronDown, FiChevronUp } from "react-icons/fi";
 import { RecentDrawnNumbers } from "./RecentDrawnNumbers";
 
@@ -20,6 +20,9 @@ export type GameScreenProps = {
   isHost: boolean;
   myId: string;
   drawing: boolean;
+  /** When host starts a draw; server broadcasts so all clients start coin sound together */
+  drawStartedAt: number | null;
+  onDrawStarted: () => void;
   onDrawNumber: () => void;
   selectedByTicket: Record<number, Set<number>>;
   onToggleNumber: (ticketIndex: number, num: number) => void;
@@ -40,6 +43,13 @@ export type GameScreenProps = {
 
 const COIN_PICK_DURATION_MS = 550;
 
+/** Coin sound plays from click until new number appears. Put your file at: public/coin.mp3 */
+const COIN_SOUND_PATH = "/coin.mp3";
+/** Coin audio duration in ms (0:01.399) – API is called after this delay so the number appears when the sound ends. */
+const COIN_SOUND_DURATION_MS = 1399;
+/** Play when current player is eligible for any claim (each time a new number is drawn and they're eligible). Put at: public/i-got-this.mp3 */
+const I_GOT_THIS_SOUND_PATH = "/i-got-this.mp3";
+
 const ticketSlideVariants = {
   enter: (direction: number) => ({
     y: direction > 0 ? 60 : -80,
@@ -59,6 +69,8 @@ export function GameScreen({
   isHost,
   myId,
   drawing,
+  drawStartedAt,
+  onDrawStarted,
   onDrawNumber,
   selectedByTicket,
   onToggleNumber,
@@ -84,6 +96,112 @@ export function GameScreen({
   const [ticketsFit, setTicketsFit] = useState(true);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const ticketsContentRef = useRef<HTMLDivElement>(null);
+  const coinSoundRef = useRef<HTMLAudioElement | null>(null);
+  const iGotThisSoundRef = useRef<HTMLAudioElement | null>(null);
+  const prevDrawnLengthRef = useRef(drawn.length);
+  const prevDrawStartedAtRef = useRef<number | null>(null);
+  /** Only play "i got this" when user *just became* eligible this draw, not when they were already eligible */
+  const wasEligibleLastDrawRef = useRef(false);
+
+  const hasEligibleClaim = useMemo(() => {
+    const alreadyClaimedByMe = (arr?: ClaimEntry[]) =>
+      arr?.some((e) => e.playerId === myId) ?? false;
+    const noOneClaimedYet = (arr?: ClaimEntry[]) => !arr?.length;
+    for (let ti = 0; ti < tickets.length; ti++) {
+      const ticket = tickets[ti]!;
+      const selected = selectedByTicket[ti] ?? new Set<number>();
+      const selectedList = Array.from(selected);
+      const row0 = getNumbersInRow(ticket, 0);
+      const row1 = getNumbersInRow(ticket, 1);
+      const row2 = getNumbersInRow(ticket, 2);
+      const all15 = getAllNumbersInTicket(ticket);
+      const jaldiFiveOk =
+        selectedList.length === 5 &&
+        selectedList.every((n) => drawnSet.has(n)) &&
+        noOneClaimedYet(room.jaldiFiveClaimed) &&
+        !alreadyClaimedByMe(room.jaldiFiveClaimed);
+      const firstLineOk =
+        row0.length === 5 &&
+        row0.every((n) => drawnSet.has(n)) &&
+        noOneClaimedYet(room.firstLineClaimed) &&
+        !alreadyClaimedByMe(room.firstLineClaimed);
+      const middleLineOk =
+        row1.length === 5 &&
+        row1.every((n) => drawnSet.has(n)) &&
+        noOneClaimedYet(room.middleLineClaimed) &&
+        !alreadyClaimedByMe(room.middleLineClaimed);
+      const lastLineOk =
+        row2.length === 5 &&
+        row2.every((n) => drawnSet.has(n)) &&
+        noOneClaimedYet(room.lastLineClaimed) &&
+        !alreadyClaimedByMe(room.lastLineClaimed);
+      const housieOk =
+        all15.length === 15 &&
+        all15.every((n) => drawnSet.has(n)) &&
+        noOneClaimedYet(room.housieClaimed) &&
+        !alreadyClaimedByMe(room.housieClaimed);
+      if (jaldiFiveOk || firstLineOk || middleLineOk || lastLineOk || housieOk)
+        return true;
+    }
+    return false;
+  }, [room, tickets, selectedByTicket, drawnSet, myId]);
+
+  useEffect(() => {
+    const audio = new Audio(COIN_SOUND_PATH);
+    coinSoundRef.current = audio;
+    return () => {
+      audio.pause();
+      coinSoundRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    const audio = new Audio(I_GOT_THIS_SOUND_PATH);
+    iGotThisSoundRef.current = audio;
+    return () => {
+      audio.pause();
+      iGotThisSoundRef.current = null;
+    };
+  }, []);
+
+  // When draw_started is received (host clicked or socket broadcast), start coin sound (loop) for everyone
+  useEffect(() => {
+    if (
+      drawStartedAt != null &&
+      drawStartedAt !== prevDrawStartedAtRef.current
+    ) {
+      prevDrawStartedAtRef.current = drawStartedAt;
+      const audio = coinSoundRef.current;
+      if (audio) {
+        audio.loop = true;
+        audio.currentTime = 0;
+        audio.play().catch(() => {});
+      }
+    }
+  }, [drawStartedAt]);
+
+  // When a new number appears: stop coin sound for everyone; play i-got-this when this user is eligible for a claim (overlay would show). Only update "was eligible" when a draw actually happened so we don't mark eligible from selection-only.
+  useEffect(() => {
+    const newNumberDrawn = drawn.length > prevDrawnLengthRef.current;
+    if (newNumberDrawn) {
+      const coinAudio = coinSoundRef.current;
+      if (coinAudio) {
+        coinAudio.pause();
+        coinAudio.currentTime = 0;
+        coinAudio.loop = false;
+      }
+      // Play when this user is eligible after this draw (including jaldi five when 5th selected number just came)
+      if (hasEligibleClaim) {
+        const iGotThis = iGotThisSoundRef.current;
+        if (iGotThis) {
+          iGotThis.currentTime = 0;
+          iGotThis.play().catch(() => {});
+        }
+      }
+      wasEligibleLastDrawRef.current = hasEligibleClaim;
+    }
+    prevDrawnLengthRef.current = drawn.length;
+  }, [drawn.length, hasEligibleClaim]);
 
   const goToPrevTicket = () => {
     if (currentTicketIndex <= 0) return;
@@ -128,14 +246,13 @@ export function GameScreen({
 
   const handlePickNext = () => {
     if (!isHost || drawing || drawn.length >= 90) return;
+    onDrawStarted();
     if (currentNumber !== null) {
       setCoinHidden(true);
-      setTimeout(() => {
-        onDrawNumber();
-      }, COIN_PICK_DURATION_MS);
-    } else {
-      onDrawNumber();
     }
+    setTimeout(() => {
+      onDrawNumber();
+    }, COIN_SOUND_DURATION_MS);
   };
 
   useEffect(() => {

@@ -49,6 +49,8 @@ function RoomPageInner() {
   const [drawing, setDrawing] = useState(false);
   const [claiming, setClaiming] = useState(false);
   const [claimError, setClaimError] = useState("");
+  /** When host starts a draw; server broadcasts draw_started so all clients can play coin sound in sync */
+  const [drawStartedAt, setDrawStartedAt] = useState<number | null>(null);
   /** Per-ticket selected numbers (ticketIndex -> Set of numbers) for Jaldi Five */
   const [selectedByTicket, setSelectedByTicket] = useState<
     Record<number, Set<number>>
@@ -56,6 +58,7 @@ function RoomPageInner() {
   const socketRef = useRef<Socket | null>(null);
   const selectionsLoadedRef = useRef(false);
   const hasRefetchedForStartedRef = useRef(false);
+  const gameEndedWithWinnersSoundPlayedRef = useRef(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const isHost = Boolean(hostId && room?.hostId === hostId);
@@ -177,6 +180,14 @@ function RoomPageInner() {
     }
   };
 
+  /** Called when host clicks "Pick next number"; emits draw_started so all clients (including host) get it via socket and play coin sound */
+  const handleDrawStarted = () => {
+    if (!code) return;
+    socketRef.current?.emit("draw_started", {
+      roomCode: String(code).toUpperCase(),
+    });
+  };
+
   const handleDrawNumber = async () => {
     if (!isHost || room?.status !== "started" || !hostId) return;
     if (drawing) return;
@@ -296,6 +307,10 @@ function RoomPageInner() {
             data.room.playerTickets?.[myId]?.[ticketIndex] ?? ticket,
             jaldiFiveNumbers
           );
+          socketRef.current?.emit("claim_made", {
+            roomCode: String(code).toUpperCase(),
+            claimerId: myId,
+          });
         } else {
           setClaimError(data.error ?? "Claim failed");
         }
@@ -325,6 +340,10 @@ function RoomPageInner() {
             data.room.playerTickets?.[myId]?.[ticketIndex] ?? ticket,
             jaldiFiveNumbers
           );
+          socketRef.current?.emit("claim_made", {
+            roomCode: String(code).toUpperCase(),
+            claimerId: myId,
+          });
         } else {
           setClaimError(data.error ?? "Claim failed");
         }
@@ -403,9 +422,18 @@ function RoomPageInner() {
       });
     };
 
+    const onDrawStarted = () => setDrawStartedAt(Date.now());
+    const onClaimMade = (payload: { claimerId?: string }) => {
+      if (payload.claimerId !== myId) {
+        new Audio("/fahh.mp3").play().catch(() => {});
+      }
+    };
+
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
     socket.on("room", onRoom);
+    socket.on("draw_started", onDrawStarted);
+    socket.on("claim_made", onClaimMade);
 
     if (socket.connected) {
       setLive(true);
@@ -418,10 +446,32 @@ function RoomPageInner() {
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
       socket.off("room", onRoom);
+      socket.off("draw_started", onDrawStarted);
+      socket.off("claim_made", onClaimMade);
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [code]);
+  }, [code, myId ?? ""]);
+
+  // Play cat-laugh once when game really ends with winners (WinnersScreen is shown)
+  const hasWinners =
+    room?.status === "ended" &&
+    ((room.drawnNumbers?.length ?? 0) > 0 ||
+      !!room.jaldiFiveClaimed?.length ||
+      !!room.firstLineClaimed?.length ||
+      !!room.middleLineClaimed?.length ||
+      !!room.lastLineClaimed?.length ||
+      !!room.housieClaimed?.length);
+  useEffect(() => {
+    if (room?.status !== "ended") {
+      gameEndedWithWinnersSoundPlayedRef.current = false;
+      return;
+    }
+    if (!hasWinners || gameEndedWithWinnersSoundPlayedRef.current) return;
+    gameEndedWithWinnersSoundPlayedRef.current = true;
+    const audio = new Audio("/cat-laugh.mp3");
+    audio.play().catch(() => {});
+  }, [room?.status, hasWinners]);
 
   // Refetch room when game starts so production always has latest state (avoids stuck waiting screen)
   useEffect(() => {
@@ -879,6 +929,8 @@ function RoomPageInner() {
                       isHost={isHost}
                       myId={myId ?? ""}
                       drawing={drawing}
+                      drawStartedAt={drawStartedAt}
+                      onDrawStarted={handleDrawStarted}
                       onDrawNumber={handleDrawNumber}
                       selectedByTicket={selectedByTicket}
                       onToggleNumber={toggleTicketNumber}

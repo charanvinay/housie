@@ -83,6 +83,19 @@ app.prepare().then(() => {
         socket.leave(roomCode.toUpperCase());
       }
     });
+    socket.on("draw_started", (payload) => {
+      const roomCode = payload?.roomCode ?? payload;
+      if (roomCode && typeof roomCode === "string") {
+        io.to(String(roomCode).toUpperCase()).emit("draw_started", {});
+      }
+    });
+    socket.on("claim_made", (payload) => {
+      const roomCode = payload?.roomCode ?? payload;
+      const claimerId = payload?.claimerId;
+      if (roomCode && typeof roomCode === "string") {
+        io.to(String(roomCode).toUpperCase()).emit("claim_made", { claimerId });
+      }
+    });
   });
 
   server.listen(PORT, (err) => {
