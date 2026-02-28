@@ -684,43 +684,98 @@ function RoomPageInner() {
         </main>
       ) : (
         <div className="flex-1 min-h-0 flex flex-col w-full overflow-hidden p-4">
-          <header className="shrink-0 flex items-center gap-3 px-2 py-2 w-full">
-            {canQuitAsPlayer ? (
-              <IconButton
-                type="button"
-                onClick={() => handleGoHome()}
-                disabled={leaving}
-                icon={<FiChevronLeft className="size-5 shrink-0" />}
-                aria-label="Leave room"
-              />
-            ) : isHost ? (
-              <IconButton
-                type="button"
-                onClick={() =>
-                  modal.info({
-                    title: "Are you sure you want to exit?",
-                    description: "This will end the game.",
-                    onOk: handleEndGame,
-                    onCancel: () => {},
-                    okText: "Yes",
-                    cancelText: "No",
-                  })
-                }
-                icon={<FiChevronLeft className="size-5 shrink-0" />}
-                aria-label="Back (exit and end game)"
-              />
-            ) : (
-              <IconButton
-                href="/"
-                icon={<FiChevronLeft className="size-5 shrink-0" />}
-                aria-label="Back to home"
-              />
-            )}
-            <h1 className="flex-1 text-lg font-semibold text-white drop-shadow-sm">
-              Room {room.code}
-            </h1>
+          <header className="shrink-0 flex items-center px-2 py-2 w-full gap-4">
+            {/* Left: back + room name */}
+            <div className="flex items-center gap-3 shrink-0">
+              {canQuitAsPlayer ? (
+                <IconButton
+                  type="button"
+                  onClick={() => handleGoHome()}
+                  disabled={leaving}
+                  icon={<FiChevronLeft className="size-5 shrink-0" />}
+                  aria-label="Leave room"
+                />
+              ) : isHost ? (
+                <IconButton
+                  type="button"
+                  onClick={() =>
+                    modal.info({
+                      title: "Are you sure you want to exit?",
+                      description: "This will end the game.",
+                      onOk: handleEndGame,
+                      onCancel: () => {},
+                      okText: "Yes",
+                      cancelText: "No",
+                    })
+                  }
+                  icon={<FiChevronLeft className="size-5 shrink-0" />}
+                  aria-label="Back (exit and end game)"
+                />
+              ) : (
+                <IconButton
+                  href="/"
+                  icon={<FiChevronLeft className="size-5 shrink-0" />}
+                  aria-label="Back to home"
+                />
+              )}
+              <h1 className="text-lg font-semibold text-white drop-shadow-sm">
+                Room {room.code}
+              </h1>
+            </div>
+            {/* Center: claims */}
+            <div className="flex flex-1 justify-center items-start gap-5 min-w-0">
+              {(
+                [
+                  {
+                    key: "jaldiFive",
+                    label: "J5",
+                    entries: room.jaldiFiveClaimed,
+                  },
+                  {
+                    key: "firstLine",
+                    label: "FL",
+                    entries: room.firstLineClaimed,
+                  },
+                  {
+                    key: "middleLine",
+                    label: "ML",
+                    entries: room.middleLineClaimed,
+                  },
+                  {
+                    key: "lastLine",
+                    label: "LL",
+                    entries: room.lastLineClaimed,
+                  },
+                  { key: "housie", label: "H", entries: room.housieClaimed },
+                ] as const
+              ).map(({ key, label, entries }) => {
+                const claimed = (entries?.length ?? 0) > 0;
+                return (
+                  <div
+                    key={key}
+                    className="flex flex-col items-center gap-0.5 shrink-0"
+                  >
+                    <div
+                      className={`flex h-7 w-7 items-center justify-center rounded-full border text-[10px] font-bold ${
+                        claimed
+                          ? "border-yellow bg-yellow/20 text-yellow"
+                          : "border-slate-500 bg-slate-700/50 text-slate-400"
+                      }`}
+                    >
+                      {label}
+                    </div>
+                    {claimed && entries?.length ? (
+                      <span className="text-center text-[10px] text-yellow font-semibold">
+                        {entries.map((e) => e.playerName).join(", ")}
+                      </span>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+            {/* Right: Live */}
             <span
-              className={`rounded px-2 py-0.5 text-xs font-medium ${
+              className={`shrink-0 rounded px-2 py-0.5 text-xs font-medium ${
                 live ? "bg-green-400/90 text-white" : "bg-white/20 text-white"
               }`}
             >

@@ -33,7 +33,7 @@ export type GameScreenProps = {
   ) => void;
 };
 
-const COIN_PICK_DURATION_MS = 300;
+const COIN_PICK_DURATION_MS = 550;
 
 export function GameScreen({
   room,
@@ -91,7 +91,7 @@ export function GameScreen({
                 className="relative w-full max-w-[200px] aspect-square rounded-full flex items-center justify-center overflow-hidden bg-green-600 border-4 border-green-300"
                 style={{
                   boxShadow:
-                    "inset 4px 4px 16px rgba(0,0,0,0.3), inset -2px -2px 8px rgba(255,255,255,0.1)",
+                    "0 6px 0 rgba(0,0,0,0.2), 0 8px 16px rgba(0,0,0,0.25), 0 2px 4px rgba(0,0,0,0.15)",
                 }}
               >
                 <span
@@ -122,49 +122,6 @@ export function GameScreen({
 
       {/* Right: 2/3 – tickets column (scrollable) */}
       <div className="md:col-span-2 flex flex-col gap-0 p-2 md:p-4 min-h-0 overflow-y-auto justify-center">
-        {/* Claims: J5, FL, ML, LL, H as circled avatars with player names */}
-        <section className="flex flex-wrap justify-center gap-4 md:gap-6 mb-4">
-          {(
-            [
-              {
-                key: "jaldiFive",
-                label: "J5",
-                entries: room.jaldiFiveClaimed,
-              },
-              { key: "firstLine", label: "FL", entries: room.firstLineClaimed },
-              {
-                key: "middleLine",
-                label: "ML",
-                entries: room.middleLineClaimed,
-              },
-              { key: "lastLine", label: "LL", entries: room.lastLineClaimed },
-              { key: "housie", label: "H", entries: room.housieClaimed },
-            ] as const
-          ).map(({ key, label, entries }) => {
-            const claimed = (entries?.length ?? 0) > 0;
-            return (
-              <div key={key} className="flex flex-col items-center gap-1">
-                <div
-                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold ${
-                    claimed
-                      ? "border-yellow bg-yellow/20 text-slate-800"
-                      : "border-slate-500 bg-slate-700/50 text-slate-300"
-                  }`}
-                >
-                  {label}
-                </div>
-                {claimed && entries?.length ? (
-                  <p className="max-w-[72px] truncate text-center text-xs text-theme-primary">
-                    {entries.map((e) => e.playerName).join(", ")}
-                  </p>
-                ) : (
-                  <span className="h-4 text-xs" aria-hidden />
-                )}
-              </div>
-            );
-          })}
-        </section>
-
         {claimError && (
           <p className="text-sm text-red-600 text-center mb-2">{claimError}</p>
         )}
