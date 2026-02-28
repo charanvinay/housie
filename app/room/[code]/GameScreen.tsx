@@ -239,7 +239,7 @@ export function GameScreen({
                                   <td
                                     key={c}
                                     className={`border-[1.5px] border-[#1f2937] p-0.5 h-8 md:h-9 text-sm select-none text-slate-800 font-semibold ${
-                                      num !== null ? "cursor-pointer" : ""
+                                      num !== null && isDrawn && !isSelected ? "cursor-pointer" : ""
                                     } ${
                                       isEmpty
                                         ? "bg-ticket/20"
@@ -253,9 +253,11 @@ export function GameScreen({
                                     }`}
                                     onClick={() =>
                                       num !== null &&
+                                      isDrawn &&
+                                      !isSelected &&
                                       onToggleNumber(ticketIndex, num)
                                     }
-                                    role={num !== null ? "button" : undefined}
+                                    role={num !== null && isDrawn && !isSelected ? "button" : undefined}
                                   >
                                     {num ?? ""}
                                   </td>
