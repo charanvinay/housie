@@ -36,31 +36,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       images: [OG_IMAGE_URL],
     },
   };
-  // #region agent log
-  if (typeof fetch === "function") {
-    fetch("http://127.0.0.1:7243/ingest/35f333f4-c284-4afe-b2ef-cae41b59ec59", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "5d8f75",
-      },
-      body: JSON.stringify({
-        sessionId: "5d8f75",
-        location: "app/room/[code]/layout.tsx:generateMetadata",
-        message: "Room metadata generated",
-        data: {
-          code,
-          pageUrl,
-          openGraphTitle: metadata.openGraph?.title,
-          openGraphUrl: metadata.openGraph?.url,
-          openGraphImages: metadata.openGraph?.images,
-        },
-        timestamp: Date.now(),
-        hypothesisId: "A",
-      }),
-    }).catch(() => {});
-  }
-  // #endregion
   return metadata;
 }
 
