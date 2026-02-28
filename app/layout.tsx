@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     siteName: "Housie",
     images: [
       {
-        url: "/og-image.png", // Add a 1200x630 image in public folder
+        url: "https://housiegame.vercel.app/og-image.png",
         width: 1200,
         height: 630,
         alt: "Housie Telugu Tambola Game",
@@ -55,6 +55,13 @@ export const metadata: Metadata = {
     ],
     locale: "en_IN",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Housie – Play Telugu Tambola Online",
+    description:
+      "Create a room, invite your friends, have fun playing Telugu Tambola game!",
+    images: ["/og-image.png"],
   },
 
   category: "game",
