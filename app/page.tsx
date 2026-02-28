@@ -116,7 +116,7 @@ export default function Home() {
   return (
     <PageWrapper exiting={exiting} onExitComplete={handleExitComplete}>
       {checking && <LoadingOverlay />}
-      <div className="flex flex-col gap-4">
+      <div className="flex gap-4">
         <Button
           type="button"
           variant="primary"
@@ -129,7 +129,7 @@ export default function Home() {
         </Button>
         <Button
           type="button"
-          variant="secondary"
+          variant="yellow"
           onClick={() => {
             setExiting(true);
             setExitTargetUrl("/join");

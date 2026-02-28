@@ -44,7 +44,7 @@ export function PageWrapper({
       <header className="flex-shrink-0 flex justify-center">
         <Link href="/" className="block">
           <motion.h1
-            className="text-4xl sm:text-5xl md:text-6xl text-white drop-shadow-lg text-center"
+            className="text-5xl md:text-6xl text-white drop-shadow-lg text-center"
             style={{ fontFamily: "var(--font-pacifico), cursive" }}
             initial={{ opacity: 0, y: -32 }}
             animate={exiting ? titleExit : { opacity: 1, y: 0 }}
@@ -60,11 +60,12 @@ export function PageWrapper({
       </header>
       <div className="h-5 shrink-0" />
       <motion.div
-        className={
-          isFormLayout
-            ? "w-full max-w-sm shrink-0 rounded-2xl backdrop-blur-sm shadow-2xl p-8 max-h-[calc(100dvh-14rem)] overflow-y-auto bg-cardBg"
-            : "w-full max-w-sm shrink-0 rounded-2xl backdrop-blur-sm shadow-2xl p-8 bg-cardBg"
-        }
+        className={`w-full max-w-xs border-2 border-accent/30 md:border-none md:max-w-md shrink-0 rounded-2xl backdrop-blur-sm shadow-2xl p-4 md:p-8  
+          ${
+            isFormLayout
+              ? "max-h-[calc(100dvh-14rem)] overflow-y-auto bg-cardBg"
+              : "bg-cardBg"
+          }`}
         initial={{ opacity: 0, scale: 0 }}
         animate={exiting ? cardExit : { opacity: 1, scale: 1 }}
         transition={
