@@ -2,22 +2,18 @@
 
 import { Button } from "@/components/Button";
 import { IconButton } from "@/components/IconButton";
+import { LoadingOverlay } from "@/components/LoadingOverlay";
+import { MobilePortraitGameWrap } from "@/components/MobilePortraitGameWrap";
 import { useModal } from "@/components/Modal";
+import { RotateToLandscape } from "@/components/RotateToLandscape";
+import { useToast } from "@/components/Toast";
 import { getClaimPrizeAmounts } from "@/lib/rooms";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import {
-  FiChevronLeft,
-  FiCopy,
-  FiRefreshCw,
-  FiShare2,
-  FiUser,
-} from "react-icons/fi";
+import { FiChevronLeft, FiCopy, FiRefreshCw, FiShare2 } from "react-icons/fi";
 import { PiUserCircleCheckFill, PiUserCircleDashedFill } from "react-icons/pi";
 import { io, Socket } from "socket.io-client";
-import { MobilePortraitGameWrap } from "@/components/MobilePortraitGameWrap";
-import { RotateToLandscape } from "@/components/RotateToLandscape";
 import { GameEndedNoWinners } from "./GameEndedNoWinners";
 import { GameScreen } from "./GameScreen";
 import { WinnersScreen } from "./WinnersScreen";
@@ -31,8 +27,6 @@ import {
   saveSelections,
 } from "./room-utils";
 import type { RoomState, TicketGrid } from "./types";
-import { LoadingOverlay } from "@/components/LoadingOverlay";
-import { useToast } from "@/components/Toast";
 
 function RoomPageInner() {
   const params = useParams();
@@ -487,10 +481,7 @@ function RoomPageInner() {
           <h2 className="text-xl font-bold text-theme-primary text-center mb-2">
             Room not found
           </h2>
-          <p className="text-sm text-theme-muted text-center mb-6">
-            This room may have been closed or the code might be incorrect.
-            Please check the code and try again.
-          </p>
+          <p className="text-sm text-theme-muted text-center mb-6">{error}</p>
           <div className="pt-2 text-center">
             <Button href="/" variant="primary">
               Back to home
