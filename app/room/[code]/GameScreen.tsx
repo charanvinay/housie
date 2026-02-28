@@ -147,8 +147,8 @@ export function GameScreen({
   return (
     <div className="grid grid-cols-3 grid-rows-[minmax(0,1fr)] gap-0 w-full h-full min-h-0 overflow-hidden">
       {/* Left: 1/3 – coin + pick button (sticky) */}
-      <div className="col-span-1 flex flex-col items-center justify-center p-4 md:p-6 h-full sticky top-6 self-start">
-        <div className="w-full max-w-[100px] min-h-[100px] md:max-w-[200px] md:min-h-[200px] flex items-center justify-center shrink-0">
+      <div className="col-span-1 flex flex-col items-center justify-center px-2 py-4 md:px-4 md:py-6 h-full sticky top-6 self-start">
+        <div className="w-full max-w-[72px] min-h-[72px] md:max-w-[160px] md:min-h-[160px] flex items-center justify-center shrink-0">
           <AnimatePresence mode="wait">
             {currentNumber !== null && !coinHidden && (
               <motion.div
@@ -157,14 +157,14 @@ export function GameScreen({
                 animate={{ scale: 1 }}
                 exit={{ scale: 0 }}
                 transition={{ type: "tween", duration: 0.25 }}
-                className="relative w-full max-w-[100px] md:max-w-[200px] aspect-square rounded-full flex items-center justify-center overflow-hidden bg-green-600 border-4 md:border-[6px] border-green-300"
+                className="relative w-full max-w-[72px] md:max-w-[160px] aspect-square rounded-full flex items-center justify-center overflow-hidden bg-green-600 border-[3px] md:border-[5px] border-green-300"
                 style={{
                   boxShadow:
-                    "4px 10px 0 rgba(21, 128, 61, 0.85), 6px 14px 28px rgba(0, 0, 0, 0.3)",
+                    "3px 8px 0 rgba(21, 128, 61, 0.85), 4px 10px 20px rgba(0, 0, 0, 0.3)",
                 }}
               >
                 <span
-                  className="flex items-center justify-center text-3xl md:text-8xl font-bold text-green-300 leading-none text-center w-full h-full"
+                  className="flex items-center justify-center text-2xl md:text-6xl font-bold text-green-300 leading-none text-center w-full h-full"
                   style={{
                     textShadow:
                       "0 4px 12px rgba(21, 128, 61, 0.95), 0 0 20px rgba(134, 239, 172, 0.3)",
@@ -204,7 +204,7 @@ export function GameScreen({
       {/* Right: 2/3 – tickets column (scrollable); center when content fits, top when needs scroll */}
       <div
         ref={scrollContainerRef}
-        className={`tickets-scroll col-span-2 flex min-h-0 flex-col gap-0 p-2 md:p-4 overflow-y-auto ${
+        className={`tickets-scroll col-span-2 flex min-h-0 flex-col gap-0 px-1 py-2 md:px-2 md:py-4 overflow-y-auto ${
           ticketsFit ? "justify-center" : "justify-start"
         }`}
       >
@@ -218,7 +218,7 @@ export function GameScreen({
           <div
             className={
               isMobileLayout && tickets.length > 1
-                ? "flex flex-1 min-h-0 gap-3"
+                ? "flex flex-1 min-h-0 gap-6"
                 : "flex flex-col"
             }
           >

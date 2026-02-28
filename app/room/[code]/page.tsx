@@ -849,7 +849,7 @@ function RoomPageInner() {
             </div>
           </header>
 
-          <main className="w-full flex-1 min-h-0 px-0 py-4 flex flex-col">
+          <main key={room.status} className="w-full flex-1 min-h-0 px-0 py-4 flex flex-col">
             {room.status === "started" && (
               <div className="w-full flex-1 min-h-0 px-2 md:px-4 flex flex-col overflow-hidden">
                 <MobilePortraitGameWrap>

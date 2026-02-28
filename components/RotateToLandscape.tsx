@@ -20,6 +20,18 @@ function tryLockLandscape() {
   }
 }
 
+function tryUnlockOrientation() {
+  if (typeof window === "undefined") return;
+  const o = (window.screen as { orientation?: { unlock?: () => void } }).orientation;
+  if (o?.unlock) {
+    try {
+      o.unlock();
+    } catch {
+      // ignore
+    }
+  }
+}
+
 export function RotateToLandscape({ children, active = false }: Props) {
   const [showRotatePrompt, setShowRotatePrompt] = useState(false);
   const isMobileUserAgent = useIsMobileUserAgent();
@@ -39,6 +51,7 @@ export function RotateToLandscape({ children, active = false }: Props) {
   useEffect(() => {
     if (!active) {
       setShowRotatePrompt(false);
+      tryUnlockOrientation();
       return;
     }
     checkOrientation();
@@ -51,13 +64,20 @@ export function RotateToLandscape({ children, active = false }: Props) {
     };
   }, [active, checkOrientation]);
 
-  // On mobile: when in fullscreen, try to lock orientation to landscape so user cannot rotate
+  // On mobile: when in fullscreen, try to lock orientation to landscape; when game ends (active false), unlock
   useEffect(() => {
-    if (!active || !isMobileUserAgent) return;
+    if (!active) {
+      tryUnlockOrientation();
+      return;
+    }
+    if (!isMobileUserAgent) return;
     tryLockLandscape();
     const onFullscreenChange = () => tryLockLandscape();
     document.addEventListener("fullscreenchange", onFullscreenChange);
-    return () => document.removeEventListener("fullscreenchange", onFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", onFullscreenChange);
+      tryUnlockOrientation();
+    };
   }, [active, isMobileUserAgent]);
 
   // Non-mobile: show "Please rotate" when portrait or narrow (mobile rotation is handled by MobilePortraitGameWrap around game screen only)
