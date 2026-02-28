@@ -1,14 +1,17 @@
 "use client";
 
 import { Button } from "@/components/Button";
+import { IconButton } from "@/components/IconButton";
 import type { ClaimEntry, RoomState } from "./types";
 import {
   CLAIM_LABELS,
   getAllNumbersInTicket,
   getNumbersInRow,
 } from "./room-utils";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import { FiChevronDown, FiChevronUp } from "react-icons/fi";
 
 export type GameScreenProps = {
   room: RoomState;
@@ -55,6 +58,14 @@ export function GameScreen({
 
   const [coinHidden, setCoinHidden] = useState(false);
   const prevDrawing = useRef(drawing);
+  const isMobile = useIsMobile();
+  const [currentTicketIndex, setCurrentTicketIndex] = useState(0);
+
+  useEffect(() => {
+    if (currentTicketIndex >= tickets.length && tickets.length > 0) {
+      setCurrentTicketIndex(tickets.length - 1);
+    }
+  }, [tickets.length, currentTicketIndex]);
 
   const handlePickNext = () => {
     if (!isHost || drawing || drawn.length >= 90) return;
@@ -127,17 +138,31 @@ export function GameScreen({
         )}
       </div>
 
-      {/* Right: 2/3 – tickets column (scrollable) */}
-      <div className="tickets-scroll md:col-span-2 flex flex-col gap-0 p-2 md:p-4 min-h-0 overflow-y-auto">
+      {/* Right: 2/3 – tickets column (scrollable); on mobile single ticket + arrows */}
+      <div className="tickets-scroll md:col-span-2 flex min-h-0 flex-col gap-0 p-2 md:p-4 overflow-y-auto">
         {claimError && (
           <p className="text-sm text-red-600 text-center mb-2">{claimError}</p>
         )}
 
-        <div className="flex flex-col">
+        <div
+          className={
+            isMobile && tickets.length > 1
+              ? "flex flex-1 min-h-0 gap-3"
+              : "flex flex-col"
+          }
+        >
+          <div
+            className={
+              isMobile && tickets.length > 1
+                ? "flex flex-1 min-h-0 flex-col overflow-y-auto min-w-0"
+                : "flex flex-col"
+            }
+          >
           {tickets.length === 0 ? (
             <p className="text-theme-muted text-sm py-4">No tickets.</p>
           ) : (
-            tickets.map((ticket, ticketIndex) => {
+            (isMobile ? [currentTicketIndex] : Array.from({ length: tickets.length }, (_, i) => i)).map((ticketIndex) => {
+              const ticket = tickets[ticketIndex]!;
               const selected = selectedByTicket[ticketIndex] ?? new Set();
               const selectedList = Array.from(selected);
               const alreadyClaimedByMe = (arr?: ClaimEntry[]) =>
@@ -217,12 +242,14 @@ export function GameScreen({
                     type: "tween",
                     duration: 0.3,
                     ease: "easeOut",
-                    delay: 0.08 * ticketIndex,
+                    delay: isMobile ? 0 : 0.08 * ticketIndex,
                   }}
                   className="relative rounded-none bg-ticket/95 p-4 md:p-6 shrink-0"
                 >
                   <p className="text-xs text-slate-800 text-center font-semibold mb-1.5">
-                    Ticket {ticketIndex + 1}
+                    {isMobile && tickets.length > 1
+                      ? `Ticket ${ticketIndex + 1} of ${tickets.length}`
+                      : `Ticket ${ticketIndex + 1}`}
                   </p>
                   <div className="overflow-x-auto w-full">
                     <table className="w-full border-collapse text-center table-fixed">
@@ -327,6 +354,31 @@ export function GameScreen({
                 </motion.div>
               );
             })
+          )}
+          </div>
+          {isMobile && tickets.length > 1 && (
+            <div className="flex flex-col justify-center gap-4 shrink-0">
+              <IconButton
+                type="button"
+                onClick={() =>
+                  setCurrentTicketIndex((i) => Math.max(0, i - 1))
+                }
+                disabled={currentTicketIndex === 0}
+                icon={<FiChevronUp className="size-6 shrink-0" />}
+                aria-label="Previous ticket"
+              />
+              <IconButton
+                type="button"
+                onClick={() =>
+                  setCurrentTicketIndex((i) =>
+                    Math.min(tickets.length - 1, i + 1)
+                  )
+                }
+                disabled={currentTicketIndex === tickets.length - 1}
+                icon={<FiChevronDown className="size-6 shrink-0" />}
+                aria-label="Next ticket"
+              />
+            </div>
           )}
         </div>
       </div>
