@@ -12,7 +12,7 @@
   /* Room card: one static lighter blue */
   --room-card-bg: #0f2564;
   --text-primary: #f3f4f6;
-  --text-muted: #9ca3af;
+  --text-muted: #dadada;
   --accent: #60a5fa;
   --accent-dim: rgba(96, 165, 250, 0.2);
   --accent-bright: #93c5fd;
@@ -40,7 +40,6 @@
   .font-google-sans-flex {
     font-family: var(--font-google-sans-flex), sans-serif;
   }
-
 }
 
 /* Buttons – earlier blue (#0045f6) for strong, recognizable CTAs */

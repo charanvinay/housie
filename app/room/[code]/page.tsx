@@ -9,6 +9,7 @@ import { getClaimPrizeAmounts } from "@/lib/rooms";
 import { GRADIENT_BG } from "@/lib/theme";
 import { Button } from "@/components/Button";
 import { IconButton } from "@/components/IconButton";
+import { ModalProvider, useModal } from "@/components/Modal";
 
 const ROOM_SESSION_KEY = "housie_room";
 
@@ -110,7 +111,7 @@ function saveSelections(
   } catch {}
 }
 
-export default function RoomPage() {
+function RoomPageInner() {
   const params = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -140,6 +141,7 @@ export default function RoomPage() {
   const isHost = Boolean(hostId && room?.hostId === hostId);
   const myId = isHost ? hostId : playerId;
   const canQuitAsPlayer = !isHost && playerId && room?.status === "waiting";
+  const modal = useModal();
 
   // Persist this tab’s room context so "/" can redirect back (per-tab via sessionStorage)
   useEffect(() => {
@@ -558,6 +560,27 @@ export default function RoomPage() {
                       }
                       aria-label="Leave room"
                     />
+                  ) : isHost ? (
+                    <IconButton
+                      type="button"
+                      onClick={() =>
+                        modal.info({
+                          title: "Are you sure you want to exit?",
+                          description: "This will end the game.",
+                          onOk: handleEndGame,
+                          onCancel: () => {},
+                          okText: "Yes",
+                          cancelText: "No",
+                        })
+                      }
+                      icon={
+                        <ChevronLeft
+                          className="size-5 shrink-0"
+                          strokeWidth={2.5}
+                        />
+                      }
+                      aria-label="Back (exit and end game)"
+                    />
                   ) : (
                     <IconButton
                       href="/"
@@ -765,15 +788,6 @@ export default function RoomPage() {
                         Start game is available when the connection is live.
                       </p>
                     )}
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={handleEndGame}
-                      disabled={ending}
-                      className="!border-danger !text-danger hover:!bg-dangerSoft"
-                    >
-                      {ending ? "Ending…" : "End game"}
-                    </Button>
                   </div>
                 )}
               </div>
@@ -792,6 +806,24 @@ export default function RoomPage() {
                   <ChevronLeft className="size-5 shrink-0" strokeWidth={2.5} />
                 }
                 aria-label="Leave room"
+              />
+            ) : isHost ? (
+              <IconButton
+                type="button"
+                onClick={() =>
+                  modal.info({
+                    title: "Are you sure you want to exit?",
+                    description: "This will end the game.",
+                    onOk: handleEndGame,
+                    onCancel: () => {},
+                    okText: "Yes",
+                    cancelText: "No",
+                  })
+                }
+                icon={
+                  <ChevronLeft className="size-5 shrink-0" strokeWidth={2.5} />
+                }
+                aria-label="Back (exit and end game)"
               />
             ) : (
               <IconButton
@@ -828,8 +860,6 @@ export default function RoomPage() {
                   claiming={claiming}
                   claimError={claimError}
                   onClaim={handleClaim}
-                  onEndGame={handleEndGame}
-                  ending={ending}
                 />
               </div>
             )}
@@ -867,6 +897,8 @@ export default function RoomPage() {
     </div>
   );
 }
+
+export default RoomPageInner;
 
 function getNumbersInRow(ticket: TicketGrid, rowIndex: number): number[] {
   const row = ticket[rowIndex];
@@ -921,8 +953,6 @@ function GameScreen({
   claiming,
   claimError,
   onClaim,
-  onEndGame,
-  ending,
 }: {
   room: RoomState;
   isHost: boolean;
@@ -944,8 +974,6 @@ function GameScreen({
     )[],
     jaldiFiveNumbers?: number[]
   ) => void;
-  onEndGame: () => void;
-  ending: boolean;
 }) {
   const tickets =
     (room.playerTickets && myId ? room.playerTickets[myId] : null) ?? [];
@@ -971,14 +999,6 @@ function GameScreen({
               className="rounded-lg bg-green-600 px-6 py-2 text-white font-medium hover:bg-green-700 disabled:opacity-50"
             >
               {drawing ? "Drawing…" : "Pick next number"}
-            </button>
-            <button
-              type="button"
-              onClick={onEndGame}
-              disabled={ending}
-              className="rounded-lg border border-red-300 bg-red-50 px-4 py-2 text-sm font-medium text-red-800 hover:bg-red-100 disabled:opacity-50"
-            >
-              {ending ? "Ending…" : "End game"}
             </button>
           </div>
         ) : (

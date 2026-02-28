@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Google_Sans_Flex, Pacifico } from "next/font/google";
 import "./globals.css";
+import { Providers } from "@/components/Providers";
 
 const pacifico = Pacifico({
   weight: "400",
@@ -29,7 +30,7 @@ export default function RootLayout({
       <body
         className={`${pacifico.variable} ${googleSansFlex.variable} antialiased`}
       >
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
