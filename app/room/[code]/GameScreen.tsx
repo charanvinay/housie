@@ -4,7 +4,6 @@ import { Button } from "@/components/Button";
 import type { ClaimEntry, RoomState } from "./types";
 import {
   CLAIM_LABELS,
-  formatClaimWinner,
   getAllNumbersInTicket,
   getNumbersInRow,
 } from "./room-utils";
@@ -80,7 +79,7 @@ export function GameScreen({
     <div className="grid grid-cols-1 md:grid-cols-3 gap-0 w-full h-full min-h-0 overflow-hidden">
       {/* Left: 1/3 – coin + pick button (sticky) */}
       <div className="flex flex-col items-center justify-center p-4 md:p-6 md:sticky md:top-6 md:self-start h-full">
-        <div className="w-full max-w-[200px] aspect-square flex items-center justify-center">
+        <div className="w-full max-w-[200px] min-h-[200px] flex items-center justify-center shrink-0">
           <AnimatePresence mode="wait">
             {currentNumber !== null && !coinHidden && (
               <motion.div
@@ -89,20 +88,17 @@ export function GameScreen({
                 animate={{ scale: 1 }}
                 exit={{ scale: 0 }}
                 transition={{ type: "tween", duration: 0.25 }}
-                className="relative w-full h-full rounded-full flex items-center justify-center overflow-hidden"
+                className="relative w-full max-w-[200px] aspect-square rounded-full flex items-center justify-center overflow-hidden bg-green-600 border-4 border-green-300"
                 style={{
-                  background:
-                    "linear-gradient(145deg, #fef3c7 0%, #fcd34d 30%, #eab308 60%, #ca8a04 100%)",
-                  border: "4px solid #92400e",
                   boxShadow:
-                    "inset 4px 4px 14px rgba(255,255,255,0.5), inset -4px -4px 14px rgba(0,0,0,0.25), 0 10px 28px rgba(0,0,0,0.4)",
+                    "inset 4px 4px 16px rgba(0,0,0,0.3), inset -2px -2px 8px rgba(255,255,255,0.1)",
                 }}
               >
                 <span
-                  className="text-4xl md:text-5xl font-bold text-slate-900 drop-shadow-sm"
+                  className="text-4xl md:text-5xl font-bold text-green-100"
                   style={{
                     textShadow:
-                      "0 1px 0 rgba(255,255,255,0.6), 0 2px 4px rgba(0,0,0,0.2)",
+                      "0 2px 4px rgba(0,0,0,0.4), 0 0 20px rgba(134, 239, 172, 0.3)",
                   }}
                 >
                   {currentNumber}
@@ -117,7 +113,7 @@ export function GameScreen({
             variant="yellow"
             onClick={handlePickNext}
             disabled={drawing || drawn.length >= 90}
-            className="mt-6 w-full max-w-[200px]"
+            className="mt-6 w-full min-w-[220px] max-w-[280px] whitespace-nowrap"
           >
             {drawing ? "Picking…" : "Pick next number"}
           </Button>
@@ -126,37 +122,48 @@ export function GameScreen({
 
       {/* Right: 2/3 – tickets column (scrollable) */}
       <div className="md:col-span-2 flex flex-col gap-0 p-2 md:p-4 min-h-0 overflow-y-auto justify-center">
-        {room.jaldiFiveClaimed?.length ||
-        room.firstLineClaimed?.length ||
-        room.middleLineClaimed?.length ||
-        room.lastLineClaimed?.length ? (
-          <section className="rounded-lg border border-green-500 bg-green-50 p-3 text-center space-y-1 mb-4">
-            {room.jaldiFiveClaimed?.length ? (
-              <p className="text-sm font-medium text-green-800">
-                Jaldi Five:{" "}
-                {room.jaldiFiveClaimed.map(formatClaimWinner).join(", ")}
-              </p>
-            ) : null}
-            {room.firstLineClaimed?.length ? (
-              <p className="text-sm font-medium text-green-800">
-                First line:{" "}
-                {room.firstLineClaimed.map(formatClaimWinner).join(", ")}
-              </p>
-            ) : null}
-            {room.middleLineClaimed?.length ? (
-              <p className="text-sm font-medium text-green-800">
-                Middle line:{" "}
-                {room.middleLineClaimed.map(formatClaimWinner).join(", ")}
-              </p>
-            ) : null}
-            {room.lastLineClaimed?.length ? (
-              <p className="text-sm font-medium text-green-800">
-                Last line:{" "}
-                {room.lastLineClaimed.map(formatClaimWinner).join(", ")}
-              </p>
-            ) : null}
-          </section>
-        ) : null}
+        {/* Claims: J5, FL, ML, LL, H as circled avatars with player names */}
+        <section className="flex flex-wrap justify-center gap-4 md:gap-6 mb-4">
+          {(
+            [
+              {
+                key: "jaldiFive",
+                label: "J5",
+                entries: room.jaldiFiveClaimed,
+              },
+              { key: "firstLine", label: "FL", entries: room.firstLineClaimed },
+              {
+                key: "middleLine",
+                label: "ML",
+                entries: room.middleLineClaimed,
+              },
+              { key: "lastLine", label: "LL", entries: room.lastLineClaimed },
+              { key: "housie", label: "H", entries: room.housieClaimed },
+            ] as const
+          ).map(({ key, label, entries }) => {
+            const claimed = (entries?.length ?? 0) > 0;
+            return (
+              <div key={key} className="flex flex-col items-center gap-1">
+                <div
+                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold ${
+                    claimed
+                      ? "border-yellow bg-yellow/20 text-slate-800"
+                      : "border-slate-500 bg-slate-700/50 text-slate-300"
+                  }`}
+                >
+                  {label}
+                </div>
+                {claimed && entries?.length ? (
+                  <p className="max-w-[72px] truncate text-center text-xs text-theme-primary">
+                    {entries.map((e) => e.playerName).join(", ")}
+                  </p>
+                ) : (
+                  <span className="h-4 text-xs" aria-hidden />
+                )}
+              </div>
+            );
+          })}
+        </section>
 
         {claimError && (
           <p className="text-sm text-red-600 text-center mb-2">{claimError}</p>
@@ -278,9 +285,9 @@ export function GameScreen({
                                       isEmpty
                                         ? "bg-ticket/20"
                                         : isSelected
-                                        ? "bg-yellow/90 text-slate-900"
+                                        ? "bg-pink-500 text-white"
                                         : isDrawn
-                                        ? "bg-ticket text-white"
+                                        ? "bg-yellow/80 text-slate-900"
                                         : isPending
                                         ? "bg-ticket/40 hover:bg-ticket/60 cursor-pointer"
                                         : ""
