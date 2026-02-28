@@ -74,6 +74,38 @@
     inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
+/* Yellow variant – stands out on blue backgrounds */
+.btn-yellow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 1rem 1.5rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  text-transform: capitalize;
+  color: #0f172a;
+  cursor: pointer;
+  background: linear-gradient(180deg, #fef08a 0%, #facc15 50%, #eab308 100%);
+  border: 2px solid #ca8a04;
+  border-radius: 1rem;
+  box-shadow: 0 4px 0 #a16207, 0 6px 0 rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
+  transition: box-shadow 0.12s ease, filter 0.15s ease;
+}
+
+.btn-yellow:hover:not(:disabled) {
+  filter: brightness(1.06);
+  box-shadow: 0 6px 0 #a16207, 0 8px 0 rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.btn-yellow:active:not(:disabled) {
+  box-shadow: 0 2px 0 #a16207, 0 3px 0 rgba(0, 0, 0, 0.3),
+    inset 0 2px 4px rgba(0, 0, 0, 0.12);
+}
+
 /* Secondary button – much whiter / lighter blue */
 .btn-secondary {
   display: flex;

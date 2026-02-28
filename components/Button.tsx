@@ -13,7 +13,7 @@ const hoverStyle = { scale: 1, y: -2 };
 const restStyle = { scale: 1, y: 0 };
 
 type ButtonBaseProps = {
-  variant: "primary" | "secondary";
+  variant: "primary" | "secondary" | "yellow";
   children: React.ReactNode;
   className?: string;
 };
@@ -40,7 +40,12 @@ export function Button({
   className = "",
   ...rest
 }: ButtonProps) {
-  const variantClass = variant === "primary" ? "btn-primary" : "btn-secondary";
+  const variantClass =
+    variant === "primary"
+      ? "btn-primary"
+      : variant === "yellow"
+        ? "btn-yellow"
+        : "btn-secondary";
   const classes = `${baseClass} ${variantClass} ${className}`.trim();
   const disabled = "disabled" in rest ? rest.disabled : false;
   const { isHovered, isPressed, pressableProps } = usePressable(disabled);

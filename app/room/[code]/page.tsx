@@ -777,7 +777,7 @@ function RoomPageInner() {
                   <div className="flex flex-col gap-3 pt-2">
                     <Button
                       type="button"
-                      variant="primary"
+                      variant="yellow"
                       onClick={handleStartGame}
                       disabled={starting || !live}
                     >
