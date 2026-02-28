@@ -22,7 +22,6 @@ function tryLockLandscape() {
 
 export function RotateToLandscape({ children, active = false }: Props) {
   const [showRotatePrompt, setShowRotatePrompt] = useState(false);
-  const [isPortrait, setIsPortrait] = useState(false);
   const isMobileUserAgent = useIsMobileUserAgent();
 
   const checkOrientation = useCallback(() => {
@@ -32,7 +31,6 @@ export function RotateToLandscape({ children, active = false }: Props) {
     const narrow =
       typeof window !== "undefined" &&
       window.innerWidth < NARROW_BREAKPOINT;
-    setIsPortrait(portrait);
     if (!isMobileUserAgent) {
       setShowRotatePrompt(portrait || narrow);
     }
@@ -62,7 +60,7 @@ export function RotateToLandscape({ children, active = false }: Props) {
     return () => document.removeEventListener("fullscreenchange", onFullscreenChange);
   }, [active, isMobileUserAgent]);
 
-  // Non-mobile: show "Please rotate" when portrait or narrow
+  // Non-mobile: show "Please rotate" when portrait or narrow (mobile rotation is handled by MobilePortraitGameWrap around game screen only)
   if (active && showRotatePrompt) {
     return (
       <div className="fixed inset-0 z-9999 flex flex-col items-center justify-center bg-black/80 p-6 text-center">
@@ -70,27 +68,6 @@ export function RotateToLandscape({ children, active = false }: Props) {
         <h1 className="text-xl font-bold text-white drop-shadow-sm">
           Please rotate
         </h1>
-      </div>
-    );
-  }
-
-  // Mobile + portrait: tilt layout 90° so content appears landscape (single ticket + buttons)
-  if (active && isMobileUserAgent && isPortrait) {
-    return (
-      <div
-        className="fixed inset-0 overflow-hidden"
-        style={{
-          width: "100vh",
-          height: "100vw",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%) rotate(90deg)",
-          transformOrigin: "center center",
-        }}
-      >
-        <div className="w-full h-full overflow-auto">
-          {children}
-        </div>
       </div>
     );
   }

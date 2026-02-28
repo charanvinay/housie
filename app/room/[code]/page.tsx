@@ -10,6 +10,7 @@ import { useEffect, useRef, useState } from "react";
 import { FiChevronLeft, FiCopy, FiRefreshCw, FiShare2, FiUser } from "react-icons/fi";
 import { PiUserCircleCheckFill, PiUserCircleDashedFill } from "react-icons/pi";
 import { io, Socket } from "socket.io-client";
+import { MobilePortraitGameWrap } from "@/components/MobilePortraitGameWrap";
 import { RotateToLandscape } from "@/components/RotateToLandscape";
 import { GameEndedNoWinners } from "./GameEndedNoWinners";
 import { GameScreen } from "./GameScreen";
@@ -819,18 +820,20 @@ function RoomPageInner() {
           <main className="w-full flex-1 min-h-0 px-0 py-4 flex flex-col">
             {room.status === "started" && (
               <div className="w-full flex-1 min-h-0 px-2 md:px-4 flex flex-col overflow-hidden">
-                <GameScreen
-                  room={room}
-                  isHost={isHost}
-                  myId={myId ?? ""}
-                  drawing={drawing}
-                  onDrawNumber={handleDrawNumber}
-                  selectedByTicket={selectedByTicket}
-                  onToggleNumber={toggleTicketNumber}
-                  claiming={claiming}
-                  claimError={claimError}
-                  onClaim={handleClaim}
-                />
+                <MobilePortraitGameWrap>
+                  <GameScreen
+                    room={room}
+                    isHost={isHost}
+                    myId={myId ?? ""}
+                    drawing={drawing}
+                    onDrawNumber={handleDrawNumber}
+                    selectedByTicket={selectedByTicket}
+                    onToggleNumber={toggleTicketNumber}
+                    claiming={claiming}
+                    claimError={claimError}
+                    onClaim={handleClaim}
+                  />
+                </MobilePortraitGameWrap>
               </div>
             )}
 

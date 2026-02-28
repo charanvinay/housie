@@ -113,9 +113,9 @@ export function GameScreen({
   }, [drawing, coinHidden]);
 
   return (
-    <div className={`grid gap-0 w-full h-full min-h-0 overflow-hidden ${isMobileLayout ? "grid-cols-1" : "grid-cols-1 md:grid-cols-3"}`}>
+    <div className="grid grid-cols-3 grid-rows-[minmax(0,1fr)] gap-0 w-full h-full min-h-0 overflow-hidden">
       {/* Left: 1/3 – coin + pick button (sticky) */}
-      <div className={`flex flex-col items-center justify-center p-4 md:p-6 h-full ${isMobileLayout ? "" : "md:sticky md:top-6 md:self-start"}`}>
+      <div className="col-span-1 flex flex-col items-center justify-center p-4 md:p-6 h-full sticky top-6 self-start">
         <div className="w-full max-w-[200px] min-h-[200px] flex items-center justify-center shrink-0">
           <AnimatePresence mode="wait">
             {currentNumber !== null && !coinHidden && (
@@ -167,7 +167,7 @@ export function GameScreen({
       {/* Right: 2/3 – tickets column (scrollable); center when content fits, top when needs scroll */}
       <div
         ref={scrollContainerRef}
-        className={`tickets-scroll flex min-h-0 flex-col gap-0 p-2 md:p-4 overflow-y-auto ${isMobileLayout ? "" : "md:col-span-2"} ${ticketsFit ? "justify-center" : "justify-start"}`}
+        className={`tickets-scroll col-span-2 flex min-h-0 flex-col gap-0 p-2 md:p-4 overflow-y-auto ${ticketsFit ? "justify-center" : "justify-start"}`}
       >
         <div ref={ticketsContentRef} className="flex flex-col shrink-0">
         {claimError && (
