@@ -88,17 +88,17 @@ export function GameScreen({
                 animate={{ scale: 1 }}
                 exit={{ scale: 0 }}
                 transition={{ type: "tween", duration: 0.25 }}
-                className="relative w-full max-w-[200px] aspect-square rounded-full flex items-center justify-center overflow-hidden bg-green-600 border-4 border-green-300"
+                className="relative w-full max-w-[200px] aspect-square rounded-full flex items-center justify-center overflow-hidden bg-green-600 border-[6px] border-green-300"
                 style={{
                   boxShadow:
-                    "0 6px 0 rgba(0,0,0,0.2), 0 8px 16px rgba(0,0,0,0.25), 0 2px 4px rgba(0,0,0,0.15)",
+                    "4px 10px 0 rgba(21, 128, 61, 0.85), 6px 14px 28px rgba(0, 0, 0, 0.3)",
                 }}
               >
                 <span
-                  className="text-4xl md:text-5xl font-bold text-green-100"
+                  className="flex items-center justify-center text-6xl md:text-8xl font-bold text-green-300 leading-none text-center w-full h-full"
                   style={{
                     textShadow:
-                      "0 2px 4px rgba(0,0,0,0.4), 0 0 20px rgba(134, 239, 172, 0.3)",
+                      "0 4px 12px rgba(21, 128, 61, 0.95), 0 0 20px rgba(134, 239, 172, 0.3)",
                   }}
                 >
                   {currentNumber}
@@ -113,9 +113,9 @@ export function GameScreen({
             variant="yellow"
             onClick={handlePickNext}
             disabled={drawing || drawn.length >= 90}
-            className="mt-6 w-full min-w-[220px] max-w-[280px] whitespace-nowrap"
+            className="mt-16 w-full min-w-[220px] max-w-[280px] whitespace-nowrap"
           >
-            {drawing ? "Picking…" : "Pick next number"}
+            Pick next number
           </Button>
         )}
       </div>
@@ -239,6 +239,8 @@ export function GameScreen({
                                   <td
                                     key={c}
                                     className={`border-[1.5px] border-[#1f2937] p-0.5 h-8 md:h-9 text-sm select-none text-slate-800 font-semibold ${
+                                      num !== null ? "cursor-pointer" : ""
+                                    } ${
                                       isEmpty
                                         ? "bg-ticket/20"
                                         : isSelected
@@ -246,7 +248,7 @@ export function GameScreen({
                                         : isDrawn
                                         ? "bg-yellow/80 text-slate-900"
                                         : isPending
-                                        ? "bg-ticket/40 hover:bg-ticket/60 cursor-pointer"
+                                        ? "bg-ticket/40 hover:bg-ticket/60"
                                         : ""
                                     }`}
                                     onClick={() =>
@@ -275,9 +277,9 @@ export function GameScreen({
                                   }}
                                 >
                                   <div
-                                    className="w-full border-t-2 border-rose-500"
+                                    className="w-full border-t-2 border-yellow"
                                     style={{
-                                      boxShadow: "0 1px 0 rgba(0,0,0,0.2)",
+                                      boxShadow: "0 2px 4px rgba(0, 0, 0, 0.8)",
                                     }}
                                   />
                                 </td>

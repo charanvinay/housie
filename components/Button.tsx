@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { usePressable } from "@/components/usePressable";
+
+const DISABLED_TO_ENABLED_DELAY_MS = 450;
 
 const baseClass = "cursor-pointer select-none w-full flex items-center justify-center font-medium text-lg py-4 px-6 rounded-xl";
 
@@ -46,13 +49,42 @@ export function Button({
       : variant === "yellow"
         ? "btn-yellow"
         : "btn-secondary";
-  const classes = `${baseClass} ${variantClass} ${className}`.trim();
   const disabled = "disabled" in rest ? rest.disabled : false;
-  const { isHovered, isPressed, pressableProps } = usePressable(disabled);
+  const [domDisabled, setDomDisabled] = useState(disabled);
+  const prevDisabledRef = useRef(disabled);
+
+  useEffect(() => {
+    if (disabled) {
+      prevDisabledRef.current = true;
+      setDomDisabled(true);
+      return;
+    }
+    if (prevDisabledRef.current) {
+      setDomDisabled(true);
+      const id = setTimeout(() => {
+        prevDisabledRef.current = false;
+        setDomDisabled(false);
+      }, DISABLED_TO_ENABLED_DELAY_MS);
+      return () => clearTimeout(id);
+    }
+    setDomDisabled(false);
+  }, [disabled]);
+
+  const disabledCursorClass = domDisabled ? "cursor-not-allowed" : "";
+  const classes = `${baseClass} ${variantClass} ${disabledCursorClass} ${className}`.trim();
+  const { isHovered, isPressed, pressableProps } = usePressable(domDisabled);
 
   const animate =
     isPressed ? tapStyle : isHovered ? hoverStyle : restStyle;
   const transitionConfig = isPressed ? tapTransition : transition;
+  const animateWithOpacity = {
+    ...animate,
+    opacity: disabled ? 0.6 : 1,
+  };
+  const transitionWithOpacity = {
+    ...transitionConfig,
+    opacity: { duration: 0.4, ease: "easeOut" as const },
+  };
 
   if ("href" in rest && rest.href) {
     return (
@@ -60,8 +92,8 @@ export function Button({
         <motion.span
           className={classes}
           initial={restStyle}
-          animate={animate}
-          transition={transitionConfig}
+          animate={animateWithOpacity}
+          transition={transitionWithOpacity}
           {...pressableProps}
         >
           {children}
@@ -74,12 +106,12 @@ export function Button({
   return (
     <motion.button
       type={type}
-      disabled={disabled}
+      disabled={domDisabled}
       onClick={onClick}
       className={classes}
       initial={restStyle}
-      animate={animate}
-      transition={transitionConfig}
+      animate={animateWithOpacity}
+      transition={transitionWithOpacity}
       {...pressableProps}
     >
       {children}
