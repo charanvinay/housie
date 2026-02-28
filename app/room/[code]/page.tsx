@@ -485,11 +485,6 @@ function RoomPageInner() {
                     Room {room.code}
                   </h1>
                   <div className="flex items-center gap-2 w-10 justify-end">
-                    {isHost && (
-                      <span className="rounded bg-theme-accent-soft px-2 py-0.5 text-xs font-medium text-theme-accent">
-                        Host
-                      </span>
-                    )}
                     <span
                       className={`rounded px-2 py-0.5 text-xs font-medium ${
                         live
@@ -504,7 +499,7 @@ function RoomPageInner() {
                 </div>
                 {leaveError && <p className="form-error mb-3">{leaveError}</p>}
                 <h2 className="form-label mb-2">Joining players</h2>
-                <ul className="space-y-4 flex-1 rounded-lg p-3 border-2 border-accent/30 bg-inputBg">
+                <ul className="space-y-4 flex-1 rounded-lg p-3 border-2 border-accent/30 bg-inputBg max-h-52 md:max-h-full overflow-scroll">
                   {room.players.map((p) => (
                     <li
                       key={p.id}
@@ -605,7 +600,7 @@ function RoomPageInner() {
                                   <td className="py-2 text-theme-primary">
                                     {label}
                                   </td>
-                                  <td className="py-2 text-right font-semibold text-theme-accent">
+                                  <td className="py-2 text-right font-semibold text-yellow">
                                     ₹{amount}
                                   </td>
                                 </tr>
