@@ -534,7 +534,7 @@ export function GameScreen({
                               ? `Ticket ${ticketIndex + 1} of ${tickets.length}`
                               : `Ticket ${ticketIndex + 1}`}
                           </p>
-                          <div className="overflow-x-auto w-full">
+                          <div className="w-full">
                             <table className="w-full border-collapse text-center table-fixed">
                               <colgroup>
                                 {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
