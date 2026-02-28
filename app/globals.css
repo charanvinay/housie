@@ -52,6 +52,11 @@
     height: 100dvh;
     color: var(--text-primary);
   }
+  @media (max-width: 767px) {
+    body {
+      font-size: 0.875rem;
+    }
+  }
   html[data-fullscreen="true"] body {
     height: 100vh;
     min-height: 100vh;
@@ -185,6 +190,23 @@
 .btn-icon:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+/* Mobile: smaller buttons and text */
+@media (max-width: 767px) {
+  .btn-primary,
+  .btn-secondary,
+  .btn-yellow {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    border-radius: 0.75rem;
+  }
+  .btn-icon {
+    min-width: 2rem;
+    min-height: 2rem;
+    padding: 0.25rem;
+    font-size: 0.8125rem;
+  }
 }
 
 /* Form fields – lighter so they stand out on dark cards */

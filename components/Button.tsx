@@ -7,7 +7,7 @@ import { usePressable } from "@/components/usePressable";
 
 const DISABLED_TO_ENABLED_DELAY_MS = 450;
 
-const baseClass = "cursor-pointer select-none w-full flex items-center justify-center font-medium text-lg py-4 px-6 rounded-xl";
+const baseClass = "cursor-pointer select-none w-full flex items-center justify-center font-medium text-base md:text-lg py-2 md:py-4 px-4 md:px-6 rounded-xl";
 
 const transition = { type: "tween" as const, duration: 0.12 };
 const tapTransition = { type: "tween" as const, duration: 0.08 };
