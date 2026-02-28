@@ -4,7 +4,6 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { FiChevronLeft } from "react-icons/fi";
 import { IconButton } from "@/components/IconButton";
-import { GRADIENT_BG } from "@/lib/theme";
 
 const exitTransition = { duration: 0.4, ease: [0.22, 1, 0.36, 1] as const };
 /** Title: entered from top (y -32), so exit back up and fade. */
@@ -40,10 +39,7 @@ export function PageWrapper({
   const isFormLayout = formLayout(showBack);
 
   return (
-    <div
-      className="min-h-screen flex flex-col items-center px-4 py-6"
-      style={{ background: GRADIENT_BG }}
-    >
+    <div className="min-h-screen flex flex-col items-center px-4 py-6">
       <div className="flex-1 min-h-[1rem]" />
       <header className="flex-shrink-0 flex justify-center">
         <Link href="/" className="block">

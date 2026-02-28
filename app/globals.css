@@ -26,12 +26,22 @@
   --yellow: #facc15;
   --yellow-dark: #ca8a04;
   --yellow-darker: #a16207;
+  /* App background – applied at layout level */
+  --gradient-bg: radial-gradient(
+    ellipse at center,
+    #0038d4 0%,
+    #002a9e 30%,
+    #001a62 60%,
+    #000d33 85%,
+    #050518 100%
+  );
 }
 
 @layer base {
   body {
     font-family: var(--font-google-sans-flex), sans-serif;
-    background: #0a0a0f;
+    background: var(--gradient-bg);
+    min-height: 100vh;
     color: var(--text-primary);
   }
 }
@@ -215,6 +225,7 @@
 }
 
 .loading-overlay {
+  background: var(--gradient-bg);
   animation: loading-overlay-fade-in 0.35s ease-out forwards;
 }
 

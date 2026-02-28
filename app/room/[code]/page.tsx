@@ -4,7 +4,6 @@ import { Button } from "@/components/Button";
 import { IconButton } from "@/components/IconButton";
 import { useModal } from "@/components/Modal";
 import { getClaimPrizeAmounts } from "@/lib/rooms";
-import { GRADIENT_BG } from "@/lib/theme";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { FiChevronLeft, FiCopy, FiShare2, FiUser } from "react-icons/fi";
@@ -415,10 +414,7 @@ function RoomPageInner() {
 
   if (error && !room) {
     return (
-      <div
-        className="min-h-screen flex flex-col items-center justify-center px-4 py-8"
-        style={{ background: GRADIENT_BG }}
-      >
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 py-8">
         <div className="room-card max-w-sm w-full text-center">
           <p className="form-error">{error}</p>
           <div className="mt-4">
@@ -433,10 +429,7 @@ function RoomPageInner() {
 
   if (!room) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center px-4"
-        style={{ background: GRADIENT_BG }}
-      >
+      <div className="min-h-screen flex items-center justify-center px-4">
         <div className="room-card max-w-sm text-center">
           <p className="text-theme-primary">Loading room…</p>
         </div>
@@ -449,10 +442,7 @@ function RoomPageInner() {
   const totalAmount = room.totalAmount ?? totalTickets * room.ticketPrice;
 
   return (
-    <div
-      className="min-h-screen flex flex-col items-center justify-center px-4 py-6"
-      style={{ background: GRADIENT_BG }}
-    >
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-6">
       {room.status === "waiting" ? (
         <main className="w-full max-w-4xl flex-1 flex flex-col items-center justify-center">
           <div className="w-full rounded-2xl p-4 md:p-8 shadow-2xl bg-roomCard border-2 border-yellow/80">
