@@ -73,8 +73,20 @@
   }
 }
 
+/* Button hover shimmer – left to right sweep */
+@keyframes btn-shimmer-ltr {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
 /* Buttons – earlier blue (#0045f6) for strong, recognizable CTAs */
 .btn-primary {
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -94,10 +106,30 @@
   transition: box-shadow 0.12s ease, filter 0.15s ease;
 }
 
+.btn-primary::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.25) 45%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(255, 255, 255, 0.25) 55%,
+    transparent 100%
+  );
+  pointer-events: none;
+  transform: translateX(-100%);
+}
+
 .btn-primary:hover:not(:disabled) {
   filter: brightness(1.1);
   box-shadow: 0 6px 0 #002d9e, 0 8px 0 rgba(0, 0, 0, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.btn-primary:hover:not(:disabled)::before {
+  animation: btn-shimmer-ltr 0.5s ease-out forwards;
 }
 
 .btn-primary:active:not(:disabled) {
@@ -105,8 +137,14 @@
     inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
+.btn-primary:active:not(:disabled)::before {
+  animation: none;
+}
+
 /* Yellow variant – stands out on blue backgrounds */
 .btn-yellow {
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -126,10 +164,30 @@
   transition: box-shadow 0.12s ease, filter 0.15s ease;
 }
 
+.btn-yellow::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 45%,
+    rgba(255, 255, 255, 0.5) 50%,
+    rgba(255, 255, 255, 0.3) 55%,
+    transparent 100%
+  );
+  pointer-events: none;
+  transform: translateX(-100%);
+}
+
 .btn-yellow:hover:not(:disabled) {
   filter: brightness(1.06);
   box-shadow: 0 6px 0 #a16207, 0 8px 0 rgba(0, 0, 0, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.btn-yellow:hover:not(:disabled)::before {
+  animation: btn-shimmer-ltr 0.5s ease-out forwards;
 }
 
 .btn-yellow:active:not(:disabled) {
@@ -137,8 +195,14 @@
     inset 0 2px 4px rgba(0, 0, 0, 0.12);
 }
 
+.btn-yellow:active:not(:disabled)::before {
+  animation: none;
+}
+
 /* Secondary button – much whiter / lighter blue */
 .btn-secondary {
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -156,13 +220,37 @@
   transition: box-shadow 0.12s ease, background 0.15s ease;
 }
 
+.btn-secondary::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.15) 45%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0.15) 55%,
+    transparent 100%
+  );
+  pointer-events: none;
+  transform: translateX(-100%);
+}
+
 .btn-secondary:hover:not(:disabled) {
   background: rgba(191, 219, 254, 0.15);
   box-shadow: 0 4px 0 #1e40af, 0 6px 0 rgba(0, 0, 0, 0.2);
 }
 
+.btn-secondary:hover:not(:disabled)::before {
+  animation: btn-shimmer-ltr 0.5s ease-out forwards;
+}
+
 .btn-secondary:active:not(:disabled) {
   box-shadow: 0 1px 0 #1e40af, 0 2px 0 rgba(0, 0, 0, 0.2);
+}
+
+.btn-secondary:active:not(:disabled)::before {
+  animation: none;
 }
 
 /* Icon button – much whiter blue to match secondary */
@@ -297,6 +385,44 @@
 .h-screen-safe {
   height: 100dvh;
   height: 100vh;
+}
+
+/* Housie title: golden text with shimmer (matches btn-yellow palette) */
+@keyframes title-shimmer {
+  0% {
+    background-position: 200% center;
+  }
+  100% {
+    background-position: -200% center;
+  }
+}
+
+.title-shimmer-gold {
+  padding-left: 1.2rem;
+  padding-right: 1.2rem;
+  background: linear-gradient(
+    90deg,
+    #eab308 0%,
+    #facc15 15%,
+    #fef08a 35%,
+    #facc15 50%,
+    #fef08a 65%,
+    #facc15 85%,
+    #eab308 100%
+  );
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  text-shadow: none;
+  animation: title-shimmer 3s ease-in-out infinite;
+}
+
+.title-shimmer-gold-wrap {
+  display: inline-block;
+  filter: drop-shadow(0 1px 1px rgba(255, 255, 255, 0.3))
+    drop-shadow(0 2px 0 #ca8a04) drop-shadow(0 4px 0 #a16207)
+    drop-shadow(0 6px 2px rgba(0, 0, 0, 0.3));
 }
 
 /* Tickets column: light blue scrollbar thumb, gap before track */

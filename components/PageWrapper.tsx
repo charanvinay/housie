@@ -42,9 +42,9 @@ export function PageWrapper({
     <div className="min-h-screen-safe flex flex-col items-center px-4 py-6">
       <div className="flex-1 min-h-[1rem]" />
       <header className="flex-shrink-0 flex justify-center">
-        <Link href="/" className="block">
+        <Link href="/" className="block title-shimmer-gold-wrap px-6">
           <motion.h1
-            className="text-5xl md:text-6xl text-white drop-shadow-lg text-center"
+            className="title-shimmer-gold text-5xl md:text-6xl text-center font-bold"
             style={{ fontFamily: "var(--font-pacifico), cursive" }}
             initial={{ opacity: 0, y: -32 }}
             animate={exiting ? titleExit : { opacity: 1, y: 0 }}

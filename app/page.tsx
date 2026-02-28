@@ -116,7 +116,7 @@ export default function Home() {
   return (
     <PageWrapper exiting={exiting} onExitComplete={handleExitComplete}>
       {checking && <LoadingOverlay />}
-      <div className="flex gap-4">
+      <div className="flex flex-col md:flex-row gap-4">
         <Button
           type="button"
           variant="primary"
