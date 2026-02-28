@@ -346,7 +346,9 @@ export function GameScreen({
       {/* Right: 2/3 – tickets column (scrollable); center when content fits, top when needs scroll */}
       <div
         ref={scrollContainerRef}
-        className={`tickets-scroll col-span-2 flex min-h-0 flex-col gap-0 overflow-y-auto ${
+        className={`${
+          isMobileLayout ? "" : "overflow-y-auto tickets-scroll"
+        } col-span-2 flex min-h-0 flex-col gap-0  ${
           isMobileLayout ? "px-1 py-2" : "px-2 py-4"
         } ${ticketsFit ? "justify-center" : "justify-start"}`}
       >

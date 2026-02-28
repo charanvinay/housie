@@ -853,57 +853,59 @@ function RoomPageInner() {
                   Room {room.code}
                 </h1>
               </div>
-              {/* Center: claims */}
-              <div className="flex flex-1 justify-center items-start gap-5 min-w-0">
-                {(
-                  [
-                    {
-                      key: "jaldiFive",
-                      label: "J5",
-                      entries: room.jaldiFiveClaimed,
-                    },
-                    {
-                      key: "firstLine",
-                      label: "FL",
-                      entries: room.firstLineClaimed,
-                    },
-                    {
-                      key: "middleLine",
-                      label: "ML",
-                      entries: room.middleLineClaimed,
-                    },
-                    {
-                      key: "lastLine",
-                      label: "LL",
-                      entries: room.lastLineClaimed,
-                    },
-                    { key: "housie", label: "H", entries: room.housieClaimed },
-                  ] as const
-                ).map(({ key, label, entries }) => {
-                  const claimed = (entries?.length ?? 0) > 0;
-                  return (
-                    <div
-                      key={key}
-                      className="flex flex-col items-center gap-0.5 shrink-0"
-                    >
+              {/* Center: claims — only when game is waiting or started */}
+              {room.status !== "ended" && (
+                <div className="flex flex-1 justify-center items-start gap-5 min-w-0">
+                  {(
+                    [
+                      {
+                        key: "jaldiFive",
+                        label: "J5",
+                        entries: room.jaldiFiveClaimed,
+                      },
+                      {
+                        key: "firstLine",
+                        label: "FL",
+                        entries: room.firstLineClaimed,
+                      },
+                      {
+                        key: "middleLine",
+                        label: "ML",
+                        entries: room.middleLineClaimed,
+                      },
+                      {
+                        key: "lastLine",
+                        label: "LL",
+                        entries: room.lastLineClaimed,
+                      },
+                      { key: "housie", label: "H", entries: room.housieClaimed },
+                    ] as const
+                  ).map(({ key, label, entries }) => {
+                    const claimed = (entries?.length ?? 0) > 0;
+                    return (
                       <div
-                        className={`flex h-7 w-7 items-center justify-center rounded-full border text-[10px] font-bold ${
-                          claimed
-                            ? "border-yellow bg-yellow/20 text-yellow"
-                            : "border-slate-500 bg-slate-700/50 text-slate-400"
-                        }`}
+                        key={key}
+                        className="flex flex-col items-center gap-0.5 shrink-0"
                       >
-                        {label}
+                        <div
+                          className={`flex h-7 w-7 items-center justify-center rounded-full border text-[10px] font-bold ${
+                            claimed
+                              ? "border-yellow bg-yellow/20 text-yellow"
+                              : "border-slate-500 bg-slate-700/50 text-slate-400"
+                          }`}
+                        >
+                          {label}
+                        </div>
+                        {claimed && entries?.length ? (
+                          <span className="text-center text-[10px] text-yellow font-semibold">
+                            {entries.map((e) => e.playerName).join(", ")}
+                          </span>
+                        ) : null}
                       </div>
-                      {claimed && entries?.length ? (
-                        <span className="text-center text-[10px] text-yellow font-semibold">
-                          {entries.map((e) => e.playerName).join(", ")}
-                        </span>
-                      ) : null}
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
               {/* Right: Live + Reload */}
               <div className="flex items-center gap-2 shrink-0 place-self-end self-start">
                 <LiveIndicator
