@@ -804,7 +804,11 @@ function RoomPageInner() {
       ) : (
         <RotateToLandscape active={room.status === "started"}>
           <div className="flex-1 min-h-0 flex flex-col w-full overflow-hidden p-4">
-            <header className="shrink-0 grid grid-cols-3 items-center px-2 py-2 w-full gap-4">
+            <header
+              className={`shrink-0 grid ${
+                room.status !== "ended" ? "grid-cols-3" : "grid-cols-2"
+              } items-center px-2 py-2 w-full gap-4`}
+            >
               {/* Left: back + room name */}
               <div className="flex items-center gap-3 shrink-0">
                 {canQuitAsPlayer ? (
@@ -878,7 +882,11 @@ function RoomPageInner() {
                         label: "LL",
                         entries: room.lastLineClaimed,
                       },
-                      { key: "housie", label: "H", entries: room.housieClaimed },
+                      {
+                        key: "housie",
+                        label: "H",
+                        entries: room.housieClaimed,
+                      },
                     ] as const
                   ).map(({ key, label, entries }) => {
                     const claimed = (entries?.length ?? 0) > 0;
