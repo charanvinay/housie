@@ -437,7 +437,13 @@ function RoomPageInner() {
   const totalAmount = room.totalAmount ?? totalTickets * room.ticketPrice;
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-6">
+    <div
+      className={
+        room.status === "waiting"
+          ? "min-h-screen flex flex-col items-center justify-center px-4 py-6"
+          : "h-screen flex flex-col overflow-hidden"
+      }
+    >
       {room.status === "waiting" ? (
         <main className="w-full max-w-4xl flex-1 flex flex-col items-center justify-center">
           <div className="w-full rounded-2xl p-6 md:p-8 bg-roomCard border-2 border-yellow/80 shadow-roomCardInner grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
@@ -677,8 +683,8 @@ function RoomPageInner() {
           </div>
         </main>
       ) : (
-        <>
-          <header className="shrink-0 flex items-center gap-3 px-2 py-2 max-w-4xl mx-auto w-full">
+        <div className="flex-1 min-h-0 flex flex-col w-full overflow-hidden p-4">
+          <header className="shrink-0 flex items-center gap-3 px-2 py-2 w-full">
             {canQuitAsPlayer ? (
               <IconButton
                 type="button"
@@ -722,9 +728,9 @@ function RoomPageInner() {
             </span>
           </header>
 
-          <main className="mx-auto w-full max-w-4xl flex-1 px-0 py-4">
+          <main className="w-full flex-1 min-h-0 px-0 py-4 flex flex-col">
             {room.status === "started" && (
-              <div className="mx-auto max-w-lg space-y-6">
+              <div className="w-full flex-1 min-h-0 px-2 md:px-4 flex flex-col overflow-hidden">
                 <GameScreen
                   room={room}
                   isHost={isHost}
@@ -768,7 +774,7 @@ function RoomPageInner() {
               </div>
             )}
           </main>
-        </>
+        </div>
       )}
     </div>
   );

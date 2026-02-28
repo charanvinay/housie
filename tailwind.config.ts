@@ -25,6 +25,7 @@ const config: Config = {
         yellow: "var(--yellow)",
         yellowDark: "var(--yellow-dark)",
         yellowDarker: "var(--yellow-darker)",
+        ticket: "var(--ticket)",
       },
       fontFamily: {
         display: ["var(--font-display)", "system-ui", "sans-serif"],

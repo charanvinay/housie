@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/Button";
 import type { ClaimEntry, RoomState } from "./types";
 import {
   CLAIM_LABELS,
@@ -7,6 +8,8 @@ import {
   getAllNumbersInTicket,
   getNumbersInRow,
 } from "./room-utils";
+import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
 
 export type GameScreenProps = {
   room: RoomState;
@@ -31,6 +34,8 @@ export type GameScreenProps = {
   ) => void;
 };
 
+const COIN_PICK_DURATION_MS = 300;
+
 export function GameScreen({
   room,
   isHost,
@@ -49,74 +54,117 @@ export function GameScreen({
   const currentNumber = drawn.length > 0 ? drawn[drawn.length - 1]! : null;
   const drawnSet = new Set(drawn);
 
+  const [coinHidden, setCoinHidden] = useState(false);
+  const prevDrawing = useRef(drawing);
+
+  const handlePickNext = () => {
+    if (!isHost || drawing || drawn.length >= 90) return;
+    if (currentNumber !== null) {
+      setCoinHidden(true);
+      setTimeout(() => {
+        onDrawNumber();
+      }, COIN_PICK_DURATION_MS);
+    } else {
+      onDrawNumber();
+    }
+  };
+
+  useEffect(() => {
+    if (prevDrawing.current && !drawing && coinHidden) {
+      setCoinHidden(false);
+    }
+    prevDrawing.current = drawing;
+  }, [drawing, coinHidden]);
+
   return (
-    <div className="space-y-6">
-      <section className="rounded-lg border-2 border-neutral-400 bg-white p-6 text-center">
-        <p className="text-sm font-medium text-neutral-600 mb-1">
-          Current number
-        </p>
-        {isHost ? (
-          <div className="flex flex-col gap-3 items-center">
-            <p className="text-4xl font-bold text-neutral-900">
-              {currentNumber ?? "—"}
-            </p>
-            <button
-              type="button"
-              onClick={onDrawNumber}
-              disabled={drawing || drawn.length >= 90}
-              className="rounded-lg bg-green-600 px-6 py-2 text-white font-medium hover:bg-green-700 disabled:opacity-50"
-            >
-              {drawing ? "Drawing…" : "Pick next number"}
-            </button>
-          </div>
-        ) : (
-          <p className="text-4xl font-bold text-neutral-900">
-            {currentNumber ?? "—"}
-          </p>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-0 w-full h-full min-h-0 overflow-hidden">
+      {/* Left: 1/3 – coin + pick button (sticky) */}
+      <div className="flex flex-col items-center justify-center p-4 md:p-6 md:sticky md:top-6 md:self-start h-full">
+        <div className="w-full max-w-[200px] aspect-square flex items-center justify-center">
+          <AnimatePresence mode="wait">
+            {currentNumber !== null && !coinHidden && (
+              <motion.div
+                key={currentNumber}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0 }}
+                transition={{ type: "tween", duration: 0.25 }}
+                className="relative w-full h-full rounded-full flex items-center justify-center overflow-hidden"
+                style={{
+                  background:
+                    "linear-gradient(145deg, #fef3c7 0%, #fcd34d 30%, #eab308 60%, #ca8a04 100%)",
+                  border: "4px solid #92400e",
+                  boxShadow:
+                    "inset 4px 4px 14px rgba(255,255,255,0.5), inset -4px -4px 14px rgba(0,0,0,0.25), 0 10px 28px rgba(0,0,0,0.4)",
+                }}
+              >
+                <span
+                  className="text-4xl md:text-5xl font-bold text-slate-900 drop-shadow-sm"
+                  style={{
+                    textShadow:
+                      "0 1px 0 rgba(255,255,255,0.6), 0 2px 4px rgba(0,0,0,0.2)",
+                  }}
+                >
+                  {currentNumber}
+                </span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+        {isHost && (
+          <Button
+            type="button"
+            variant="yellow"
+            onClick={handlePickNext}
+            disabled={drawing || drawn.length >= 90}
+            className="mt-6 w-full max-w-[200px]"
+          >
+            {drawing ? "Picking…" : "Pick next number"}
+          </Button>
         )}
-      </section>
+      </div>
 
-      {room.jaldiFiveClaimed?.length ||
-      room.firstLineClaimed?.length ||
-      room.middleLineClaimed?.length ||
-      room.lastLineClaimed?.length ? (
-        <section className="rounded-lg border border-green-500 bg-green-50 p-3 text-center space-y-1">
-          {room.jaldiFiveClaimed?.length ? (
-            <p className="text-sm font-medium text-green-800">
-              Jaldi Five:{" "}
-              {room.jaldiFiveClaimed.map(formatClaimWinner).join(", ")}
-            </p>
-          ) : null}
-          {room.firstLineClaimed?.length ? (
-            <p className="text-sm font-medium text-green-800">
-              First line:{" "}
-              {room.firstLineClaimed.map(formatClaimWinner).join(", ")}
-            </p>
-          ) : null}
-          {room.middleLineClaimed?.length ? (
-            <p className="text-sm font-medium text-green-800">
-              Middle line:{" "}
-              {room.middleLineClaimed.map(formatClaimWinner).join(", ")}
-            </p>
-          ) : null}
-          {room.lastLineClaimed?.length ? (
-            <p className="text-sm font-medium text-green-800">
-              Last line:{" "}
-              {room.lastLineClaimed.map(formatClaimWinner).join(", ")}
-            </p>
-          ) : null}
-        </section>
-      ) : null}
+      {/* Right: 2/3 – tickets column (scrollable) */}
+      <div className="md:col-span-2 flex flex-col gap-0 p-2 md:p-4 min-h-0 overflow-y-auto justify-center">
+        {room.jaldiFiveClaimed?.length ||
+        room.firstLineClaimed?.length ||
+        room.middleLineClaimed?.length ||
+        room.lastLineClaimed?.length ? (
+          <section className="rounded-lg border border-green-500 bg-green-50 p-3 text-center space-y-1 mb-4">
+            {room.jaldiFiveClaimed?.length ? (
+              <p className="text-sm font-medium text-green-800">
+                Jaldi Five:{" "}
+                {room.jaldiFiveClaimed.map(formatClaimWinner).join(", ")}
+              </p>
+            ) : null}
+            {room.firstLineClaimed?.length ? (
+              <p className="text-sm font-medium text-green-800">
+                First line:{" "}
+                {room.firstLineClaimed.map(formatClaimWinner).join(", ")}
+              </p>
+            ) : null}
+            {room.middleLineClaimed?.length ? (
+              <p className="text-sm font-medium text-green-800">
+                Middle line:{" "}
+                {room.middleLineClaimed.map(formatClaimWinner).join(", ")}
+              </p>
+            ) : null}
+            {room.lastLineClaimed?.length ? (
+              <p className="text-sm font-medium text-green-800">
+                Last line:{" "}
+                {room.lastLineClaimed.map(formatClaimWinner).join(", ")}
+              </p>
+            ) : null}
+          </section>
+        ) : null}
 
-      {claimError && (
-        <p className="text-sm text-red-600 text-center">{claimError}</p>
-      )}
+        {claimError && (
+          <p className="text-sm text-red-600 text-center mb-2">{claimError}</p>
+        )}
 
-      <section>
-        <h2 className="font-medium text-neutral-800 mb-3">My tickets</h2>
-        <div className="space-y-6">
+        <div className="flex flex-col">
           {tickets.length === 0 ? (
-            <p className="text-neutral-500 text-sm">No tickets.</p>
+            <p className="text-theme-muted text-sm py-4">No tickets.</p>
           ) : (
             tickets.map((ticket, ticketIndex) => {
               const selected = selectedByTicket[ticketIndex] ?? new Set();
@@ -192,9 +240,9 @@ export function GameScreen({
               return (
                 <div
                   key={ticketIndex}
-                  className="relative rounded-lg border border-neutral-300 bg-white p-3"
+                  className="relative rounded-none bg-ticket/95 p-4 md:p-6 shrink-0"
                 >
-                  <p className="text-xs text-neutral-500 mb-2">
+                  <p className="text-xs text-slate-800 text-center font-semibold mb-1.5">
                     Ticket {ticketIndex + 1}
                   </p>
                   <div className="overflow-x-auto w-full">
@@ -210,8 +258,8 @@ export function GameScreen({
                             r === 0
                               ? row0Complete
                               : r === 1
-                                ? row1Complete
-                                : row2Complete;
+                              ? row1Complete
+                              : row2Complete;
                           return (
                             <tr key={r} className="relative">
                               {row.map((cell, c) => {
@@ -220,17 +268,22 @@ export function GameScreen({
                                   num !== null && drawnSet.has(num);
                                 const isSelected =
                                   num !== null && selected.has(num);
+                                const isEmpty = num === null;
+                                const isPending =
+                                  num !== null && !isDrawn && !isSelected;
                                 return (
                                   <td
                                     key={c}
-                                    className={`border border-neutral-300 p-1 h-9 text-sm select-none ${
-                                      num === null
-                                        ? "bg-neutral-100"
+                                    className={`border-[1.5px] border-[#1f2937] p-0.5 h-8 md:h-9 text-sm select-none text-slate-800 font-semibold ${
+                                      isEmpty
+                                        ? "bg-ticket/20"
                                         : isSelected
-                                          ? "bg-green-400 text-white font-medium"
-                                          : isDrawn
-                                            ? "bg-green-100"
-                                            : "bg-white hover:bg-neutral-100 cursor-pointer"
+                                        ? "bg-yellow/90 text-slate-900"
+                                        : isDrawn
+                                        ? "bg-ticket text-white"
+                                        : isPending
+                                        ? "bg-ticket/40 hover:bg-ticket/60 cursor-pointer"
+                                        : ""
                                     }`}
                                     onClick={() =>
                                       num !== null &&
@@ -246,7 +299,7 @@ export function GameScreen({
                                 <td
                                   colSpan={9}
                                   aria-hidden
-                                  className="absolute border-0 p-0 m-0 pointer-events-none"
+                                  className="absolute border-0 p-0 m-0 pointer-events-none inset-0 flex items-center"
                                   style={{
                                     left: 0,
                                     right: 0,
@@ -258,11 +311,9 @@ export function GameScreen({
                                   }}
                                 >
                                   <div
-                                    className="absolute left-0 right-0 top-1/2 -translate-y-1/2 border-t-2 border-red-500"
+                                    className="w-full border-t-2 border-rose-500"
                                     style={{
-                                      left: 0,
-                                      right: 0,
-                                      width: "100%",
+                                      boxShadow: "0 1px 0 rgba(0,0,0,0.2)",
                                     }}
                                   />
                                 </td>
@@ -274,19 +325,20 @@ export function GameScreen({
                     </table>
                   </div>
                   {hasAnyClaim && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-lg bg-black/60 p-4">
-                      <button
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/50 p-4 rounded-none">
+                      <Button
                         type="button"
+                        variant="yellow"
                         onClick={handleClaimClick}
                         disabled={claiming}
-                        className="rounded-lg bg-green-600 px-4 py-3 text-sm font-medium text-white shadow-lg hover:bg-green-700 disabled:opacity-50"
+                        className="max-w-xs"
                       >
                         {claiming
                           ? "Claiming…"
                           : `Claim ${eligibleTypes
                               .map((t) => CLAIM_LABELS[t])
                               .join(" & ")}`}
-                      </button>
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -294,7 +346,7 @@ export function GameScreen({
             })
           )}
         </div>
-      </section>
+      </div>
     </div>
   );
 }

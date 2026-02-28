@@ -26,6 +26,8 @@
   --yellow: #facc15;
   --yellow-dark: #ca8a04;
   --yellow-darker: #a16207;
+  /* Ticket (e.g. ticket cells, highlights) */
+  --ticket: #FF9FFE;
   /* App background – applied at layout level */
   --gradient-bg: radial-gradient(
     ellipse at center,
