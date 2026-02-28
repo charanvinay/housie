@@ -481,7 +481,13 @@ export function GameScreen({
                             </table>
                           </div>
                           {hasAnyClaim && (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/50 p-4 rounded-none">
+                            <div
+                              className={`absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/50 p-4 ${
+                                isMobileLayout && tickets.length > 1
+                                  ? "rounded-lg"
+                                  : "rounded-none"
+                              }`}
+                            >
                               <Button
                                 type="button"
                                 variant="yellow"

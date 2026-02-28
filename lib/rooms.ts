@@ -103,7 +103,11 @@ export function joinRoom(
 ): { room: Room; playerId: string } | { error: string } {
   const upperCode = code.toUpperCase().trim();
   const room = rooms.get(upperCode);
-  if (!room) return { error: "Room not found" };
+  if (!room)
+    return {
+      error:
+        "This room may have been closed or the code might be incorrect. Please check the code and try again.",
+    };
   if (room.status !== "waiting")
     return { error: "Game already started or ended" };
 
@@ -133,7 +137,11 @@ export function leaveRoom(
 ): { ok: true } | { error: string } {
   const upperCode = code.toUpperCase();
   const room = rooms.get(upperCode);
-  if (!room) return { error: "Room not found" };
+  if (!room)
+    return {
+      error:
+        "This room may have been closed or the code might be incorrect. Please check the code and try again.",
+    };
   if (room.status !== "waiting")
     return { error: "Cannot leave after game has started" };
   if (room.hostId === playerId)
@@ -154,7 +162,11 @@ export function endRoom(
 ): { ok: true } | { error: string } {
   const upperCode = code.toUpperCase();
   const room = rooms.get(upperCode);
-  if (!room) return { error: "Room not found" };
+  if (!room)
+    return {
+      error:
+        "This room may have been closed or the code might be incorrect. Please check the code and try again.",
+    };
   if (room.hostId !== hostId)
     return { error: "Only the host can end the game" };
   if (room.status === "ended") return { error: "Game already ended" };
@@ -169,7 +181,11 @@ export function startGame(
 ): { ok: true } | { error: string } {
   const upperCode = code.toUpperCase();
   const room = rooms.get(upperCode);
-  if (!room) return { error: "Room not found" };
+  if (!room)
+    return {
+      error:
+        "This room may have been closed or the code might be incorrect. Please check the code and try again.",
+    };
   if (room.hostId !== hostId)
     return { error: "Only the host can start the game" };
   if (room.status !== "waiting")
@@ -245,7 +261,11 @@ export function claimFirstLine(
 ): { ok: true } | { error: string } {
   const upperCode = code.toUpperCase();
   const room = rooms.get(upperCode);
-  if (!room) return { error: "Room not found" };
+  if (!room)
+    return {
+      error:
+        "This room may have been closed or the code might be incorrect. Please check the code and try again.",
+    };
   if (room.status !== "started") return { error: "Game not in progress" };
 
   const tickets = room.playerTickets?.[playerId];
@@ -271,7 +291,11 @@ export function claimMiddleLine(
 ): { ok: true } | { error: string } {
   const upperCode = code.toUpperCase();
   const room = rooms.get(upperCode);
-  if (!room) return { error: "Room not found" };
+  if (!room)
+    return {
+      error:
+        "This room may have been closed or the code might be incorrect. Please check the code and try again.",
+    };
   if (room.status !== "started") return { error: "Game not in progress" };
 
   const tickets = room.playerTickets?.[playerId];
@@ -297,7 +321,11 @@ export function claimLastLine(
 ): { ok: true } | { error: string } {
   const upperCode = code.toUpperCase();
   const room = rooms.get(upperCode);
-  if (!room) return { error: "Room not found" };
+  if (!room)
+    return {
+      error:
+        "This room may have been closed or the code might be incorrect. Please check the code and try again.",
+    };
   if (room.status !== "started") return { error: "Game not in progress" };
 
   const tickets = room.playerTickets?.[playerId];
@@ -323,7 +351,11 @@ export function claimHousie(
 ): { ok: true } | { error: string } {
   const upperCode = code.toUpperCase();
   const room = rooms.get(upperCode);
-  if (!room) return { error: "Room not found" };
+  if (!room)
+    return {
+      error:
+        "This room may have been closed or the code might be incorrect. Please check the code and try again.",
+    };
   if (room.status !== "started") return { error: "Game not in progress" };
 
   const tickets = room.playerTickets?.[playerId];
@@ -360,7 +392,11 @@ export function claimMultiple(
 ): { ok: true } | { error: string } {
   const upperCode = code.toUpperCase();
   const room = rooms.get(upperCode);
-  if (!room) return { error: "Room not found" };
+  if (!room)
+    return {
+      error:
+        "This room may have been closed or the code might be incorrect. Please check the code and try again.",
+    };
   if (room.status !== "started") return { error: "Game not in progress" };
 
   const tickets = room.playerTickets?.[playerId];
@@ -451,7 +487,11 @@ export function drawNumber(
 ): { number: number } | { error: string } {
   const upperCode = code.toUpperCase();
   const room = rooms.get(upperCode);
-  if (!room) return { error: "Room not found" };
+  if (!room)
+    return {
+      error:
+        "This room may have been closed or the code might be incorrect. Please check the code and try again.",
+    };
   if (room.hostId !== hostId)
     return { error: "Only the host can draw numbers" };
   if (room.status !== "started") return { error: "Game not in progress" };
@@ -475,7 +515,11 @@ export function claimJaldiFive(
 ): { ok: true } | { error: string } {
   const upperCode = code.toUpperCase();
   const room = rooms.get(upperCode);
-  if (!room) return { error: "Room not found" };
+  if (!room)
+    return {
+      error:
+        "This room may have been closed or the code might be incorrect. Please check the code and try again.",
+    };
   if (room.status !== "started") return { error: "Game not in progress" };
   if (!Array.isArray(numbers) || numbers.length !== 5) {
     return { error: "Exactly 5 numbers required" };
@@ -503,7 +547,11 @@ export function updatePlayerTickets(
   ticketCount: number
 ): Room | { error: string } {
   const room = rooms.get(code.toUpperCase());
-  if (!room) return { error: "Room not found" };
+  if (!room)
+    return {
+      error:
+        "This room may have been closed or the code might be incorrect. Please check the code and try again.",
+    };
   if (room.status !== "waiting")
     return { error: "Cannot change tickets after game started" };
 

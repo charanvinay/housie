@@ -7,7 +7,13 @@ import { getClaimPrizeAmounts } from "@/lib/rooms";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-import { FiChevronLeft, FiCopy, FiRefreshCw, FiShare2, FiUser } from "react-icons/fi";
+import {
+  FiChevronLeft,
+  FiCopy,
+  FiRefreshCw,
+  FiShare2,
+  FiUser,
+} from "react-icons/fi";
 import { PiUserCircleCheckFill, PiUserCircleDashedFill } from "react-icons/pi";
 import { io, Socket } from "socket.io-client";
 import { MobilePortraitGameWrap } from "@/components/MobilePortraitGameWrap";
@@ -349,7 +355,9 @@ function RoomPageInner() {
       try {
         const res = await fetch(`/api/rooms/${encodeURIComponent(code)}`);
         if (!res.ok) {
-          setError("Room not found");
+          setError(
+            "This room may have been closed or the code might be incorrect. Please check the code and try again."
+          );
           setRoom(null);
           return;
         }
@@ -445,7 +453,9 @@ function RoomPageInner() {
     try {
       const res = await fetch(`/api/rooms/${encodeURIComponent(code)}`);
       if (!res.ok) {
-        setError("Room not found");
+        setError(
+          "This room may have been closed or the code might be incorrect. Please check the code and try again."
+        );
         setRoom(null);
         return;
       }
@@ -478,7 +488,8 @@ function RoomPageInner() {
             Room not found
           </h2>
           <p className="text-sm text-theme-muted text-center mb-6">
-            {error}
+            This room may have been closed or the code might be incorrect.
+            Please check the code and try again.
           </p>
           <div className="pt-2 text-center">
             <Button href="/" variant="primary">
@@ -757,174 +768,179 @@ function RoomPageInner() {
         </main>
       ) : (
         <RotateToLandscape active={room.status === "started"}>
-        <div className="flex-1 min-h-0 flex flex-col w-full overflow-hidden p-4">
-          <header className="shrink-0 grid grid-cols-3 items-center px-2 py-2 w-full gap-4">
-            {/* Left: back + room name */}
-            <div className="flex items-center gap-3 shrink-0">
-              {canQuitAsPlayer ? (
-                <IconButton
-                  type="button"
-                  onClick={() => handleGoHome()}
-                  disabled={leaving}
-                  icon={<FiChevronLeft className="size-5 shrink-0" />}
-                  aria-label="Leave room"
-                />
-              ) : isHost && room.status === "ended" ? (
-                <IconButton
-                  type="button"
-                  onClick={() => {
-                    clearRoomSession();
-                    if (myId) clearSelectionsForRoom(code, myId);
-                    router.push("/");
-                  }}
-                  icon={<FiChevronLeft className="size-5 shrink-0" />}
-                  aria-label="Back to home"
-                />
-              ) : isHost ? (
-                <IconButton
-                  type="button"
-                  onClick={() =>
-                    modal.info({
-                      title: "Are you sure you want to exit?",
-                      description: "This will end the game.",
-                      onOk: handleEndGame,
-                      onCancel: () => {},
-                      okText: "Yes",
-                      cancelText: "No",
-                    })
-                  }
-                  icon={<FiChevronLeft className="size-5 shrink-0" />}
-                  aria-label="Back (exit and end game)"
-                />
-              ) : (
-                <IconButton
-                  href="/"
-                  icon={<FiChevronLeft className="size-5 shrink-0" />}
-                  aria-label="Back to home"
-                />
-              )}
-              <h1 className="text-lg font-semibold text-white drop-shadow-sm">
-                Room {room.code}
-              </h1>
-            </div>
-            {/* Center: claims */}
-            <div className="flex flex-1 justify-center items-start gap-5 min-w-0">
-              {(
-                [
-                  {
-                    key: "jaldiFive",
-                    label: "J5",
-                    entries: room.jaldiFiveClaimed,
-                  },
-                  {
-                    key: "firstLine",
-                    label: "FL",
-                    entries: room.firstLineClaimed,
-                  },
-                  {
-                    key: "middleLine",
-                    label: "ML",
-                    entries: room.middleLineClaimed,
-                  },
-                  {
-                    key: "lastLine",
-                    label: "LL",
-                    entries: room.lastLineClaimed,
-                  },
-                  { key: "housie", label: "H", entries: room.housieClaimed },
-                ] as const
-              ).map(({ key, label, entries }) => {
-                const claimed = (entries?.length ?? 0) > 0;
-                return (
-                  <div
-                    key={key}
-                    className="flex flex-col items-center gap-0.5 shrink-0"
-                  >
-                    <div
-                      className={`flex h-7 w-7 items-center justify-center rounded-full border text-[10px] font-bold ${
-                        claimed
-                          ? "border-yellow bg-yellow/20 text-yellow"
-                          : "border-slate-500 bg-slate-700/50 text-slate-400"
-                      }`}
-                    >
-                      {label}
-                    </div>
-                    {claimed && entries?.length ? (
-                      <span className="text-center text-[10px] text-yellow font-semibold">
-                        {entries.map((e) => e.playerName).join(", ")}
-                      </span>
-                    ) : null}
-                  </div>
-                );
-              })}
-            </div>
-            {/* Right: Live + Reload */}
-            <div className="flex items-center gap-2 shrink-0 place-self-end self-start">
-              <span
-                className={`rounded-lg border px-2.5 py-1 text-xs font-medium ${
-                  live ? "border-green-500/50 bg-green-500/20 text-green-400" : "border-white/20 bg-white/10 text-white/70"
-                }`}
-              >
-                {live ? "Live" : "…"}
-              </span>
-              <IconButton
-                type="button"
-                onClick={handleSoftRefresh}
-                icon={<FiRefreshCw className="size-5 shrink-0" />}
-                aria-label="Reload page"
-              />
-            </div>
-          </header>
-
-          <main key={room.status} className="w-full flex-1 min-h-0 px-0 py-4 flex flex-col">
-            {room.status === "started" && (
-              <div className="w-full flex-1 min-h-0 px-2 md:px-4 flex flex-col overflow-hidden">
-                <MobilePortraitGameWrap>
-                  <GameScreen
-                    room={room}
-                    isHost={isHost}
-                    myId={myId ?? ""}
-                    drawing={drawing}
-                    onDrawNumber={handleDrawNumber}
-                    selectedByTicket={selectedByTicket}
-                    onToggleNumber={toggleTicketNumber}
-                    claiming={claiming}
-                    claimError={claimError}
-                    onClaim={handleClaim}
+          <div className="flex-1 min-h-0 flex flex-col w-full overflow-hidden p-4">
+            <header className="shrink-0 grid grid-cols-3 items-center px-2 py-2 w-full gap-4">
+              {/* Left: back + room name */}
+              <div className="flex items-center gap-3 shrink-0">
+                {canQuitAsPlayer ? (
+                  <IconButton
+                    type="button"
+                    onClick={() => handleGoHome()}
+                    disabled={leaving}
+                    icon={<FiChevronLeft className="size-5 shrink-0" />}
+                    aria-label="Leave room"
                   />
-                </MobilePortraitGameWrap>
-              </div>
-            )}
-
-            {room.status === "ended" && (
-              <div className="flex flex-1 flex-col items-center justify-center w-full px-4">
-                {(room.drawnNumbers?.length ?? 0) > 0 ||
-                room.jaldiFiveClaimed?.length ||
-                room.firstLineClaimed?.length ||
-                room.middleLineClaimed?.length ||
-                room.lastLineClaimed?.length ||
-                room.housieClaimed?.length ? (
-                  <WinnersScreen
-                    room={room}
-                    onBackHome={() => {
+                ) : isHost && room.status === "ended" ? (
+                  <IconButton
+                    type="button"
+                    onClick={() => {
                       clearRoomSession();
                       if (myId) clearSelectionsForRoom(code, myId);
                       router.push("/");
                     }}
+                    icon={<FiChevronLeft className="size-5 shrink-0" />}
+                    aria-label="Back to home"
+                  />
+                ) : isHost ? (
+                  <IconButton
+                    type="button"
+                    onClick={() =>
+                      modal.info({
+                        title: "Are you sure you want to exit?",
+                        description: "This will end the game.",
+                        onOk: handleEndGame,
+                        onCancel: () => {},
+                        okText: "Yes",
+                        cancelText: "No",
+                      })
+                    }
+                    icon={<FiChevronLeft className="size-5 shrink-0" />}
+                    aria-label="Back (exit and end game)"
                   />
                 ) : (
-                  <GameEndedNoWinners
-                    onBackHome={() => {
-                      clearRoomSession();
-                      if (myId) clearSelectionsForRoom(code, myId);
-                      router.push("/");
-                    }}
+                  <IconButton
+                    href="/"
+                    icon={<FiChevronLeft className="size-5 shrink-0" />}
+                    aria-label="Back to home"
                   />
                 )}
+                <h1 className="text-lg font-semibold text-white drop-shadow-sm">
+                  Room {room.code}
+                </h1>
               </div>
-            )}
-          </main>
-        </div>
+              {/* Center: claims */}
+              <div className="flex flex-1 justify-center items-start gap-5 min-w-0">
+                {(
+                  [
+                    {
+                      key: "jaldiFive",
+                      label: "J5",
+                      entries: room.jaldiFiveClaimed,
+                    },
+                    {
+                      key: "firstLine",
+                      label: "FL",
+                      entries: room.firstLineClaimed,
+                    },
+                    {
+                      key: "middleLine",
+                      label: "ML",
+                      entries: room.middleLineClaimed,
+                    },
+                    {
+                      key: "lastLine",
+                      label: "LL",
+                      entries: room.lastLineClaimed,
+                    },
+                    { key: "housie", label: "H", entries: room.housieClaimed },
+                  ] as const
+                ).map(({ key, label, entries }) => {
+                  const claimed = (entries?.length ?? 0) > 0;
+                  return (
+                    <div
+                      key={key}
+                      className="flex flex-col items-center gap-0.5 shrink-0"
+                    >
+                      <div
+                        className={`flex h-7 w-7 items-center justify-center rounded-full border text-[10px] font-bold ${
+                          claimed
+                            ? "border-yellow bg-yellow/20 text-yellow"
+                            : "border-slate-500 bg-slate-700/50 text-slate-400"
+                        }`}
+                      >
+                        {label}
+                      </div>
+                      {claimed && entries?.length ? (
+                        <span className="text-center text-[10px] text-yellow font-semibold">
+                          {entries.map((e) => e.playerName).join(", ")}
+                        </span>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+              {/* Right: Live + Reload */}
+              <div className="flex items-center gap-2 shrink-0 place-self-end self-start">
+                <span
+                  className={`rounded-lg border px-2.5 py-1 text-xs font-medium ${
+                    live
+                      ? "border-green-500/50 bg-green-500/20 text-green-400"
+                      : "border-white/20 bg-white/10 text-white/70"
+                  }`}
+                >
+                  {live ? "Live" : "…"}
+                </span>
+                <IconButton
+                  type="button"
+                  onClick={handleSoftRefresh}
+                  icon={<FiRefreshCw className="size-5 shrink-0" />}
+                  aria-label="Reload page"
+                />
+              </div>
+            </header>
+
+            <main
+              key={room.status}
+              className="w-full flex-1 min-h-0 px-0 py-4 flex flex-col"
+            >
+              {room.status === "started" && (
+                <div className="w-full flex-1 min-h-0 px-2 md:px-4 flex flex-col overflow-hidden">
+                  <MobilePortraitGameWrap>
+                    <GameScreen
+                      room={room}
+                      isHost={isHost}
+                      myId={myId ?? ""}
+                      drawing={drawing}
+                      onDrawNumber={handleDrawNumber}
+                      selectedByTicket={selectedByTicket}
+                      onToggleNumber={toggleTicketNumber}
+                      claiming={claiming}
+                      claimError={claimError}
+                      onClaim={handleClaim}
+                    />
+                  </MobilePortraitGameWrap>
+                </div>
+              )}
+
+              {room.status === "ended" && (
+                <div className="flex flex-1 flex-col items-center justify-center w-full px-4">
+                  {(room.drawnNumbers?.length ?? 0) > 0 ||
+                  room.jaldiFiveClaimed?.length ||
+                  room.firstLineClaimed?.length ||
+                  room.middleLineClaimed?.length ||
+                  room.lastLineClaimed?.length ||
+                  room.housieClaimed?.length ? (
+                    <WinnersScreen
+                      room={room}
+                      onBackHome={() => {
+                        clearRoomSession();
+                        if (myId) clearSelectionsForRoom(code, myId);
+                        router.push("/");
+                      }}
+                    />
+                  ) : (
+                    <GameEndedNoWinners
+                      onBackHome={() => {
+                        clearRoomSession();
+                        if (myId) clearSelectionsForRoom(code, myId);
+                        router.push("/");
+                      }}
+                    />
+                  )}
+                </div>
+              )}
+            </main>
+          </div>
         </RotateToLandscape>
       )}
       {isRefreshing && <LoadingOverlay />}

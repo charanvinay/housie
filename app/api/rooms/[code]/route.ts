@@ -7,7 +7,13 @@ export async function GET(_request: Request, { params }: Params) {
   const { code } = await params;
   const room = getRoom(code);
   if (!room) {
-    return NextResponse.json({ error: "Room not found" }, { status: 404 });
+    return NextResponse.json(
+      {
+        error:
+          "This room may have been closed or the code might be incorrect. Please check the code and try again.",
+      },
+      { status: 404 }
+    );
   }
   return NextResponse.json({
     ...room,
@@ -20,9 +26,13 @@ export async function POST(request: Request, { params }: Params) {
   const { code } = await params;
   try {
     const body = await request.json();
-    const name = typeof body.playerName === "string" ? body.playerName.trim() : "";
+    const name =
+      typeof body.playerName === "string" ? body.playerName.trim() : "";
     if (!name) {
-      return NextResponse.json({ error: "Player name is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Player name is required" },
+        { status: 400 }
+      );
     }
     const result = joinRoom(code, {
       playerName: name,

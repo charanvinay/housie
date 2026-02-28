@@ -15,11 +15,27 @@ export async function POST(request: Request, { params }: Params) {
     const room = getRoom(code);
     if ("error" in result) {
       return NextResponse.json(
-        { error: result.error, ...(room && { room: { ...room, totalTickets: totalTickets(room), totalAmount: totalAmount(room) } }) },
+        {
+          error: result.error,
+          ...(room && {
+            room: {
+              ...room,
+              totalTickets: totalTickets(room),
+              totalAmount: totalAmount(room),
+            },
+          }),
+        },
         { status: 400 }
       );
     }
-    if (!room) return NextResponse.json({ error: "Room not found" }, { status: 404 });
+    if (!room)
+      return NextResponse.json(
+        {
+          error:
+            "This room may have been closed or the code might be incorrect. Please check the code and try again.",
+        },
+        { status: 404 }
+      );
     return NextResponse.json({
       number: result.number,
       room: {
@@ -29,6 +45,9 @@ export async function POST(request: Request, { params }: Params) {
       },
     });
   } catch {
-    return NextResponse.json({ error: "Failed to draw number" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to draw number" },
+      { status: 500 }
+    );
   }
 }
