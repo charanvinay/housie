@@ -148,7 +148,7 @@ export function GameScreen({
     <div className="grid grid-cols-3 grid-rows-[minmax(0,1fr)] gap-0 w-full h-full min-h-0 overflow-hidden">
       {/* Left: 1/3 – coin + pick button (sticky) */}
       <div className="col-span-1 flex flex-col items-center justify-center p-4 md:p-6 h-full sticky top-6 self-start">
-        <div className="w-full max-w-[140px] min-h-[140px] md:max-w-[200px] md:min-h-[200px] flex items-center justify-center shrink-0">
+        <div className="w-full max-w-[100px] min-h-[100px] md:max-w-[200px] md:min-h-[200px] flex items-center justify-center shrink-0">
           <AnimatePresence mode="wait">
             {currentNumber !== null && !coinHidden && (
               <motion.div
@@ -157,14 +157,14 @@ export function GameScreen({
                 animate={{ scale: 1 }}
                 exit={{ scale: 0 }}
                 transition={{ type: "tween", duration: 0.25 }}
-                className="relative w-full max-w-[140px] md:max-w-[200px] aspect-square rounded-full flex items-center justify-center overflow-hidden bg-green-600 border-4 md:border-[6px] border-green-300"
+                className="relative w-full max-w-[100px] md:max-w-[200px] aspect-square rounded-full flex items-center justify-center overflow-hidden bg-green-600 border-4 md:border-[6px] border-green-300"
                 style={{
                   boxShadow:
                     "4px 10px 0 rgba(21, 128, 61, 0.85), 6px 14px 28px rgba(0, 0, 0, 0.3)",
                 }}
               >
                 <span
-                  className="flex items-center justify-center text-4xl md:text-8xl font-bold text-green-300 leading-none text-center w-full h-full"
+                  className="flex items-center justify-center text-3xl md:text-8xl font-bold text-green-300 leading-none text-center w-full h-full"
                   style={{
                     textShadow:
                       "0 4px 12px rgba(21, 128, 61, 0.95), 0 0 20px rgba(134, 239, 172, 0.3)",
@@ -236,19 +236,25 @@ export function GameScreen({
                   {/* Tinder-style stack: (tickets.length - 1) card shadows behind active ticket on mobile */}
                   {isMobileLayout &&
                     tickets.length > 1 &&
-                    Array.from({ length: tickets.length - 1 }).map((_, i) => (
-                      <div
-                        key={`stack-${i}`}
-                        className="absolute left-2 right-2 rounded-none border border-slate-400/30 bg-ticket/50 pointer-events-none"
-                        style={{
-                          top: `${8 * (i + 1)}px`,
-                          bottom: `${-8 * (i + 1)}px`,
-                          boxShadow:
-                            "0 4px 6px -1px rgba(0,0,0,0.2), 0 2px 4px -2px rgba(0,0,0,0.15)",
-                          zIndex: i,
-                        }}
-                      />
-                    ))}
+                    Array.from({ length: tickets.length - 1 }).map((_, i) => {
+                      const inset = 6 * (i + 1);
+                      const offset = 4 * (i + 1);
+                      return (
+                        <div
+                          key={`stack-${i}`}
+                          className="absolute rounded-lg border border-slate-400/30 bg-ticket/50 pointer-events-none"
+                          style={{
+                            left: `${inset}px`,
+                            right: `${inset}px`,
+                            top: `${offset}px`,
+                            bottom: `${-offset}px`,
+                            boxShadow:
+                              "0 2px 4px -1px rgba(0,0,0,0.18), 0 1px 2px -1px rgba(0,0,0,0.1)",
+                            zIndex: i,
+                          }}
+                        />
+                      );
+                    })}
                   <AnimatePresence
                     initial={false}
                     mode="wait"
@@ -367,7 +373,7 @@ export function GameScreen({
                                 ? 0
                                 : 0.08 * ticketIndex,
                           }}
-                          className="relative rounded-none bg-ticket/95 p-4 md:p-6 shrink-0 z-10"
+                          className={`relative ${isMobileLayout && tickets.length > 1 ? "rounded-lg" : "rounded-none"} bg-ticket/95 p-4 md:p-6 shrink-0 z-10`}
                         >
                           <p className="text-[10px] md:text-xs text-slate-800 text-center font-semibold mb-1 md:mb-1.5">
                             {isMobileLayout && tickets.length > 1

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { PageWrapper } from "@/components/PageWrapper";
 import { Button } from "@/components/Button";
 
@@ -115,39 +115,29 @@ export default function Home() {
 
   return (
     <PageWrapper exiting={exiting} onExitComplete={handleExitComplete}>
-      {checking ? (
-        <motion.p
-          className="text-theme-muted text-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
+      {checking && <LoadingOverlay />}
+      <div className="flex flex-col gap-4">
+        <Button
+          type="button"
+          variant="primary"
+          onClick={() => {
+            setExiting(true);
+            setExitTargetUrl("/create");
+          }}
         >
-          Loading…
-        </motion.p>
-      ) : (
-        <div className="flex flex-col gap-4">
-          <Button
-            type="button"
-            variant="primary"
-            onClick={() => {
-              setExiting(true);
-              setExitTargetUrl("/create");
-            }}
-          >
-            Create room
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => {
-              setExiting(true);
-              setExitTargetUrl("/join");
-            }}
-          >
-            Join room
-          </Button>
-        </div>
-      )}
+          Create room
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => {
+            setExiting(true);
+            setExitTargetUrl("/join");
+          }}
+        >
+          Join room
+        </Button>
+      </div>
     </PageWrapper>
   );
 }

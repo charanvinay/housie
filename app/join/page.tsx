@@ -2,6 +2,7 @@
 
 import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { PageWrapper } from "@/components/PageWrapper";
 import { Button } from "@/components/Button";
 import { Label } from "@/components/form/Label";
@@ -183,7 +184,9 @@ function JoinRoomContent() {
       }}
     >
       {checkingSession ? (
-        <p className="text-theme-muted">Loading…</p>
+        <div className="relative min-h-[200px]">
+          <LoadingOverlay />
+        </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
@@ -238,7 +241,9 @@ export default function JoinRoomPage() {
     <Suspense
       fallback={
         <PageWrapper showBack cardTitle="Join room">
-          <p className="text-theme-muted">Loading…</p>
+          <div className="relative min-h-[200px]">
+            <LoadingOverlay />
+          </div>
         </PageWrapper>
       }
     >

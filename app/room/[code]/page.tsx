@@ -416,17 +416,49 @@ function RoomPageInner() {
     };
   }, [code]);
 
+  const handleSoftRefresh = async () => {
+    if (!code) return;
+    try {
+      const res = await fetch(`/api/rooms/${encodeURIComponent(code)}`);
+      if (!res.ok) {
+        setError("Room not found");
+        setRoom(null);
+        return;
+      }
+      const data = await res.json();
+      setRoom(data);
+      setError("");
+      const socket = socketRef.current;
+      if (socket?.connected) {
+        socket.emit("join_room", { roomCode: String(code).toUpperCase() });
+      }
+    } catch {
+      setError("Failed to load room");
+      setRoom(null);
+    }
+  };
+
   if (error && !room) {
     return (
       <div className="min-h-screen-safe flex flex-col items-center justify-center px-4 py-8">
-        <div className="room-card max-w-sm w-full text-center">
-          <p className="form-error">{error}</p>
-          <div className="mt-4">
-            <Button href="/" variant="secondary">
+        <motion.div
+          initial={{ y: 32, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ type: "tween", duration: 0.35, ease: "easeOut" }}
+          className="w-full max-w-xl rounded-2xl p-8 md:p-10 bg-roomCard border-2 border-yellow/80 shadow-roomCardInner"
+        >
+          <h2 className="text-xl font-bold text-theme-primary text-center mb-2">
+            Room not found
+          </h2>
+          <p className="text-sm text-theme-muted text-center mb-6">
+            {error}
+          </p>
+          <div className="pt-2 text-center">
+            <Button href="/" variant="primary">
               Back to home
             </Button>
           </div>
-        </div>
+        </motion.div>
       </div>
     );
   }
@@ -505,7 +537,7 @@ function RoomPageInner() {
                   </span>
                   <IconButton
                     type="button"
-                    onClick={() => window.location.reload()}
+                    onClick={handleSoftRefresh}
                     icon={<FiRefreshCw className="size-5 shrink-0" />}
                     aria-label="Reload page"
                   />
@@ -810,7 +842,7 @@ function RoomPageInner() {
               </span>
               <IconButton
                 type="button"
-                onClick={() => window.location.reload()}
+                onClick={handleSoftRefresh}
                 icon={<FiRefreshCw className="size-5 shrink-0" />}
                 aria-label="Reload page"
               />

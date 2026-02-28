@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { PageWrapper } from "@/components/PageWrapper";
 import { Button } from "@/components/Button";
 import { Label } from "@/components/form/Label";
@@ -172,7 +173,9 @@ export default function CreateRoomPage() {
       }}
     >
       {checkingSession ? (
-        <p className="text-theme-muted">Loading…</p>
+        <div className="relative min-h-[200px]">
+          <LoadingOverlay />
+        </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
