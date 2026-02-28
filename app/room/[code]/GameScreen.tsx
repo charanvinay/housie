@@ -13,6 +13,7 @@ import { useIsMobileUserAgent } from "@/hooks/useIsMobileUserAgent";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { FiChevronDown, FiChevronUp } from "react-icons/fi";
+import { RecentDrawnNumbers } from "./RecentDrawnNumbers";
 
 export type GameScreenProps = {
   room: RoomState;
@@ -145,7 +146,9 @@ export function GameScreen({
   }, [drawing, coinHidden]);
 
   return (
-    <div className="grid grid-cols-3 grid-rows-[minmax(0,1fr)] gap-10 w-full h-full min-h-0 overflow-hidden">
+    <div className="grid grid-cols-3 grid-rows-[auto_minmax(0,1fr)] gap-0 w-full h-full min-h-0 overflow-hidden">
+      <RecentDrawnNumbers drawn={drawn} />
+
       {/* Left: 1/3 – coin + pick button (sticky) */}
       <div
         className={`col-span-1 flex flex-col items-center justify-center h-full sticky top-6 self-start ${

@@ -6,6 +6,7 @@ import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { MobilePortraitGameWrap } from "@/components/MobilePortraitGameWrap";
 import { useModal } from "@/components/Modal";
 import { RotateToLandscape } from "@/components/RotateToLandscape";
+import { LiveIndicator } from "@/components/LiveIndicator";
 import { useToast } from "@/components/Toast";
 import { getClaimPrizeAmounts } from "@/lib/rooms";
 import { motion } from "framer-motion";
@@ -460,7 +461,7 @@ function RoomPageInner() {
       if (socket?.connected) {
         socket.emit("join_room", { roomCode: String(code).toUpperCase() });
       }
-      toast.show("Reloaded");
+      toast.show("Reloaded Successfully", "success");
     } catch {
       setError("Failed to load room");
       setRoom(null);
@@ -554,16 +555,7 @@ function RoomPageInner() {
                   Room {room.code}
                 </h1>
                 <div className="flex items-center gap-2 justify-end">
-                  <span
-                    className={`rounded-lg border px-2.5 py-1 text-xs font-medium ${
-                      live
-                        ? "border-green-500/50 bg-green-500/20 text-green-400"
-                        : "border-white/20 bg-white/10 text-theme-muted"
-                    }`}
-                    title={live ? "Real-time updates on" : "Connecting…"}
-                  >
-                    {live ? "Live" : "…"}
-                  </span>
+                  <LiveIndicator live={live} />
                   <IconButton
                     type="button"
                     onClick={handleSoftRefresh}
@@ -862,15 +854,10 @@ function RoomPageInner() {
               </div>
               {/* Right: Live + Reload */}
               <div className="flex items-center gap-2 shrink-0 place-self-end self-start">
-                <span
-                  className={`rounded-lg border px-2.5 py-1 text-xs font-medium ${
-                    live
-                      ? "border-green-500/50 bg-green-500/20 text-green-400"
-                      : "border-white/20 bg-white/10 text-white/70"
-                  }`}
-                >
-                  {live ? "Live" : "…"}
-                </span>
+                <LiveIndicator
+                  live={live}
+                  className={!live ? "text-white/70!" : undefined}
+                />
                 <IconButton
                   type="button"
                   onClick={handleSoftRefresh}
