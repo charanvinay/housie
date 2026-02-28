@@ -128,7 +128,7 @@ export function GameScreen({
       </div>
 
       {/* Right: 2/3 – tickets column (scrollable) */}
-      <div className="md:col-span-2 flex flex-col gap-0 p-2 md:p-4 min-h-0 overflow-y-auto">
+      <div className="tickets-scroll md:col-span-2 flex flex-col gap-0 p-2 md:p-4 min-h-0 overflow-y-auto">
         {claimError && (
           <p className="text-sm text-red-600 text-center mb-2">{claimError}</p>
         )}

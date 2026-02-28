@@ -27,7 +27,7 @@
   --yellow-dark: #ca8a04;
   --yellow-darker: #a16207;
   /* Ticket (e.g. ticket cells, highlights) */
-  --ticket: #FF9FFE;
+  --ticket: #ff9ffe;
   /* App background – applied at layout level */
   --gradient-bg: radial-gradient(
     ellipse at center,
@@ -252,4 +252,17 @@
 }
 .border-theme {
   border-color: var(--card-border);
+}
+
+/* Tickets column: light blue scrollbar thumb, gap before track */
+.tickets-scroll {
+  scrollbar-color: var(--accent-bright) transparent;
+}
+
+.tickets-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.tickets-scroll::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 5px;
 }
