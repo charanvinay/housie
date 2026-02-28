@@ -44,6 +44,10 @@ const config: Config = {
           "100%": { opacity: "1", transform: "scale(1)" },
         },
       },
+      boxShadow: {
+        roomCardInner:
+          "inset 0 4px 20px rgba(0, 0, 0, 0.5)",
+      },
     },
   },
   plugins: [],

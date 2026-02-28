@@ -22,6 +22,7 @@ import {
   saveSelections,
 } from "./room-utils";
 import type { RoomState, TicketGrid } from "./types";
+import { LoadingOverlay } from "@/components/LoadingOverlay";
 
 function RoomPageInner() {
   const params = useParams();
@@ -428,13 +429,7 @@ function RoomPageInner() {
   }
 
   if (!room) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="room-card max-w-sm text-center">
-          <p className="text-theme-primary">Loading room…</p>
-        </div>
-      </div>
-    );
+    return <LoadingOverlay />;
   }
 
   const totalTickets =
@@ -445,244 +440,239 @@ function RoomPageInner() {
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-6">
       {room.status === "waiting" ? (
         <main className="w-full max-w-4xl flex-1 flex flex-col items-center justify-center">
-          <div className="w-full rounded-2xl p-4 md:p-8 shadow-2xl bg-roomCard border-2 border-yellow/80">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
-              {/* Left card: header actions + joining players */}
-              <div className="order-1 room-card flex flex-col">
-                <div className="flex flex-row items-center gap-3 mb-4">
-                  {canQuitAsPlayer ? (
-                    <IconButton
-                      type="button"
-                      onClick={() => handleGoHome()}
-                      disabled={leaving}
-                      icon={<FiChevronLeft className="size-5 shrink-0" />}
-                      aria-label="Leave room"
-                    />
-                  ) : isHost ? (
-                    <IconButton
-                      type="button"
-                      onClick={() =>
-                        modal.info({
-                          title: "Are you sure you want to exit?",
-                          description: "This will end the game.",
-                          onOk: handleEndGame,
-                          onCancel: () => {},
-                          okText: "Yes",
-                          cancelText: "No",
-                        })
-                      }
-                      icon={<FiChevronLeft className="size-5 shrink-0" />}
-                      aria-label="Back (exit and end game)"
-                    />
-                  ) : (
-                    <IconButton
-                      href="/"
-                      icon={<FiChevronLeft className="size-5 shrink-0" />}
-                      aria-label="Back to home"
-                    />
-                  )}
-                  <h1 className="flex-1 text-xl font-semibold text-theme-primary text-center">
-                    Room {room.code}
-                  </h1>
-                  <div className="flex items-center gap-2 w-10 justify-end">
-                    <span
-                      className={`rounded px-2 py-0.5 text-xs font-medium ${
-                        live
-                          ? "bg-successBg text-success"
-                          : "bg-theme-accent-soft text-theme-muted"
-                      }`}
-                      title={live ? "Real-time updates on" : "Connecting…"}
-                    >
-                      {live ? "Live" : "…"}
+          <div className="w-full rounded-2xl p-6 md:p-8 bg-roomCard border-2 border-yellow/80 shadow-roomCardInner grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
+            {/* Left card: header actions + joining players */}
+            <div className="order-1 room-card flex flex-col">
+              <div className="flex flex-row items-center gap-3 mb-4">
+                {canQuitAsPlayer ? (
+                  <IconButton
+                    type="button"
+                    onClick={() => handleGoHome()}
+                    disabled={leaving}
+                    icon={<FiChevronLeft className="size-5 shrink-0" />}
+                    aria-label="Leave room"
+                  />
+                ) : isHost ? (
+                  <IconButton
+                    type="button"
+                    onClick={() =>
+                      modal.info({
+                        title: "Are you sure you want to exit?",
+                        description: "This will end the game.",
+                        onOk: handleEndGame,
+                        onCancel: () => {},
+                        okText: "Yes",
+                        cancelText: "No",
+                      })
+                    }
+                    icon={<FiChevronLeft className="size-5 shrink-0" />}
+                    aria-label="Back (exit and end game)"
+                  />
+                ) : (
+                  <IconButton
+                    href="/"
+                    icon={<FiChevronLeft className="size-5 shrink-0" />}
+                    aria-label="Back to home"
+                  />
+                )}
+                <h1 className="flex-1 text-xl font-semibold text-theme-primary text-center">
+                  Room {room.code}
+                </h1>
+                <div className="flex items-center gap-2 w-10 justify-end">
+                  <span
+                    className={`rounded px-2 py-0.5 text-xs font-medium ${
+                      live
+                        ? "bg-successBg text-success"
+                        : "bg-theme-accent-soft text-theme-muted"
+                    }`}
+                    title={live ? "Real-time updates on" : "Connecting…"}
+                  >
+                    {live ? "Live" : "…"}
+                  </span>
+                </div>
+              </div>
+              {leaveError && <p className="form-error mb-3">{leaveError}</p>}
+              <h2 className="form-label mb-2">Joining players</h2>
+              <ul className="space-y-4 flex-1 rounded-lg p-3 border-2 border-accent/30 bg-inputBg max-h-52 md:max-h-full overflow-scroll">
+                {room.players.map((p) => (
+                  <li
+                    key={p.id}
+                    className="flex items-center gap-3 text-sm text-theme-primary"
+                  >
+                    {p.id === room.hostId ? (
+                      <PiUserCircleCheckFill className="size-7 text-yellow" />
+                    ) : (
+                      <PiUserCircleDashedFill className="size-7 text-accent/90" />
+                    )}
+                    <span className="min-w-0 flex-1 truncate font-medium">
+                      {p.name}
+                      {p.id === room.hostId && (
+                        <span className="ml-1 text-yellow text-xs font-semibold">
+                          (Host)
+                        </span>
+                      )}
+                    </span>
+                    <span className="shrink-0 font-medium text-theme-accent">
+                      {p.ticketCount} ticket{p.ticketCount !== 1 ? "s" : ""}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Right card: game details + prize split + share + start/end */}
+            <div className="order-2 room-card space-y-6 border-t border-accent/30 md:border-l md:border-t-0 border-dashed pt-6 md:pl-10 md:pt-0">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <section>
+                  <p className="form-label">Ticket price</p>
+                  <p className="text-xl font-bold text-theme-accent">
+                    ₹{room.ticketPrice} per ticket
+                  </p>
+                </section>
+                <section>
+                  <div className="flex justify-between text-sm">
+                    <span className="form-label mb-0">Total tickets</span>
+                    <span className="font-semibold text-theme-primary">
+                      {totalTickets}
                     </span>
                   </div>
-                </div>
-                {leaveError && <p className="form-error mb-3">{leaveError}</p>}
-                <h2 className="form-label mb-2">Joining players</h2>
-                <ul className="space-y-4 flex-1 rounded-lg p-3 border-2 border-accent/30 bg-inputBg max-h-52 md:max-h-full overflow-scroll">
-                  {room.players.map((p) => (
-                    <li
-                      key={p.id}
-                      className="flex items-center gap-3 text-sm text-theme-primary"
-                    >
-                      {p.id === room.hostId ? (
-                        <PiUserCircleCheckFill className="size-7 text-yellow" />
-                      ) : (
-                        <PiUserCircleDashedFill className="size-7 text-accent/90" />
-                      )}
-                      <span className="min-w-0 flex-1 truncate font-medium">
-                        {p.name}
-                        {p.id === room.hostId && (
-                          <span className="ml-1 text-yellow text-xs font-semibold">
-                            (Host)
-                          </span>
-                        )}
-                      </span>
-                      <span className="shrink-0 font-medium text-theme-accent">
-                        {p.ticketCount} ticket{p.ticketCount !== 1 ? "s" : ""}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
+                  <div className="flex justify-between text-sm mt-1">
+                    <span className="text-theme-muted">Total amount</span>
+                    <span className="font-semibold text-theme-accent">
+                      ₹{totalAmount}
+                    </span>
+                  </div>
+                </section>
               </div>
 
-              {/* Right card: game details + prize split + share + start/end */}
-              <div className="order-2 room-card space-y-6 border-t border-accent/30 md:border-l md:border-t-0 border-dashed pt-6 md:pl-10 md:pt-0">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <section>
-                    <p className="form-label">Ticket price</p>
-                    <p className="text-xl font-bold text-theme-accent">
-                      ₹{room.ticketPrice} per ticket
-                    </p>
-                  </section>
-                  <section>
-                    <div className="flex justify-between text-sm">
-                      <span className="form-label mb-0">Total tickets</span>
-                      <span className="font-semibold text-theme-primary">
-                        {totalTickets}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm mt-1">
-                      <span className="text-theme-muted">Total amount</span>
-                      <span className="font-semibold text-theme-accent">
-                        ₹{totalAmount}
-                      </span>
-                    </div>
-                  </section>
-                </div>
-
-                {totalAmount > 0 &&
-                  (() => {
-                    const prizes = getClaimPrizeAmounts(totalAmount);
-                    const rows: { label: string; amount: number }[] = [
-                      { label: "Jaldi Five", amount: prizes.jaldiFive },
-                      { label: "First line", amount: prizes.firstLine },
-                      { label: "Middle line", amount: prizes.middleLine },
-                      { label: "Last line", amount: prizes.lastLine },
-                      { label: "Housie", amount: prizes.housie },
-                    ];
-                    return (
-                      <section>
-                        <h2 className="form-label mb-2">Prize split</h2>
-                        <p className="text-xs text-theme-muted mb-2">
-                          Split equally when multiple winners for the same
-                          claim.{" "}
-                          {Math.min(
-                            prizes.jaldiFive,
-                            prizes.firstLine,
-                            prizes.housie
-                          ) < 5
-                            ? "Small pool: amounts in multiples of ₹2."
-                            : "Minimum ₹5 per claim."}
-                        </p>
-                        <div className="rounded-lg p-4 border-2 border-accent/30 bg-inputBg">
-                          <table className="w-full text-sm border-collapse">
-                            <thead>
-                              <tr className="border-b-2 border-[#93c5fd]/60">
-                                <th className="text-left py-2 font-semibold text-theme-primary">
-                                  Claim type
-                                </th>
-                                <th className="text-right py-2 font-semibold text-theme-primary">
-                                  Amount
-                                </th>
+              {totalAmount > 0 &&
+                (() => {
+                  const prizes = getClaimPrizeAmounts(totalAmount);
+                  const rows: { label: string; amount: number }[] = [
+                    { label: "Jaldi Five", amount: prizes.jaldiFive },
+                    { label: "First line", amount: prizes.firstLine },
+                    { label: "Middle line", amount: prizes.middleLine },
+                    { label: "Last line", amount: prizes.lastLine },
+                    { label: "Housie", amount: prizes.housie },
+                  ];
+                  return (
+                    <section>
+                      <h2 className="form-label mb-2">Prize split</h2>
+                      <p className="text-xs text-theme-muted mb-2">
+                        Split equally when multiple winners for the same claim.{" "}
+                        {Math.min(
+                          prizes.jaldiFive,
+                          prizes.firstLine,
+                          prizes.housie
+                        ) < 5
+                          ? "Small pool: amounts in multiples of ₹2."
+                          : "Minimum ₹5 per claim."}
+                      </p>
+                      <div className="rounded-lg p-4 border-2 border-accent/30 bg-inputBg">
+                        <table className="w-full text-sm border-collapse">
+                          <thead>
+                            <tr className="border-b-2 border-[#93c5fd]/60">
+                              <th className="text-left py-2 font-semibold text-theme-primary">
+                                Claim type
+                              </th>
+                              <th className="text-right py-2 font-semibold text-theme-primary">
+                                Amount
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {rows.map(({ label, amount }, index) => (
+                              <tr
+                                key={label}
+                                className={`border-b border-[#93c5fd]/40 ${
+                                  index === rows.length - 1 ? "border-b-0" : ""
+                                }`}
+                              >
+                                <td className="py-2 text-theme-primary">
+                                  {label}
+                                </td>
+                                <td className="py-2 text-right font-semibold text-yellow">
+                                  ₹{amount}
+                                </td>
                               </tr>
-                            </thead>
-                            <tbody>
-                              {rows.map(({ label, amount }, index) => (
-                                <tr
-                                  key={label}
-                                  className={`border-b border-[#93c5fd]/40 ${
-                                    index === rows.length - 1
-                                      ? "border-b-0"
-                                      : ""
-                                  }`}
-                                >
-                                  <td className="py-2 text-theme-primary">
-                                    {label}
-                                  </td>
-                                  <td className="py-2 text-right font-semibold text-yellow">
-                                    ₹{amount}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </section>
-                    );
-                  })()}
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  );
+                })()}
 
-                {isHost && link && (
-                  <section>
-                    <p className="form-label mb-2">Share this link</p>
-                    <p className="text-sm text-theme-primary break-all rounded-lg border-2 border-accent/30 bg-inputBg px-3 py-2">
-                      {link}
-                    </p>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          try {
+              {isHost && link && (
+                <section>
+                  <p className="form-label mb-2">Share this link</p>
+                  <p className="text-sm text-theme-primary break-all rounded-lg border-2 border-accent/30 bg-inputBg px-3 py-2">
+                    {link}
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText(link);
+                          setLinkCopied(true);
+                          setTimeout(() => setLinkCopied(false), 2000);
+                        } catch {
+                          setLinkCopied(false);
+                        }
+                      }}
+                      className="inline-flex items-center gap-2 rounded-lg border-2 border-accent/30 bg-inputBg px-3 py-2 text-sm text-theme-primary hover:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/50"
+                      title="Copy link"
+                    >
+                      <FiCopy className="size-4 shrink-0" />
+                      {linkCopied ? "Copied!" : "Copy"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          if (navigator.share) {
+                            await navigator.share({
+                              title: `Room ${room.code}`,
+                              text: `Join Housie room ${room.code}`,
+                              url: link,
+                            });
+                          } else {
                             await navigator.clipboard.writeText(link);
                             setLinkCopied(true);
                             setTimeout(() => setLinkCopied(false), 2000);
-                          } catch {
-                            setLinkCopied(false);
                           }
-                        }}
-                        className="inline-flex items-center gap-2 rounded-lg border-2 border-accent/30 bg-inputBg px-3 py-2 text-sm text-theme-primary hover:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/50"
-                        title="Copy link"
-                      >
-                        <FiCopy className="size-4 shrink-0" />
-                        {linkCopied ? "Copied!" : "Copy"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          try {
-                            if (navigator.share) {
-                              await navigator.share({
-                                title: `Room ${room.code}`,
-                                text: `Join Housie room ${room.code}`,
-                                url: link,
-                              });
-                            } else {
-                              await navigator.clipboard.writeText(link);
-                              setLinkCopied(true);
-                              setTimeout(() => setLinkCopied(false), 2000);
-                            }
-                          } catch {
-                            // user cancelled or share failed
-                          }
-                        }}
-                        className="inline-flex items-center gap-2 rounded-lg border-2 border-accent/30 bg-inputBg px-3 py-2 text-sm text-theme-primary hover:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/50"
-                        title="Share link"
-                      >
-                        <FiShare2 className="size-4 shrink-0" />
-                        Share
-                      </button>
-                    </div>
-                  </section>
-                )}
-
-                {isHost && (
-                  <div className="flex flex-col gap-3 pt-2">
-                    <Button
-                      type="button"
-                      variant="yellow"
-                      onClick={handleStartGame}
-                      disabled={starting || !live}
+                        } catch {
+                          // user cancelled or share failed
+                        }
+                      }}
+                      className="inline-flex items-center gap-2 rounded-lg border-2 border-accent/30 bg-inputBg px-3 py-2 text-sm text-theme-primary hover:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/50"
+                      title="Share link"
                     >
-                      {starting ? "Starting…" : "Start game"}
-                    </Button>
-                    {!live && (
-                      <p className="text-xs text-theme-muted text-center">
-                        Start game is available when the connection is live.
-                      </p>
-                    )}
+                      <FiShare2 className="size-4 shrink-0" />
+                      Share
+                    </button>
                   </div>
-                )}
-              </div>
+                </section>
+              )}
+
+              {isHost && (
+                <div className="flex flex-col gap-3 pt-2">
+                  <Button
+                    type="button"
+                    variant="yellow"
+                    onClick={handleStartGame}
+                    disabled={starting || !live}
+                  >
+                    {starting ? "Starting…" : "Start game"}
+                  </Button>
+                  {!live && (
+                    <p className="text-xs text-theme-muted text-center">
+                      Start game is available when the connection is live.
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </main>
