@@ -173,7 +173,7 @@ export function GameScreen({
       prevDrawStartedAtRef.current = drawStartedAt;
       const audio = coinSoundRef.current;
       if (audio) {
-        audio.loop = true;
+        audio.loop = false;
         audio.currentTime = 0;
         audio.play().catch(() => {});
       }
