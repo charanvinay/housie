@@ -9,6 +9,7 @@ import {
   getNumbersInRow,
 } from "./room-utils";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { useIsMobileUserAgent } from "@/hooks/useIsMobileUserAgent";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { FiChevronDown, FiChevronUp } from "react-icons/fi";
@@ -59,6 +60,9 @@ export function GameScreen({
   const [coinHidden, setCoinHidden] = useState(false);
   const prevDrawing = useRef(drawing);
   const isMobile = useIsMobile();
+  const isMobileUserAgent = useIsMobileUserAgent();
+  /** On mobile devices always use single-ticket + arrows layout (even after orientation lock to landscape). */
+  const isMobileLayout = isMobile || isMobileUserAgent;
   const [currentTicketIndex, setCurrentTicketIndex] = useState(0);
   const [ticketsFit, setTicketsFit] = useState(true);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -87,7 +91,7 @@ export function GameScreen({
     ro.observe(container);
     ro.observe(content);
     return () => ro.disconnect();
-  }, [tickets.length, isMobile, currentTicketIndex]);
+  }, [tickets.length, isMobileLayout, currentTicketIndex]);
 
   const handlePickNext = () => {
     if (!isHost || drawing || drawn.length >= 90) return;
@@ -109,9 +113,9 @@ export function GameScreen({
   }, [drawing, coinHidden]);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-0 w-full h-full min-h-0 overflow-hidden">
+    <div className={`grid gap-0 w-full h-full min-h-0 overflow-hidden ${isMobileLayout ? "grid-cols-1" : "grid-cols-1 md:grid-cols-3"}`}>
       {/* Left: 1/3 – coin + pick button (sticky) */}
-      <div className="flex flex-col items-center justify-center p-4 md:p-6 md:sticky md:top-6 md:self-start h-full">
+      <div className={`flex flex-col items-center justify-center p-4 md:p-6 h-full ${isMobileLayout ? "" : "md:sticky md:top-6 md:self-start"}`}>
         <div className="w-full max-w-[200px] min-h-[200px] flex items-center justify-center shrink-0">
           <AnimatePresence mode="wait">
             {currentNumber !== null && !coinHidden && (
@@ -163,7 +167,7 @@ export function GameScreen({
       {/* Right: 2/3 – tickets column (scrollable); center when content fits, top when needs scroll */}
       <div
         ref={scrollContainerRef}
-        className={`tickets-scroll md:col-span-2 flex min-h-0 flex-col gap-0 p-2 md:p-4 overflow-y-auto ${ticketsFit ? "justify-center" : "justify-start"}`}
+        className={`tickets-scroll flex min-h-0 flex-col gap-0 p-2 md:p-4 overflow-y-auto ${isMobileLayout ? "" : "md:col-span-2"} ${ticketsFit ? "justify-center" : "justify-start"}`}
       >
         <div ref={ticketsContentRef} className="flex flex-col shrink-0">
         {claimError && (
@@ -172,14 +176,14 @@ export function GameScreen({
 
         <div
           className={
-            isMobile && tickets.length > 1
+            isMobileLayout && tickets.length > 1
               ? "flex flex-1 min-h-0 gap-3"
               : "flex flex-col"
           }
         >
           <div
             className={
-              isMobile && tickets.length > 1
+              isMobileLayout && tickets.length > 1
                 ? "flex flex-1 min-h-0 flex-col overflow-y-auto min-w-0"
                 : "flex flex-col"
             }
@@ -187,7 +191,7 @@ export function GameScreen({
           {tickets.length === 0 ? (
             <p className="text-theme-muted text-sm py-4">No tickets.</p>
           ) : (
-            (isMobile ? [currentTicketIndex] : Array.from({ length: tickets.length }, (_, i) => i)).map((ticketIndex) => {
+            (isMobileLayout ? [currentTicketIndex] : Array.from({ length: tickets.length }, (_, i) => i)).map((ticketIndex) => {
               const ticket = tickets[ticketIndex]!;
               const selected = selectedByTicket[ticketIndex] ?? new Set();
               const selectedList = Array.from(selected);
@@ -268,12 +272,12 @@ export function GameScreen({
                     type: "tween",
                     duration: 0.3,
                     ease: "easeOut",
-                    delay: isMobile ? 0 : 0.08 * ticketIndex,
+                    delay: isMobileLayout ? 0 : 0.08 * ticketIndex,
                   }}
                   className="relative rounded-none bg-ticket/95 p-4 md:p-6 shrink-0"
                 >
                   <p className="text-xs text-slate-800 text-center font-semibold mb-1.5">
-                    {isMobile && tickets.length > 1
+                    {isMobileLayout && tickets.length > 1
                       ? `Ticket ${ticketIndex + 1} of ${tickets.length}`
                       : `Ticket ${ticketIndex + 1}`}
                   </p>
@@ -382,7 +386,7 @@ export function GameScreen({
             })
           )}
           </div>
-          {isMobile && tickets.length > 1 && (
+          {isMobileLayout && tickets.length > 1 && (
             <div className="flex flex-col justify-center gap-4 shrink-0">
               <IconButton
                 type="button"
