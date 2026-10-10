@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { PageWrapper } from "@/components/PageWrapper";
 import { Button } from "@/components/Button";
+import { InstallPwaPrompt } from "@/components/InstallPwaPrompt";
 
 const ROOM_SESSION_KEY = "housie_room";
 
@@ -138,6 +139,7 @@ export default function Home() {
           Join room
         </Button>
       </div>
+      <InstallPwaPrompt />
     </PageWrapper>
   );
 }

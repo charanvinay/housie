@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Google_Sans_Flex, Pacifico } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
@@ -14,6 +14,13 @@ const googleSansFlex = Google_Sans_Flex({
   variable: "--font-google-sans-flex",
   subsets: ["latin"],
 });
+
+export const viewport: Viewport = {
+  themeColor: "#001a62",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   title: {
@@ -38,6 +45,23 @@ export const metadata: Metadata = {
   publisher: "Charan vinay",
 
   metadataBase: new URL("https://housiegame.vercel.app"),
+  manifest: "/manifest.webmanifest",
+
+  icons: {
+    icon: [
+      { url: "/favicon.png", sizes: "64x64", type: "image/png" },
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: [
+      { url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
+
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Housie",
+  },
 
   openGraph: {
     title: "Housie – Play Telugu Tambola Online",
