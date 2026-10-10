@@ -12,12 +12,13 @@ import { getClaimPrizeAmounts } from "@/lib/rooms";
 import { motion } from "framer-motion";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { FiChevronLeft, FiCopy, FiRefreshCw, FiShare2 } from "react-icons/fi";
+import { FiChevronLeft, FiCopy, FiRefreshCw, FiShare2, FiVolume2, FiVolumeX } from "react-icons/fi";
 import { PiUserCircleCheckFill, PiUserCircleDashedFill } from "react-icons/pi";
 import { io, Socket } from "socket.io-client";
 import { GameEndedNoWinners } from "./GameEndedNoWinners";
 import { GameScreen } from "./GameScreen";
 import { WinnersScreen } from "./WinnersScreen";
+import { Sounds, useSoundMuted } from "@/lib/sounds";
 import {
   clearRoomSession,
   clearSelectionsForRoom,
@@ -43,6 +44,7 @@ function RoomPageInner() {
   const [link, setLink] = useState("");
   const [linkCopied, setLinkCopied] = useState(false);
   const [live, setLive] = useState(false);
+  const { muted, toggleMute } = useSoundMuted();
   const [leaving, setLeaving] = useState(false);
   const [ending, setEnding] = useState(false);
   const [starting, setStarting] = useState(false);
@@ -425,7 +427,7 @@ function RoomPageInner() {
     const onDrawStarted = () => setDrawStartedAt(Date.now());
     const onClaimMade = (payload: { claimerId?: string }) => {
       if (payload.claimerId !== myId) {
-        new Audio("/fahh.mp3").play().catch(() => {});
+        Sounds.fahh();
       }
     };
 
@@ -453,7 +455,7 @@ function RoomPageInner() {
     };
   }, [code, myId ?? ""]);
 
-  // Play cat-laugh once when game really ends with winners (WinnersScreen is shown)
+  // Play game-over once when game really ends with winners (WinnersScreen is shown)
   const hasWinners =
     room?.status === "ended" &&
     ((room.drawnNumbers?.length ?? 0) > 0 ||
@@ -469,8 +471,7 @@ function RoomPageInner() {
     }
     if (!hasWinners || gameEndedWithWinnersSoundPlayedRef.current) return;
     gameEndedWithWinnersSoundPlayedRef.current = true;
-    const audio = new Audio("/cat-laugh.mp3");
-    audio.play().catch(() => {});
+    Sounds.gameOver();
   }, [room?.status, hasWinners]);
 
   // Refetch room when game starts so production always has latest state (avoids stuck waiting screen)
@@ -608,6 +609,20 @@ function RoomPageInner() {
                   <LiveIndicator live={live} />
                   <IconButton
                     type="button"
+                    onClick={toggleMute}
+                    icon={
+                      muted ? (
+                        <FiVolumeX className="size-5 shrink-0 text-red-400" />
+                      ) : (
+                        <FiVolume2 className="size-5 shrink-0" />
+                      )
+                    }
+                    aria-label={muted ? "Unmute sounds" : "Mute sounds"}
+                    title={muted ? "Unmute sounds" : "Mute sounds"}
+                    playSound={false}
+                  />
+                  <IconButton
+                    type="button"
                     onClick={handleSoftRefresh}
                     icon={<FiRefreshCw className="size-5 shrink-0" />}
                     aria-label="Reload page"
@@ -661,7 +676,7 @@ function RoomPageInner() {
                   </div>
                   <div className="flex justify-between text-sm mt-1">
                     <span className="text-theme-muted">Total amount</span>
-                    <span className="font-semibold text-theme-accent">
+                    <span className="font-semibold text-green-400">
                       ₹{totalAmount}
                     </span>
                   </div>
@@ -738,6 +753,7 @@ function RoomPageInner() {
                     <button
                       type="button"
                       onClick={async () => {
+                        Sounds.mouseClick();
                         try {
                           await navigator.clipboard.writeText(link);
                           setLinkCopied(true);
@@ -755,6 +771,7 @@ function RoomPageInner() {
                     <button
                       type="button"
                       onClick={async () => {
+                        Sounds.mouseClick();
                         try {
                           if (navigator.share) {
                             await navigator.share({
@@ -914,11 +931,25 @@ function RoomPageInner() {
                   })}
                 </div>
               )}
-              {/* Right: Live + Reload */}
+              {/* Right: Live + Mute + Reload */}
               <div className="flex items-center gap-2 shrink-0 place-self-end self-start">
                 <LiveIndicator
                   live={live}
                   className={!live ? "text-white/70!" : undefined}
+                />
+                <IconButton
+                  type="button"
+                  onClick={toggleMute}
+                  icon={
+                    muted ? (
+                      <FiVolumeX className="size-5 shrink-0 text-red-400" />
+                    ) : (
+                      <FiVolume2 className="size-5 shrink-0" />
+                    )
+                  }
+                  aria-label={muted ? "Unmute sounds" : "Mute sounds"}
+                  title={muted ? "Unmute sounds" : "Mute sounds"}
+                  playSound={false}
                 />
                 <IconButton
                   type="button"

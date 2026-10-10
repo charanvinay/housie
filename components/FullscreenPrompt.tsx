@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FiMaximize2 } from "react-icons/fi";
+import { Sounds } from "@/lib/sounds";
 
 const FULLSCREEN_PREF_KEY = "housie_fullscreen";
 
@@ -76,7 +77,10 @@ export function FullscreenPrompt() {
   return (
     <button
       type="button"
-      onClick={requestFullscreen}
+      onClick={() => {
+        Sounds.mouseClick();
+        requestFullscreen();
+      }}
       className="fixed inset-0 z-9998 flex flex-col items-center justify-center gap-4 bg-black/70 p-6 text-center focus:outline-none focus:ring-2 focus:ring-yellow focus:ring-offset-2"
       aria-label="Enter full screen"
     >

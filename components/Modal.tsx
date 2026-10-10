@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Sounds } from "@/lib/sounds";
 
 export type ModalOptions = {
   title: string;
@@ -112,14 +113,20 @@ export function ModalProvider({ children }: { children: ReactNode }) {
               <div className="mt-6 flex gap-3 justify-end">
                 <button
                   type="button"
-                  onClick={handleCancel}
+                  onClick={() => {
+                    Sounds.mouseClick();
+                    handleCancel();
+                  }}
                   className="rounded-lg border-2 border-accent/30 bg-inputBg px-4 py-2 text-sm font-medium text-theme-primary hover:border-accent/50"
                 >
                   {state.options.cancelText ?? "No"}
                 </button>
                 <button
                   type="button"
-                  onClick={handleOk}
+                  onClick={() => {
+                    Sounds.mouseClick();
+                    handleOk();
+                  }}
                   className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90"
                 >
                   {state.options.okText ?? "Yes"}

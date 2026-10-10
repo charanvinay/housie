@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FiChevronDown, FiChevronUp } from "react-icons/fi";
 import { RecentDrawnNumbers } from "./RecentDrawnNumbers";
+import { Sounds, useSoundMuted } from "@/lib/sounds";
 
 export type GameScreenProps = {
   room: RoomState;
@@ -84,6 +85,7 @@ export function GameScreen({
   const currentNumber = drawn.length > 0 ? drawn[drawn.length - 1]! : null;
   const drawnSet = new Set(drawn);
 
+  const { muted } = useSoundMuted();
   const [coinHidden, setCoinHidden] = useState(false);
   const prevDrawing = useRef(drawing);
   const isMobile = useIsMobile();
@@ -102,6 +104,19 @@ export function GameScreen({
   const prevDrawStartedAtRef = useRef<number | null>(null);
   /** Only play "i got this" when user *just became* eligible this draw, not when they were already eligible */
   const wasEligibleLastDrawRef = useRef(false);
+
+  useEffect(() => {
+    if (muted) {
+      if (coinSoundRef.current) {
+        coinSoundRef.current.pause();
+        coinSoundRef.current.currentTime = 0;
+      }
+      if (iGotThisSoundRef.current) {
+        iGotThisSoundRef.current.pause();
+        iGotThisSoundRef.current.currentTime = 0;
+      }
+    }
+  }, [muted]);
 
   const hasEligibleClaim = useMemo(() => {
     const alreadyClaimedByMe = (arr?: ClaimEntry[]) =>
@@ -172,13 +187,13 @@ export function GameScreen({
     ) {
       prevDrawStartedAtRef.current = drawStartedAt;
       const audio = coinSoundRef.current;
-      if (audio) {
+      if (audio && !muted) {
         audio.loop = false;
         audio.currentTime = 0;
         audio.play().catch(() => {});
       }
     }
-  }, [drawStartedAt]);
+  }, [drawStartedAt, muted]);
 
   // When a new number appears: stop coin sound for everyone; play i-got-this when this user is eligible for a claim (overlay would show). Only update "was eligible" when a draw actually happened so we don't mark eligible from selection-only.
   useEffect(() => {
@@ -191,7 +206,7 @@ export function GameScreen({
         coinAudio.loop = false;
       }
       // Play when this user is eligible after this draw (including jaldi five when 5th selected number just came)
-      if (hasEligibleClaim) {
+      if (hasEligibleClaim && !muted) {
         const iGotThis = iGotThisSoundRef.current;
         if (iGotThis) {
           iGotThis.currentTime = 0;
@@ -201,7 +216,7 @@ export function GameScreen({
       wasEligibleLastDrawRef.current = hasEligibleClaim;
     }
     prevDrawnLengthRef.current = drawn.length;
-  }, [drawn.length, hasEligibleClaim]);
+  }, [drawn.length, hasEligibleClaim, muted]);
 
   const goToPrevTicket = () => {
     if (currentTicketIndex <= 0) return;
@@ -331,6 +346,7 @@ export function GameScreen({
               variant="yellow"
               onClick={handlePickNext}
               disabled={drawing || drawn.length >= 90}
+              playSound={false}
               className={`w-full whitespace-nowrap ${
                 isMobileLayout
                   ? "min-w-[220px] max-w-[280px]"
@@ -584,12 +600,16 @@ export function GameScreen({
                                                 ? "bg-ticket/40 hover:bg-ticket/60"
                                                 : ""
                                             }`}
-                                            onClick={() =>
-                                              num !== null &&
-                                              isDrawn &&
-                                              !isSelected &&
-                                              onToggleNumber(ticketIndex, num)
-                                            }
+                                            onClick={() => {
+                                              if (
+                                                num !== null &&
+                                                isDrawn &&
+                                                !isSelected
+                                              ) {
+                                                Sounds.mouseClick();
+                                                onToggleNumber(ticketIndex, num);
+                                              }
+                                            }}
                                             role={
                                               num !== null &&
                                               isDrawn &&

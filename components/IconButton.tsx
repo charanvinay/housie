@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { usePressable } from "@/components/usePressable";
+import { Sounds } from "@/lib/sounds";
 
 const iconOnlyClass = "btn-icon size-10 p-0";
 const withLabelClass = "btn-icon gap-2 px-4 py-2";
@@ -18,6 +19,8 @@ type IconButtonBaseProps = {
   children?: React.ReactNode;
   className?: string;
   "aria-label"?: string;
+  title?: string;
+  playSound?: boolean;
 };
 
 type IconButtonAsLink = IconButtonBaseProps & {
@@ -31,7 +34,7 @@ type IconButtonAsButton = IconButtonBaseProps & {
   href?: never;
   type?: "button" | "submit";
   disabled?: boolean;
-  onClick?: () => void;
+  onClick?: () => unknown;
 };
 
 export type IconButtonProps = IconButtonAsLink | IconButtonAsButton;
@@ -51,12 +54,20 @@ export function IconButton({
   const animate = isPressed ? tapStyle : isHovered ? hoverStyle : restStyle;
   const transitionConfig = isPressed ? tapTransition : transition;
 
+  const playSound = rest.playSound !== false;
+
   if ("href" in rest && rest.href) {
     return (
       <Link
         href={rest.href}
         className="inline-block"
         aria-label={rest["aria-label"]}
+        title={rest.title}
+        onClick={() => {
+          if (playSound) {
+            Sounds.mouseClick();
+          }
+        }}
       >
         <motion.span
           className={classes}
@@ -77,7 +88,13 @@ export function IconButton({
     <motion.button
       type={type}
       disabled={disabled}
-      onClick={onClick}
+      title={rest.title}
+      onClick={() => {
+        if (!disabled && playSound) {
+          Sounds.mouseClick();
+        }
+        onClick?.();
+      }}
       className={classes}
       aria-label={rest["aria-label"]}
       initial={restStyle}

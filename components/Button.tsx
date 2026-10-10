@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { usePressable } from "@/components/usePressable";
+import { Sounds } from "@/lib/sounds";
 
 const DISABLED_TO_ENABLED_DELAY_MS = 450;
 
@@ -19,6 +20,7 @@ type ButtonBaseProps = {
   variant: "primary" | "secondary" | "yellow";
   children: React.ReactNode;
   className?: string;
+  playSound?: boolean;
 };
 
 type ButtonAsLink = ButtonBaseProps & {
@@ -86,9 +88,19 @@ export function Button({
     opacity: { duration: 0.4, ease: "easeOut" as const },
   };
 
+  const playSound = rest.playSound !== false;
+
   if ("href" in rest && rest.href) {
     return (
-      <Link href={rest.href} className="block">
+      <Link
+        href={rest.href}
+        className="block"
+        onClick={() => {
+          if (playSound) {
+            Sounds.mouseClick();
+          }
+        }}
+      >
         <motion.span
           className={classes}
           initial={restStyle}
@@ -107,7 +119,12 @@ export function Button({
     <motion.button
       type={type}
       disabled={domDisabled}
-      onClick={onClick}
+      onClick={() => {
+        if (!domDisabled && playSound) {
+          Sounds.mouseClick();
+        }
+        onClick?.();
+      }}
       className={classes}
       initial={restStyle}
       animate={animateWithOpacity}
