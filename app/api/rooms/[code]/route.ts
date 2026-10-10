@@ -37,6 +37,7 @@ export async function POST(request: Request, { params }: Params) {
     const result = joinRoom(code, {
       playerName: name,
       ticketCount: body.ticketCount ?? 1,
+      playerId: typeof body.playerId === "string" ? body.playerId : undefined,
     });
     if ("error" in result) {
       return NextResponse.json({ error: result.error }, { status: 400 });

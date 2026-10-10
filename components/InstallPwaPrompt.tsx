@@ -48,7 +48,7 @@ export function InstallPwaPrompt() {
     return () => {
       window.removeEventListener(
         "beforeinstallprompt",
-        handleBeforeInstallPrompt
+        handleBeforeInstallPrompt,
       );
     };
   }, []);
@@ -91,7 +91,7 @@ export function InstallPwaPrompt() {
             <img
               src="/icons/icon-192.png"
               alt="Housie"
-              className="size-11 rounded-xl object-cover shrink-0 shadow-md border border-white/15 group-hover:scale-105 transition-transform"
+              className="size-11 object-contain shrink-0 drop-shadow-md group-hover:scale-105 transition-transform"
             />
             <div className="min-w-0 flex-1">
               <p className="text-sm font-bold text-white group-hover:text-yellow transition-colors leading-tight">
@@ -134,9 +134,11 @@ export function InstallPwaPrompt() {
               <img
                 src="/icons/icon-192.png"
                 alt="Housie"
-                className="size-16 mx-auto rounded-2xl shadow-xl border border-white/20"
+                className="size-16 mx-auto object-contain drop-shadow-xl"
               />
-              <h3 className="text-lg font-bold text-white">Install Housie on iOS</h3>
+              <h3 className="text-lg font-bold text-white">
+                Install Housie on iOS
+              </h3>
               <p className="text-sm text-theme-muted">
                 1. Tap the <strong className="text-white">Share</strong> button
                 at the bottom of Safari.

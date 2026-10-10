@@ -138,12 +138,14 @@ function JoinRoomContent() {
     }
     setLoading(true);
     try {
+      const session = getActiveRoomSession();
       const res = await fetch(`/api/rooms/${encodeURIComponent(code)}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           playerName: name,
           ticketCount,
+          playerId: session?.code === code ? session.id : undefined,
         }),
       });
       const data = await res.json();

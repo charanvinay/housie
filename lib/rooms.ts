@@ -99,7 +99,7 @@ export function getRoom(code: string): Room | undefined {
 
 export function joinRoom(
   code: string,
-  options: { playerName?: string; ticketCount: number }
+  options: { playerName?: string; ticketCount: number; playerId?: string }
 ): { room: Room; playerId: string } | { error: string } {
   const upperCode = code.toUpperCase().trim();
   const room = rooms.get(upperCode);
@@ -111,19 +111,35 @@ export function joinRoom(
   if (room.status !== "waiting")
     return { error: "Game already started or ended" };
 
-  const playerId = generateId();
   const name = (options.playerName || "Player").trim() || "Player";
   const ticketCount = Math.min(
     6,
     Math.max(1, Math.floor(options.ticketCount) || 1)
   );
 
-  room.players.push({
-    id: playerId,
-    name,
-    ticketCount,
-    joinedAt: Date.now(),
-  });
+  // Check if player with this ID or identical name is already in the room
+  const existingIdx = room.players.findIndex(
+    (p) =>
+      (options.playerId && p.id === options.playerId) ||
+      (p.id !== room.hostId &&
+        p.name.trim().toLowerCase() === name.toLowerCase())
+  );
+
+  let playerId: string;
+  if (existingIdx !== -1) {
+    playerId = room.players[existingIdx]!.id;
+    room.players[existingIdx]!.name = name;
+    room.players[existingIdx]!.ticketCount = ticketCount;
+  } else {
+    playerId = options.playerId || generateId();
+    room.players.push({
+      id: playerId,
+      name,
+      ticketCount,
+      joinedAt: Date.now(),
+    });
+  }
+
   notifyRoomUpdated(upperCode);
   return {
     room: getRoom(upperCode)!,
@@ -142,17 +158,19 @@ export function leaveRoom(
       error:
         "This room may have been closed or the code might be incorrect. Please check the code and try again.",
     };
-  if (room.status !== "waiting")
-    return { error: "Cannot leave after game has started" };
   if (room.hostId === playerId)
     return {
       error: "Host cannot leave this way; close the room or start the game",
     };
 
   const idx = room.players.findIndex((p) => p.id === playerId);
-  if (idx === -1) return { error: "Player not in room" };
-  room.players.splice(idx, 1);
-  notifyRoomUpdated(upperCode);
+  if (idx !== -1) {
+    room.players.splice(idx, 1);
+    if (room.playerTickets && room.playerTickets[playerId]) {
+      delete room.playerTickets[playerId];
+    }
+    notifyRoomUpdated(upperCode);
+  }
   return { ok: true };
 }
 

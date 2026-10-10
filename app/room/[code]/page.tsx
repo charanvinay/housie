@@ -82,7 +82,7 @@ function RoomPageInner() {
 
   const isHost = Boolean(hostId && room?.hostId === hostId);
   const myId = isHost ? hostId : playerId;
-  const canQuitAsPlayer = !isHost && playerId && room?.status === "waiting";
+  const canQuitAsPlayer = !isHost && Boolean(playerId);
   const modal = useModal();
   const toast = useToast();
 
@@ -208,28 +208,24 @@ function RoomPageInner() {
   };
 
   const handleGoHome = async (e?: React.MouseEvent) => {
-    if (!canQuitAsPlayer) return;
     e?.preventDefault();
     if (leaving) return;
-    setLeaveError("");
     setLeaving(true);
+    setLeaveError("");
     try {
-      const res = await fetch(`/api/rooms/${encodeURIComponent(code)}/leave`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ playerId }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setLeaveError(data.error || "Failed to leave room");
-        setLeaving(false);
-        return;
+      if (!isHost && playerId) {
+        await fetch(`/api/rooms/${encodeURIComponent(code)}/leave`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ playerId }),
+        });
       }
-      clearRoomSession();
-      router.push("/");
     } catch {
-      setLeaveError("Failed to leave room");
-      setLeaving(false);
+      // ignore
+    } finally {
+      clearRoomSession();
+      if (myId) clearSelectionsForRoom(code, myId);
+      router.push("/");
     }
   };
 
@@ -943,15 +939,7 @@ function RoomPageInner() {
             >
               {/* Left: back + room name */}
               <div className="flex items-center gap-3 shrink-0">
-                {canQuitAsPlayer ? (
-                  <IconButton
-                    type="button"
-                    onClick={() => handleGoHome()}
-                    disabled={leaving}
-                    icon={<FiChevronLeft className="size-5 shrink-0" />}
-                    aria-label="Leave room"
-                  />
-                ) : isHost && room.status === "ended" ? (
+                {isHost && room.status === "ended" ? (
                   <IconButton
                     type="button"
                     onClick={() => {
@@ -978,11 +966,30 @@ function RoomPageInner() {
                     icon={<FiChevronLeft className="size-5 shrink-0" />}
                     aria-label="Back (exit and end game)"
                   />
+                ) : room.status === "ended" ? (
+                  <IconButton
+                    type="button"
+                    onClick={() => handleGoHome()}
+                    disabled={leaving}
+                    icon={<FiChevronLeft className="size-5 shrink-0" />}
+                    aria-label="Leave room"
+                  />
                 ) : (
                   <IconButton
-                    href="/"
+                    type="button"
+                    onClick={() =>
+                      modal.info({
+                        title: "Are you sure you want to exit?",
+                        description: "You will leave this game room.",
+                        onOk: () => handleGoHome(),
+                        onCancel: () => {},
+                        okText: "Yes",
+                        cancelText: "No",
+                      })
+                    }
+                    disabled={leaving}
                     icon={<FiChevronLeft className="size-5 shrink-0" />}
-                    aria-label="Back to home"
+                    aria-label="Leave room"
                   />
                 )}
                 <h1 className="text-lg font-semibold text-white drop-shadow-sm">
@@ -1114,11 +1121,7 @@ function RoomPageInner() {
                       onPlayAgain={() => handleRestart(false)}
                       onBackToLobby={() => handleRestart(true)}
                       restarting={restarting}
-                      onBackHome={() => {
-                        clearRoomSession();
-                        if (myId) clearSelectionsForRoom(code, myId);
-                        router.push("/");
-                      }}
+                      onBackHome={() => handleGoHome()}
                     />
                   ) : (
                     <GameEndedNoWinners
@@ -1126,11 +1129,7 @@ function RoomPageInner() {
                       onPlayAgain={() => handleRestart(false)}
                       onBackToLobby={() => handleRestart(true)}
                       restarting={restarting}
-                      onBackHome={() => {
-                        clearRoomSession();
-                        if (myId) clearSelectionsForRoom(code, myId);
-                        router.push("/");
-                      }}
+                      onBackHome={() => handleGoHome()}
                     />
                   )}
                 </div>

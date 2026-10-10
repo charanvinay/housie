@@ -32,38 +32,40 @@ export function GameEndedNoWinners({
         {message || "The host ended the game."}
       </p>
       {isHost ? (
-        <div className="pt-2 flex flex-col sm:flex-row gap-3 justify-center items-center">
+        <div className="pt-2 flex flex-col gap-3 w-full">
           {onPlayAgain && (
             <Button
               type="button"
               variant="yellow"
               onClick={onPlayAgain}
               disabled={restarting}
-              className="w-full sm:w-auto"
+              className="w-full"
             >
-              {restarting ? "Starting game…" : "Play again (same room)"}
+              {restarting ? "Starting game…" : "Play again"}
             </Button>
           )}
-          {onBackToLobby && (
+          <div className="grid grid-cols-2 gap-3 w-full">
+            {onBackToLobby && (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={onBackToLobby}
+                disabled={restarting}
+                className="w-full"
+              >
+                {restarting ? "Returning…" : "Return to lobby"}
+              </Button>
+            )}
             <Button
               type="button"
-              variant="secondary"
-              onClick={onBackToLobby}
+              variant="primary"
+              onClick={onBackHome}
               disabled={restarting}
-              className="w-full sm:w-auto"
+              className="w-full"
             >
-              {restarting ? "Returning to lobby…" : "Return to lobby"}
+              Leave room
             </Button>
-          )}
-          <Button
-            type="button"
-            variant="primary"
-            onClick={onBackHome}
-            disabled={restarting}
-            className="w-full sm:w-auto"
-          >
-            Leave room
-          </Button>
+          </div>
         </div>
       ) : (
         <div className="pt-2 flex flex-col items-center gap-3">
