@@ -13,15 +13,23 @@ const CLAIM_LABELS: Record<string, string> = {
   housie: "Housie",
 };
 
-type ClaimKey = keyof typeof CLAIM_LABELS;
+export type WinnersScreenProps = {
+  room: RoomState;
+  isHost?: boolean;
+  onPlayAgain?: () => void;
+  onBackToLobby?: () => void;
+  onBackHome: () => void;
+  restarting?: boolean;
+};
 
 export function WinnersScreen({
   room,
+  isHost = false,
+  onPlayAgain,
+  onBackToLobby,
   onBackHome,
-}: {
-  room: RoomState;
-  onBackHome: () => void;
-}) {
+  restarting = false,
+}: WinnersScreenProps) {
   const w = room;
   const totalAmount = w.totalAmount ?? 0;
   const pools = totalAmount > 0 ? getClaimPrizeAmounts(totalAmount) : null;
@@ -30,11 +38,31 @@ export function WinnersScreen({
 
   (
     [
-      { key: "jaldiFive" as const, entries: w.jaldiFiveClaimed, pool: pools?.jaldiFive ?? 0 },
-      { key: "firstLine" as const, entries: w.firstLineClaimed, pool: pools?.firstLine ?? 0 },
-      { key: "middleLine" as const, entries: w.middleLineClaimed, pool: pools?.middleLine ?? 0 },
-      { key: "lastLine" as const, entries: w.lastLineClaimed, pool: pools?.lastLine ?? 0 },
-      { key: "housie" as const, entries: w.housieClaimed, pool: pools?.housie ?? 0 },
+      {
+        key: "jaldiFive" as const,
+        entries: w.jaldiFiveClaimed,
+        pool: pools?.jaldiFive ?? 0,
+      },
+      {
+        key: "firstLine" as const,
+        entries: w.firstLineClaimed,
+        pool: pools?.firstLine ?? 0,
+      },
+      {
+        key: "middleLine" as const,
+        entries: w.middleLineClaimed,
+        pool: pools?.middleLine ?? 0,
+      },
+      {
+        key: "lastLine" as const,
+        entries: w.lastLineClaimed,
+        pool: pools?.lastLine ?? 0,
+      },
+      {
+        key: "housie" as const,
+        entries: w.housieClaimed,
+        pool: pools?.housie ?? 0,
+      },
     ] as const
   ).forEach(({ key, entries, pool }) => {
     if (!entries?.length || pool <= 0) return;
@@ -99,11 +127,55 @@ export function WinnersScreen({
         <p className="text-theme-muted text-center py-4">No winners.</p>
       )}
 
-      <div className="pt-6 text-center">
-        <Button type="button" variant="primary" onClick={onBackHome}>
-          New game
-        </Button>
-      </div>
+      {isHost ? (
+        <div className="pt-6 flex flex-col sm:flex-row gap-3 justify-center items-center">
+          {onPlayAgain && (
+            <Button
+              type="button"
+              variant="yellow"
+              onClick={onPlayAgain}
+              disabled={restarting}
+              className="w-full sm:w-auto"
+            >
+              {restarting ? "Starting game…" : "Play again"}
+            </Button>
+          )}
+          {onBackToLobby && (
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={onBackToLobby}
+              disabled={restarting}
+              className="w-full sm:w-auto"
+            >
+              Back to lobby
+            </Button>
+          )}
+          <Button
+            type="button"
+            variant="primary"
+            onClick={onBackHome}
+            disabled={restarting}
+            className="w-full sm:w-auto"
+          >
+            Leave room
+          </Button>
+        </div>
+      ) : (
+        <div className="pt-6 flex flex-col items-center gap-3">
+          <p className="text-sm text-theme-muted text-center animate-pulse">
+            Waiting for host to start another game…
+          </p>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onBackHome}
+            className="w-full max-w-xs"
+          >
+            Leave room
+          </Button>
+        </div>
+      )}
     </motion.div>
   );
 }

@@ -208,6 +208,48 @@ export function startGame(
   return { ok: true };
 }
 
+export function restartGame(
+  code: string,
+  hostId: string,
+  options?: { toWaiting?: boolean }
+): { ok: true } | { error: string } {
+  const upperCode = code.toUpperCase();
+  const room = rooms.get(upperCode);
+  if (!room)
+    return {
+      error:
+        "This room may have been closed or the code might be incorrect. Please check the code and try again.",
+    };
+  if (room.hostId !== hostId)
+    return { error: "Only the host can start a new game" };
+  if (room.status !== "ended")
+    return { error: "Current game has not ended yet" };
+
+  room.drawnNumbers = [];
+  room.jaldiFiveClaimed = [];
+  room.firstLineClaimed = [];
+  room.middleLineClaimed = [];
+  room.lastLineClaimed = [];
+  room.housieClaimed = [];
+
+  if (options?.toWaiting) {
+    room.playerTickets = undefined;
+    room.status = "waiting";
+  } else {
+    // Generate fresh tickets for all existing players
+    const playerTickets: Record<string, Ticket[]> = {};
+    for (const p of room.players) {
+      const count = Math.min(6, Math.max(0, p.ticketCount)) || 0;
+      playerTickets[p.id] = count > 0 ? generateTickets(count) : [];
+    }
+    room.playerTickets = playerTickets;
+    room.status = "started";
+  }
+
+  notifyRoomUpdated(upperCode);
+  return { ok: true };
+}
+
 /** Last number in drawn order that appears in the claim numbers (the number that completed the claim). */
 function getWinningNumber(
   drawnNumbers: number[],

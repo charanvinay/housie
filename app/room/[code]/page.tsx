@@ -28,7 +28,23 @@ import {
   saveRoomSession,
   saveSelections,
 } from "./room-utils";
-import type { RoomState, TicketGrid } from "./types";
+import type { ClaimEntry, RoomState, TicketGrid } from "./types";
+
+const CLAIM_CATEGORIES: {
+  key:
+    | "jaldiFiveClaimed"
+    | "firstLineClaimed"
+    | "middleLineClaimed"
+    | "lastLineClaimed"
+    | "housieClaimed";
+  label: string;
+}[] = [
+  { key: "jaldiFiveClaimed", label: "Jaldi" },
+  { key: "firstLineClaimed", label: "First line" },
+  { key: "middleLineClaimed", label: "Middle line" },
+  { key: "lastLineClaimed", label: "Last line" },
+  { key: "housieClaimed", label: "Housie" },
+];
 
 function RoomPageInner() {
   const params = useParams();
@@ -62,6 +78,7 @@ function RoomPageInner() {
   const hasRefetchedForStartedRef = useRef(false);
   const gameEndedWithWinnersSoundPlayedRef = useRef(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [restarting, setRestarting] = useState(false);
 
   const isHost = Boolean(hostId && room?.hostId === hostId);
   const myId = isHost ? hostId : playerId;
@@ -106,6 +123,89 @@ function RoomPageInner() {
     if (!code || !myId || room?.status !== "started") return;
     saveSelections(code, myId, selectedByTicket);
   }, [code, myId, room?.status, selectedByTicket]);
+
+  // When a new round starts in the same room (transition from ended to started/waiting), clear selections
+  const prevStatusRef = useRef(room?.status);
+  useEffect(() => {
+    if (
+      prevStatusRef.current === "ended" &&
+      (room?.status === "started" || room?.status === "waiting")
+    ) {
+      setSelectedByTicket({});
+      if (myId) clearSelectionsForRoom(code, myId);
+    }
+    prevStatusRef.current = room?.status;
+  }, [room?.status, code, myId]);
+
+  // Track seen claims so only newly made claims trigger toast alerts
+  const isFirstClaimSyncRef = useRef(true);
+  const seenClaimsRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!room) return;
+
+    // Reset tracked claims if in lobby or newly restarted round with no drawn numbers
+    if (
+      room.status === "waiting" ||
+      (room.status === "started" && (room.drawnNumbers?.length ?? 0) === 0)
+    ) {
+      seenClaimsRef.current.clear();
+      isFirstClaimSyncRef.current = false;
+      return;
+    }
+
+    // On initial mount / sync of an ongoing game, record existing claims without showing toast
+    if (isFirstClaimSyncRef.current) {
+      isFirstClaimSyncRef.current = false;
+      CLAIM_CATEGORIES.forEach(({ key }) => {
+        const entries = (room[key] as ClaimEntry[] | undefined) || [];
+        entries.forEach((e) => {
+          seenClaimsRef.current.add(`${key}:${e.playerId}:${e.winningNumber}`);
+        });
+      });
+      return;
+    }
+
+    // Alert for any newly appeared claims
+    CLAIM_CATEGORIES.forEach(({ key, label }) => {
+      const entries = (room[key] as ClaimEntry[] | undefined) || [];
+      entries.forEach((e) => {
+        const claimKey = `${key}:${e.playerId}:${e.winningNumber}`;
+        if (!seenClaimsRef.current.has(claimKey)) {
+          seenClaimsRef.current.add(claimKey);
+          const name = e.playerName?.trim() || "Player";
+          toast.show(`${label} - ${name}`, "success");
+        }
+      });
+    });
+  }, [room, toast]);
+
+  const handleRestart = async (toWaiting = false) => {
+    if (!isHost || restarting || !code) return;
+    setRestarting(true);
+    try {
+      const res = await fetch(
+        `/api/rooms/${encodeURIComponent(code)}/restart`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ hostId, toWaiting }),
+        }
+      );
+      const data = await res.json();
+      if (!res.ok) {
+        toast.show(data.error || "Failed to restart game");
+      } else if (data.room) {
+        setSelectedByTicket({});
+        if (myId) clearSelectionsForRoom(code, myId);
+        setRoom(data.room);
+      }
+    } catch {
+      toast.show("Network error while restarting game");
+    } finally {
+      setRestarting(false);
+    }
+  };
 
   const handleGoHome = async (e?: React.MouseEvent) => {
     if (!canQuitAsPlayer) return;
@@ -425,10 +525,14 @@ function RoomPageInner() {
     const onRoom = (data: RoomState) => {
       setRoom((prev) => {
         if (!prev) return data;
+        // If status changed (e.g. ended -> started / waiting or waiting -> started), always accept new state
+        if (prev.status !== data.status) return data;
         const prevDrawn = prev.drawnNumbers?.length ?? 0;
         const nextDrawn = data.drawnNumbers?.length ?? 0;
-        if (data.status === "ended") return data;
-        if (nextDrawn < prevDrawn) return prev;
+        // Don't regress drawn numbers within the same active started round
+        if (nextDrawn < prevDrawn && prev.status === "started" && data.status === "started") {
+          return prev;
+        }
         return data;
       });
     };
@@ -1006,6 +1110,10 @@ function RoomPageInner() {
                   room.housieClaimed?.length ? (
                     <WinnersScreen
                       room={room}
+                      isHost={isHost}
+                      onPlayAgain={() => handleRestart(false)}
+                      onBackToLobby={() => handleRestart(true)}
+                      restarting={restarting}
                       onBackHome={() => {
                         clearRoomSession();
                         if (myId) clearSelectionsForRoom(code, myId);
@@ -1014,6 +1122,10 @@ function RoomPageInner() {
                     />
                   ) : (
                     <GameEndedNoWinners
+                      isHost={isHost}
+                      onPlayAgain={() => handleRestart(false)}
+                      onBackToLobby={() => handleRestart(true)}
+                      restarting={restarting}
                       onBackHome={() => {
                         clearRoomSession();
                         if (myId) clearSelectionsForRoom(code, myId);
