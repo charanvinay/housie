@@ -346,7 +346,6 @@ export function GameScreen({
               variant="yellow"
               onClick={handlePickNext}
               disabled={drawing || drawn.length >= 90}
-              playSound={false}
               className={`w-full whitespace-nowrap ${
                 isMobileLayout
                   ? "min-w-[220px] max-w-[280px]"
