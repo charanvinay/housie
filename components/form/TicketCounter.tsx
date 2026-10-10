@@ -25,10 +25,12 @@ export function TicketCounter({
 
   return (
     <div
-      className={`flex flex-row items-center justify-between gap-4 ${className}`.trim()}
+      className={`flex flex-wrap items-center justify-between gap-2 sm:gap-4 ${className}`.trim()}
     >
       {label && (
-        <label className="form-label !mb-0 flex-shrink-0">{label}</label>
+        <label className="form-label !mb-0 w-full sm:w-auto flex-shrink-0">
+          {label}
+        </label>
       )}
       <div className="flex items-center gap-1">
         <IconButton

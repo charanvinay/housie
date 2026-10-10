@@ -619,10 +619,11 @@ export function getClaimPrizeAmounts(totalAmount: number): {
 
 // --- Real-time: broadcast room updates to socket server (POST /broadcast) ---
 
-const SOCKET_SERVER_URL =
+const RAW_SOCKET_URL =
   typeof process !== "undefined"
     ? process.env.SOCKET_SERVER_URL || "http://localhost:3001"
     : "http://localhost:3001";
+const SOCKET_SERVER_URL = RAW_SOCKET_URL.replace(/\/+$/, "");
 
 function notifyRoomUpdated(code: string): void {
   const key = code.toUpperCase();
@@ -638,5 +639,7 @@ function notifyRoomUpdated(code: string): void {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ code: key, room: payload }),
-  }).catch(() => {});
+  }).catch((err) => {
+    console.error(`[Broadcast Error] Failed to reach socket server at ${SOCKET_SERVER_URL}:`, err?.message || err);
+  });
 }

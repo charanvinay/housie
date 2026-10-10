@@ -16,15 +16,15 @@ export function LiveIndicator({ live, title, className }: LiveIndicatorProps) {
           ? "border-green-500/50 bg-green-500/20 text-green-400"
           : "border-white/20 bg-white/10 text-theme-muted"
       } ${className ?? ""}`}
-      title={title ?? (live ? "Real-time updates on" : "Connecting…")}
+      title={title ?? (live ? "Real-time updates on" : "Connecting to socket server…")}
     >
-      {live && (
-        <span
-          className="size-2 shrink-0 rounded-full bg-green-500 animate-pulse"
-          aria-hidden
-        />
-      )}
-      {live ? "Live" : "…"}
+      <span
+        className={`size-2 shrink-0 rounded-full ${
+          live ? "bg-green-500 animate-pulse" : "bg-yellow/70 animate-pulse"
+        }`}
+        aria-hidden
+      />
+      {live ? "Live" : "Connecting…"}
     </span>
   );
 }

@@ -395,13 +395,18 @@ function RoomPageInner() {
 
     const roomCode = String(code).toUpperCase();
     // Socket server runs on a separate port (e.g. 3001); set NEXT_PUBLIC_SOCKET_URL if different
-    const socketUrl =
+    const rawSocketUrl =
       (process.env.NEXT_PUBLIC_SOCKET_URL as string) || "http://localhost:3001";
+    const socketUrl = rawSocketUrl.replace(/\/+$/, "");
     if (!socketUrl) return;
 
     const socket = io(socketUrl, {
       path: "/socket.io",
+      transports: ["websocket", "polling"],
       autoConnect: true,
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
     });
     socketRef.current = socket;
 
@@ -413,6 +418,10 @@ function RoomPageInner() {
       joinRoom();
     };
     const onDisconnect = () => setLive(false);
+    const onConnectError = (err: Error) => {
+      console.warn(`[Socket.IO] Failed to connect to ${socketUrl}:`, err.message);
+      setLive(false);
+    };
     const onRoom = (data: RoomState) => {
       setRoom((prev) => {
         if (!prev) return data;
@@ -433,6 +442,7 @@ function RoomPageInner() {
 
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
+    socket.on("connect_error", onConnectError);
     socket.on("room", onRoom);
     socket.on("draw_started", onDrawStarted);
     socket.on("claim_made", onClaimMade);
@@ -447,6 +457,7 @@ function RoomPageInner() {
     return () => {
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
+      socket.off("connect_error", onConnectError);
       socket.off("room", onRoom);
       socket.off("draw_started", onDrawStarted);
       socket.off("claim_made", onClaimMade);

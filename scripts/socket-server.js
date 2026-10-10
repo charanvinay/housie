@@ -8,7 +8,7 @@
 const http = require("http");
 const { Server } = require("socket.io");
 
-const PORT = Number(process.env.SOCKET_PORT) || 3001;
+const PORT = Number(process.env.PORT) || Number(process.env.SOCKET_PORT) || 3001;
 
 const server = http.createServer();
 
@@ -49,6 +49,11 @@ io.on("connection", (socket) => {
 });
 
 server.on("request", (req, res) => {
+  if (req.method === "GET" && (req.url === "/" || req.url === "/health")) {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ status: "ok", uptime: process.uptime() }));
+    return;
+  }
   if (req.method !== "POST" || req.url !== "/broadcast") {
     return;
   }
