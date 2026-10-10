@@ -55,10 +55,6 @@ export function InstallPwaPrompt() {
 
   if (isStandalone || dismissed) return null;
 
-  // Show if browser fired install prompt OR on iOS Safari
-  const canPrompt = Boolean(deferredPrompt || isIos);
-  if (!canPrompt) return null;
-
   const handleInstallClick = async () => {
     Sounds.mouseClick();
     if (deferredPrompt) {
@@ -70,6 +66,11 @@ export function InstallPwaPrompt() {
       }
     } else if (isIos) {
       setShowIosGuide(true);
+    } else {
+      toast.show(
+        "To install: click the Install icon (⊕) in your browser address bar",
+        "default"
+      );
     }
   };
 

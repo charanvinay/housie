@@ -1,7 +1,6 @@
-const CACHE_NAME = "housie-pwa-v3";
+const CACHE_NAME = "housie-pwa-v4";
 
 const STATIC_ASSETS = [
-  "/",
   "/manifest.json",
   "/favicon.png",
   "/icons/icon-192.png",

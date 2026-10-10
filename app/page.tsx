@@ -78,17 +78,17 @@ export default function Home() {
         }
         if (session.role === "host" && room.hostId === session.id) {
           router.replace(
-            `/room/${room.code}?hostId=${encodeURIComponent(session.id)}`
+            `/room/${room.code}?hostId=${encodeURIComponent(session.id)}`,
           );
           return;
         }
         if (session.role === "player" && Array.isArray(room.players)) {
           const inRoom = room.players.some(
-            (p: { id: string }) => p.id === session.id
+            (p: { id: string }) => p.id === session.id,
           );
           if (inRoom) {
             router.replace(
-              `/room/${room.code}?playerId=${encodeURIComponent(session.id)}`
+              `/room/${room.code}?playerId=${encodeURIComponent(session.id)}`,
             );
             return;
           }
@@ -115,7 +115,15 @@ export default function Home() {
   };
 
   return (
-    <PageWrapper exiting={exiting} onExitComplete={handleExitComplete}>
+    <PageWrapper
+      exiting={exiting}
+      onExitComplete={handleExitComplete}
+      footer={
+        <p className="text-sm font-semibold tracking-wider text-yellow drop-shadow-md select-none">
+          Made by Chanay
+        </p>
+      }
+    >
       {checking && <LoadingOverlay />}
       <div className="flex flex-col md:flex-row gap-4">
         <Button

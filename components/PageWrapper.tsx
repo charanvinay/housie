@@ -23,6 +23,8 @@ type PageWrapperProps = {
   onExitComplete?: () => void;
   /** If provided, Back button calls this instead of linking to /. Use for exit-then-navigate. */
   onBackClick?: () => void;
+  /** Optional content displayed outside and under the center card. */
+  footer?: React.ReactNode;
 };
 
 /** When true, title is at top and card is below (avoids overlap with tall cards). */
@@ -35,6 +37,7 @@ export function PageWrapper({
   exiting = false,
   onExitComplete,
   onBackClick,
+  footer,
 }: PageWrapperProps) {
   const isFormLayout = formLayout(showBack);
 
@@ -119,7 +122,16 @@ export function PageWrapper({
         )}
         {children}
       </motion.div>
-      <div className="flex-1 min-h-[10rem]" />
+      {footer && (
+        <motion.div
+          animate={exiting ? { opacity: 0, y: 8 } : { opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: "easeOut" }}
+          className="mt-6 shrink-0 text-center z-10"
+        >
+          {footer}
+        </motion.div>
+      )}
+      <div className="flex-1 min-h-[4rem]" />
     </div>
   );
 }
